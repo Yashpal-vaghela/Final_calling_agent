@@ -1,0 +1,9 @@
+{
+  "venvPath": "backend",
+  "venv": "venv",
+  "extraPaths": [
+    ".",
+    "backend",
+    "gemini-live-api-examples/gemini-live-genai-python-sdk"
+  ]
+}

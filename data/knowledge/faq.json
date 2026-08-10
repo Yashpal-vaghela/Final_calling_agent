@@ -1,0 +1,201 @@
+[
+  {
+    "intent": "fear_and_pain",
+    "user_questions": [
+      "I'm scared.",
+      "Will it pain?",
+      "I'm nervous.",
+      "I hate dentists.",
+      "Is anesthesia required?",
+      "Will it be painful?",
+      "Recovery time?",
+      "Can I eat?",
+      "Can I speak normally?",
+      "What if it fails?"
+    ],
+    "emotion": "anxious",
+    "voice_response": "That's completely natural — and honestly, comfort is one of the things our clients are most surprised by.\n\nThink about your first flight. Before takeoff, it feels uncertain. Once you understand the journey, most of the fear disappears.\n\nYour Smile Designer uses advanced techniques to make the experience exceptionally comfortable. Most clients say it was far more comfortable than they expected. We can start with a no-pressure consultation — just a conversation, nothing more.",
+    "follow_up": "Would you like me to explain what usually happens during your first consultation?",
+    "keywords": [
+      "pain",
+      "fear",
+      "nervous",
+      "anesthesia",
+      "recovery"
+    ]
+  },
+  {
+    "intent": "medical_conditions",
+    "user_questions": [
+      "I have diabetes.",
+      "I'm pregnant.",
+      "I grind my teeth.",
+      "I smoke.",
+      "I have gum disease.",
+      "I have a medical condition.",
+      "Is it safe for me?"
+    ],
+    "emotion": "concerned",
+    "voice_response": "Thank you for letting me know.\n\nConditions like diabetes, pregnancy, teeth grinding, or smoking don't automatically prevent treatment, but they do influence the best approach.\n\nAn Authorized USD Smile Designer will review your medical history and recommend the safest plan for you.\n\nWould you like to tell me a little more about your situation?",
+    "keywords": [
+      "diabetes",
+      "pregnancy",
+      "grinding",
+      "smoking",
+      "medical condition"
+    ]
+  },
+  {
+    "intent": "second_opinion",
+    "user_questions": [
+      "I already saw another dentist.",
+      "I want a second opinion.",
+      "Another dentist said something different.",
+      "I'm not sure who to trust.",
+      "Which treatment is right?"
+    ],
+    "emotion": "uncertain",
+    "voice_response": "That's completely understandable.\n\nThe internet provides a lot of information, but every smile is unique. That's why different dentists may recommend different treatments.\n\nAt Ultimate Smile Design, we encourage clients to ask questions, compare options, and make informed decisions before starting any journey.\n\nA confident decision is always a better decision.",
+    "keywords": [
+      "second opinion",
+      "another dentist",
+      "compare",
+      "trust"
+    ]
+  },
+  {
+    "intent": "language",
+    "user_questions": [
+      "Can you speak Hindi?",
+      "Do you speak Gujarati?",
+      "What languages do you support?",
+      "Can we talk in Hindi?",
+      "Hindi mein batao."
+    ],
+    "emotion": "curious",
+    "voice_response": "Yes, I can speak in English, Hindi, and Gujarati.\n\nPlease tell me which language you're most comfortable with, and I'll continue in that language.",
+    "keywords": [
+      "language",
+      "hindi",
+      "gujarati",
+      "english"
+    ]
+  },
+  {
+    "intent": "treatment_duration",
+    "user_questions": [
+      "How long does the treatment take?",
+      "How many visits do I need?",
+      "Is it a one-day treatment?",
+      "How many appointments?",
+      "When will I get my new smile?",
+      "Same-day smile possible?"
+    ],
+    "emotion": "curious",
+    "voice_response": "The timeline depends on your specific case and the plan recommended by your Authorized USD Smile Designer.\n\nSimple cases are usually completed within 2 to 6 weeks. More complex transformations may take 4 to 6 weeks for full-mouth cases, while implant journeys can take 6 months or more.\n\nYour Smile Designer will give you a clear timeline during your consultation so you know exactly what to expect.",
+    "follow_up": "Would you like me to explain what happens during the first consultation?",
+    "keywords": [
+      "duration",
+      "time",
+      "visits",
+      "appointments",
+      "how long"
+    ]
+  },
+  {
+    "intent": "veneer_longevity",
+    "user_questions": [
+      "How long do veneers last?",
+      "Do I need to replace them?",
+      "Are veneers permanent?",
+      "What is the lifespan of veneers?",
+      "Do veneers expire?"
+    ],
+    "emotion": "curious",
+    "voice_response": "With proper care, high-quality ceramic veneers can last many years — often 15 to 20 years or even longer.\n\nThe longevity depends on factors like your oral hygiene, diet, habits like teeth grinding, and regular check-ups. Your Authorized USD Smile Designer will guide you on how to care for your veneers to maximise their lifespan.\n\nThink of them like a premium pair of shoes — with the right care, they stay beautiful for a very long time.",
+    "keywords": [
+      "last",
+      "longevity",
+      "permanent",
+      "lifespan",
+      "replace"
+    ]
+  },
+  {
+    "intent": "maintenance_care",
+    "user_questions": [
+      "How do I take care of veneers?",
+      "Can I eat normally?",
+      "Do I need special toothpaste?",
+      "Can I bite into apples?",
+      "What foods should I avoid?",
+      "How to maintain my smile?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Caring for your veneers is very similar to caring for your natural teeth.\n\nBrush twice daily, floss regularly, and visit your dentist for routine check-ups. Avoid biting extremely hard objects like ice or opening bottles with your teeth.\n\nYou can eat most foods normally. Your Authorized USD Smile Designer will give you specific care instructions based on your treatment.",
+    "keywords": [
+      "care",
+      "maintenance",
+      "food",
+      "toothpaste",
+      "brushing"
+    ]
+  },
+  {
+    "intent": "age_eligibility",
+    "user_questions": [
+      "Is there an age limit?",
+      "Am I too old for veneers?",
+      "Can teenagers get veneers?",
+      "What is the minimum age?",
+      "Is it suitable for my age?"
+    ],
+    "emotion": "uncertain",
+    "voice_response": "There's no upper age limit for smile designing. As long as your teeth and gums are healthy, you can benefit from USD treatment at any age.\n\nFor younger clients, we typically recommend waiting until jaw growth is complete, usually around 18 to 21 years, before considering veneers.\n\nYour Authorized USD Smile Designer will evaluate your individual situation and recommend the right timing for your journey.",
+    "keywords": [
+      "age",
+      "old",
+      "young",
+      "teenager",
+      "minimum age"
+    ]
+  },
+  {
+    "intent": "reversibility",
+    "user_questions": [
+      "Is it reversible?",
+      "Can I go back to my original teeth?",
+      "Can veneers be removed?",
+      "What if I don't want them anymore?"
+    ],
+    "emotion": "uncertain",
+    "voice_response": "Traditional veneers require a small amount of tooth preparation, which means they are not fully reversible. However, minimal-preparation or no-preparation veneers may be an option depending on your case.\n\nThis is something your Authorized USD Smile Designer will discuss with you during the planning stage, so you can make a fully informed decision before treatment begins.",
+    "keywords": [
+      "reversible",
+      "remove",
+      "original",
+      "go back"
+    ]
+  },
+  {
+    "intent": "warranty",
+    "topic": "warranty",
+    "user_questions": [
+      "What is your warranty policy for veneers?",
+      "Do you provide warranty?",
+      "Is there a warranty?",
+      "Will my veneers have warranty?",
+      "Warranty for veneers?",
+      "Is there any guarantee?"
+    ],
+    "emotion": "reassuring",
+    "voice_response": "Every genuine Ultimate Smile Design treatment includes a USD Authentication Card and warranty assurance. Simply visit the Ultimate Smile Design website and enter your USD Verification Number to instantly confirm your restorations were genuinely handcrafted under official USD protocols with comprehensive warranty support.\n\nWe don't just give you a promise — we give you proof.",
+    "follow_up": "Would you like me to explain how to verify your authentication card?",
+    "keywords": [
+      "warranty",
+      "guarantee",
+      "policy",
+      "lifespan"
+    ]
+  }
+]

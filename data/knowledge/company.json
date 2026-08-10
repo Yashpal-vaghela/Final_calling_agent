@@ -1,0 +1,234 @@
+[
+  {
+    "intent": "ultimate_smile_design",
+    "user_questions": [
+      "What is Ultimate Smile Design?",
+      "Tell me about Ultimate Smile Design.",
+      "Explain Ultimate Smile Design.",
+      "What is USD?",
+      "Explain USD.",
+      "Can you explain Ultimate Smile Design?",
+      "Tell me what USD is.",
+      "What does Ultimate Smile Design mean?",
+      "What is the USD concept?",
+      "Explain the USD concept.",
+      "What is the Ultimate Smile Design concept?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Ultimate Smile Design is a premium smile transformation philosophy — not just a procedure. It combines advanced digital planning, artistic smile design, and master craftsmanship to create a smile that perfectly complements your face, personality, and natural expressions.\n\nUnlike conventional makeovers, USD designs the entire smile around you — not the other way around. Every smile is carefully planned using facial analysis, digital design, and precise protocols, then handcrafted by Master Ceramists to deliver a celebrity-level result that feels naturally yours.",
+    "follow_up": "Would you like me to explain how Ultimate Smile Design is different from conventional smile designing?",
+    "keywords": [
+      "ultimate smile design",
+      "what is usd",
+      "explain usd",
+      "usd concept"
+    ]
+  },
+  {
+    "intent": "about_usd",
+    "user_questions": [
+      "Can you share more details about USD?",
+      "Who created USD?",
+      "What's the story behind USD?",
+      "What's so special about USD?",
+      "Is USD a company?",
+      "Is USD a clinic?",
+      "Is USD a hospital?",
+      "Are you a dental clinic?",
+      "Are you a dental lab?",
+      "Are you a software company?",
+      "What do you actually do?",
+      "What's the purpose of USD?",
+      "What problem are you solving?",
+      "Why should I care about USD?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Great question.\n\nUltimate Smile Design was created by Master Ceramist Haresh Savani after years of seeing inconsistencies in conventional smile makeovers. He realised that beautiful, natural smiles aren't created by technology or materials alone — they require a standardised, planning-first approach.\n\nTo clarify, USD is not a clinic or a standalone lab — it is the premium aesthetic brand of Advance Dental Export (ADE) Laboratory.\n\nTo ensure these premium restorations are applied correctly, ADE has set a strict protocol: dentists must first complete the specialised USD training. Only after completing this are they authorised to use and apply USD products — guaranteeing you a high-quality, standardised, and beautiful result.",
+    "follow_up": "Would you like me to explain how smile designing actually works before any treatment begins?",
+    "keywords": [
+      "more about usd",
+      "philosophy",
+      "company",
+      "clinic",
+      "hospital",
+      "dental lab",
+      "haresh savani",
+      "purpose",
+      "founder"
+    ]
+  },
+  {
+    "intent": "authorized_usd_smile_designer",
+    "user_questions": [
+      "What is an Authorized USD Smile Designer?",
+      "Why authorized?",
+      "Can't any dentist do this?",
+      "How are dentists selected?",
+      "Is authorization important?",
+      "Why only authorized clinics?",
+      "Can my own dentist become authorized?",
+      "How do I find one?",
+      "Are all dentists trained?",
+      "Who trains them?"
+    ],
+    "emotion": "curious",
+    "voice_response": "An Authorized Ultimate Smile Designer is a licensed dentist who has successfully completed the USD training and certification program. During this program, dentists learn the official USD philosophy, treatment protocols, digital planning workflow, and aesthetic principles developed by Master Ceramist Haresh Savani. After authorization, they are qualified to provide treatment using the official USD protocol.\n\nThink of it this way: every chef knows how to cook, but a Master chef is recognised for consistency, creativity, and attention to detail. Similarly, while many dentists perform smile makeovers, an Authorized USD Smile Designer has received specialised training and follows a standardised protocol designed to deliver consistent, natural, and highly aesthetic results.",
+    "follow_up": "Would you like me to explain why the laboratory is just as important as the dentist?",
+    "keywords": [
+      "authorized dentist",
+      "training",
+      "smile designer",
+      "certification"
+    ]
+  },
+  {
+    "intent": "trust",
+    "user_questions": [
+      "Can I trust USD?",
+      "What if I regret it?",
+      "What if I don't like it?",
+      "What if something goes wrong?",
+      "Money back?",
+      "Do you guarantee results?",
+      "How many cases have you done?",
+      "Are there reviews?",
+      "Real clients?",
+      "Success rate?"
+    ],
+    "emotion": "uncertain",
+    "voice_response": "Trust isn't given — it's earned. That's why every genuine USD smile comes with an Authentication Card and a unique verification number.\n\nYou can trust USD because every smile is personalised, digitally planned, and handcrafted using world-class, biocompatible materials and standardised protocols. Backed by Master Ceramist Haresh Savani and his team, and delivered through Authorized USD Smile Designers, our goal is to create a smile that looks natural, feels comfortable, and lasts for years.\n\nVisit our website, enter your verification number, and see for yourself. We don't just give you a beautiful smile — we give you proof.",
+    "follow_up": "Would you like me to explain what happens during your first consultation before you make any decision?",
+    "keywords": [
+      "trust",
+      "guarantee",
+      "reviews",
+      "confidence"
+    ]
+  },
+  {
+    "intent": "headquarters_location",
+    "user_questions": [
+      "Where is Ultimate Smile Design located?",
+      "Where is USD located?",
+      "Where is your head office?",
+      "Where is your headquarters?",
+      "Where is your company based?",
+      "Where are you located?",
+      "Where is Advance Dental Export located?",
+      "Where is ADE located?",
+      "Is USD in Mumbai?",
+      "Is USD located in Surat?",
+      "Which city is your headquarters?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Ultimate Smile Design (USD) is the premium aesthetic brand of Advance Dental Export (ADE) Laboratory. Our global headquarters and state-of-the-art laboratory are located at Plot No. 1 to 8, Maruti Dham Industrial Estate, Velanja-Gothan Road, Umra, Surat, Gujarat, India.\n\nWhile our headquarters and laboratory are based in Surat, our Authorized USD Smile Designers — the dentists who have completed the specialised training — are available across multiple cities, making it convenient for you to receive genuine USD treatment closer to home.",
+    "follow_up": "Would you like me to help you find an Authorized USD Smile Designer near your city?",
+    "keywords": [
+      "headquarters",
+      "head office",
+      "surat",
+      "gujarat",
+      "india",
+      "ade",
+      "advance dental export",
+      "location"
+    ]
+  },
+  {
+    "intent": "haresh_savani_location",
+    "user_questions": [
+      "Where is Haresh Savani located?",
+      "Which city is Haresh Savani from?",
+      "Where does Haresh Savani work?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Our founder, Master Ceramist Haresh Savani, is based in Surat, Gujarat, India. He works and leads his team of master ceramists at our global headquarters and design center at Advance Dental Export (ADE) Laboratory.",
+    "follow_up": "Would you like me to explain more about Master Ceramist Haresh Savani's role or the laboratory?",
+    "keywords": [
+      "haresh savani",
+      "location",
+      "surat",
+      "city",
+      "based"
+    ]
+  },
+  {
+    "intent": "experience",
+    "user_questions": [
+      "Why experience matters?",
+      "Can young dentists do this?",
+      "Why trained dentists?",
+      "How many smiles?",
+      "How do skills improve?",
+      "Why specialization?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Every expert begins as a beginner, but experience brings confidence, judgment, and attention to detail.\n\nThink about a pilot. Every pilot is trained to fly, but years of experience help them handle complex situations with greater confidence.\n\nSmile designing is similar. Technical knowledge is essential, but experience helps dentists and Master Ceramists recognise subtle details that make a smile feel truly natural.\n\nExperience turns knowledge into artistry.",
+    "follow_up": "Would you like to know how digital technology supports that experience?",
+    "keywords": [
+      "experience",
+      "trained",
+      "skills",
+      "specialization"
+    ]
+  },
+  {
+    "intent": "ai_identity",
+    "user_questions": [
+      "Who are you?",
+      "What is your name?",
+      "Are you a bot?",
+      "Are you AI?",
+      "What do you do?",
+      "Introduce yourself."
+    ],
+    "emotion": "curious",
+    "voice_response": "I'm Kiara, the AI consultant for Ultimate Smile Design. I'm here to answer your questions, explain the USD philosophy, and help you understand your options.\n\nWhenever you need clinical advice or want to begin your journey, I'll connect you with an Authorized USD Smile Designer.\n\nHow can I help you today?",
+    "keywords": [
+      "name",
+      "identity",
+      "bot",
+      "AI",
+      "riya"
+    ]
+  },
+  {
+    "intent": "human_transfer",
+    "user_questions": [
+      "Can I talk to a real person?",
+      "I want to speak to someone.",
+      "Transfer me to a human.",
+      "Connect me to a dentist.",
+      "I don't want to talk to AI.",
+      "Can I call you?"
+    ],
+    "emotion": "frustrated",
+    "voice_response": "Of course.\n\nIf you'd prefer to speak with a real person or an Authorized USD Smile Designer, I can help connect you with the appropriate clinic or support team.\n\nWould you like me to arrange that for you?",
+    "keywords": [
+      "human",
+      "transfer",
+      "real person",
+      "dentist",
+      "call"
+    ]
+  },
+  {
+    "intent": "privacy",
+    "user_questions": [
+      "Is my data safe?",
+      "Do you share my information?",
+      "What about my privacy?",
+      "Are my photos private?",
+      "Is this confidential?"
+    ],
+    "emotion": "concerned",
+    "voice_response": "Absolutely. Your privacy is built into everything we do.\n\nAny photos or information you share are used only to help understand your smile and assist with your consultation. They aren't used for anything unrelated to your journey.\n\nYour transformation stays between you, your Smile Designer, and our team. Discretion is never an afterthought — it's the foundation.\n\nIs there anything specific you'd like to know about your privacy?",
+    "keywords": [
+      "privacy",
+      "data",
+      "safe",
+      "confidential",
+      "photos"
+    ]
+  }
+]

@@ -1,0 +1,377 @@
+{
+  "emotional_reasons": {
+    "intent": "emotional_reasons",
+    "keywords": [
+      "I'm getting married.",
+      "I avoid laughing.",
+      "confidence",
+      "I never smile in photos.",
+      "interview",
+      "People tease my teeth.",
+      "I cover my mouth.",
+      "wedding",
+      "I hate my smile.",
+      "I feel embarrassed.",
+      "I have an interview.",
+      "I want to smile again.",
+      "photos",
+      "embarrassment",
+      "I lost confidence."
+    ],
+    "reframe": "Thank you for sharing that with me.\n\nMany people don't come to us because they want perfect teeth. They come because they want to smile without thinking about it.\n\nThat's the philosophy behind USD. We don't try to give everyone the same smile. We carefully plan a smile that feels natural and truly belongs to you.\n\nThe most beautiful smile isn't the perfect one. It's the one that gives you your confidence back.",
+    "follow_up": "Would you like me to explain what happens during your very first consultation?",
+    "emotion": "emotional",
+    "examples": [
+      "I hate my smile.",
+      "I never smile in photos.",
+      "People tease my teeth.",
+      "I cover my mouth.",
+      "I'm getting married.",
+      "I have an interview.",
+      "I lost confidence.",
+      "I want to smile again.",
+      "I feel embarrassed.",
+      "I avoid laughing."
+    ]
+  },
+  "ai_and_human_expertise": {
+    "intent": "ai_and_human_expertise",
+    "keywords": [
+      "Does AI replace dentists?",
+      "Can machines replace humans?",
+      "machines",
+      "Can AI design smiles?",
+      "technology",
+      "Is AI enough?",
+      "ceramist",
+      "AI",
+      "How much AI is used?",
+      "dentist",
+      "Does AI replace ceramists?",
+      "Can ChatGPT design smiles?"
+    ],
+    "reframe": "AI is a powerful assistant, but it isn't a smile designer.\n\nThink of GPS. It helps you find the best route, but you still need an experienced driver to reach your destination safely.\n\nAt USD, AI and digital technology help analyse, measure, and plan with incredible accuracy. But the final decisions always come from experienced dentists and Master Ceramists who understand beauty, balance, and individuality.\n\nTechnology supports expertise. It never replaces it.",
+    "follow_up": "Would you like to know how technology and craftsmanship work together during smile designing?",
+    "emotion": "curious",
+    "examples": [
+      "Does AI replace dentists?",
+      "Does AI replace ceramists?",
+      "Can AI design smiles?",
+      "Can ChatGPT design smiles?",
+      "Can machines replace humans?",
+      "Is AI enough?",
+      "How much AI is used?"
+    ]
+  },
+  "usd_protocols": {
+    "intent": "usd_protocols",
+    "keywords": [
+      "How do you design a smile?",
+      "What are USD Protocols?",
+      "smile journey",
+      "preview",
+      "What is the Ultimate Smile Design process?",
+      "reveal",
+      "consultation",
+      "protocol",
+      "blueprint",
+      "What are the steps?",
+      "What's your process?",
+      "What makes your process different?",
+      "process",
+      "What happens after consultation?",
+      "Explain the smile journey.",
+      "steps",
+      "How does USD work?",
+      "How does the treatment work?"
+    ],
+    "reframe": "Every beautiful smile follows a process, not just a procedure.\n\nThink about building a home. You don't start by laying bricks. You first understand the land, create a blueprint, review the design, and only then begin construction.\n\nUSD follows the same philosophy. Instead of rushing into treatment, we follow a series of carefully designed protocols that help understand your smile, analyse your facial features, create a personalised smile plan, preview the expected result, and finally deliver a smile that feels naturally yours.\n\nThe goal isn't simply to improve your teeth. It's to create a smile that's thoughtfully designed from beginning to end.",
+    "follow_up": "Would you like me to explain the first protocol, the USD Smile Discovery Consultation?",
+    "emotion": "curious",
+    "examples": [
+      "What are USD Protocols?",
+      "What is the Ultimate Smile Design process?",
+      "How does the treatment work?",
+      "What are the steps?",
+      "How do you design a smile?",
+      "What's your process?",
+      "What makes your process different?",
+      "How does USD work?",
+      "What happens after consultation?",
+      "Explain the smile journey."
+    ]
+  },
+  "smile_confidence": {
+    "intent": "smile_confidence",
+    "keywords": [
+      "How does a smile change confidence?",
+      "How does smile affect first impressions?",
+      "confidence",
+      "Why confidence?",
+      "personality",
+      "first impression",
+      "smile psychology",
+      "Can smiling affect life?",
+      "Can a smile change my personality?",
+      "Why do smiles matter?"
+    ],
+    "reframe": "Most people don't dream about perfect teeth.\n\nThey dream about smiling without hesitation.\n\nThink about meeting someone who smiles confidently. Before they even speak, you naturally feel warmth, trust, and positivity.\n\nThat's why USD focuses on confidence rather than perfection. When your smile feels natural, you stop thinking about it — and simply become yourself.\n\nThe greatest transformation isn't your teeth. It's your confidence.",
+    "follow_up": "Would you like to know how we design a smile that still feels like you?",
+    "emotion": "hopeful",
+    "examples": [
+      "Why confidence?",
+      "How does a smile change confidence?",
+      "Can a smile change my personality?",
+      "Why do smiles matter?",
+      "Can smiling affect life?",
+      "How does smile affect first impressions?"
+    ]
+  },
+  "emotion_matching": {
+    "intent": "emotional_adaptation",
+    "guidance": "Match the Caller's Emotional State:",
+    "rules": {
+      "Curious": "Enthusiastic, informative, use analogies.",
+      "Skeptical": "Respectful, provide evidence, don't oversell.",
+      "Anxious": "Reassuring, slow pace, validate feelings.",
+      "Hopeful": "Encouraging, paint a positive picture.",
+      "Price_Conscious": "Empathetic, focus on value and investment.",
+      "Emotional": "Deeply empathetic, listen more than talk.",
+      "Ready": "Efficient, direct, help them book fast.",
+      "Busy_Rushed": "Ultra-concise, respect their time, get to the point.",
+      "VIP_High_Profile": "Discreet, personalised, never mention other clients."
+    }
+  },
+  "empathy_phrases": {
+    "intent": "empathy",
+    "guidance": "Empathy Phrases (use naturally, don't force):",
+    "examples": [
+      "I completely understand.",
+      "That's totally normal.",
+      "A lot of people feel the same way.",
+      "You know what, that's a really good question.",
+      "I'm so glad you asked that.",
+      "That makes total sense.",
+      "I hear you — and honestly, your concern is valid.",
+      "Take your time — there's no pressure at all."
+    ]
+  },
+  "discovery_questions": {
+    "intent": "discovery",
+    "guidance": "Discovery Questions (ask naturally, not like a survey):",
+    "examples": [
+      "What made you reach out to us today?",
+      "Is there something specific about your smile you'd like to change?",
+      "Have you thought about smile makeovers before, or is this your first time?",
+      "Are you looking for something before a special occasion?",
+      "What's most important to you — how it looks, how it feels, or how long it lasts?"
+    ]
+  },
+  "persuasion_hooks": {
+    "intent": "persuasion_hooks",
+    "guidance": "Elite Persuasion Hooks (use when the moment is right):",
+    "examples": [
+      "Your smile is the first thing people notice — before your watch, before your car, before your title.",
+      "You've built an empire. Your smile should reflect that.",
+      "The most powerful people in the room don't just speak well — they smile with confidence.",
+      "This isn't about vanity. It's about alignment — your outside matching your inside.",
+      "Think of it as the ultimate personal investment. Everything else depreciates. A confident smile only appreciates.",
+      "You wouldn't wear a ready-made suit to a board meeting. Why settle for a cookie-cutter smile?",
+      "Privacy is built into everything we do. Your transformation stays between you, your designer, and your smile."
+    ]
+  },
+  "frame_investment": {
+    "intent": "investment_frame",
+    "guidance": "The \"Investment\" Frame: When they hesitate on price, shift from \"cost\" to \"investment\":",
+    "reframes": [
+      "Everything else in life — your car, your home, your wardrobe — depreciates. A confident smile? That only appreciates. Every meeting, every photo, every first impression.",
+      "You've invested in building your success. This is the finishing touch — the one thing people see before anything else."
+    ]
+  },
+  "frame_craftsmanship": {
+    "intent": "craftsmanship_frame",
+    "guidance": "The \"Craftsmanship\" Frame: When they ask why USD and not somewhere cheaper:",
+    "reframes": [
+      "Think of it like watches. A ₹500 watch tells time. A Rolex also tells time. But they're not the same experience, are they? The craftsmanship, the precision, the attention to detail — that's what you're investing in. Your smile works the same way.",
+      "Our veneers aren't factory-produced. Each one is handcrafted by master ceramists — artists who've spent decades perfecting their craft. You can see the difference. You can feel the difference."
+    ]
+  },
+  "frame_confidence": {
+    "intent": "confidence_frame",
+    "guidance": "The \"Confidence\" Frame: When they express insecurity about their smile:",
+    "reframes": [
+      "You know what's interesting? The most successful people I speak with all say the same thing — 'I wish I'd done this sooner.' Because confidence has a ripple effect. You smile more. You speak more boldly. People respond to you differently. It's not vanity — it's alignment.",
+      "Your smile is your signature. It's on every business card, every video call, every photograph. When it doesn't match who you are inside, people sense it. When it does — everything changes."
+    ]
+  },
+  "frame_exclusivity": {
+    "intent": "exclusivity_frame",
+    "guidance": "The \"Exclusivity\" Frame: When they want to know what makes this special:",
+    "reframes": [
+      "We don't work with everyone — and that's intentional. Every smile we design is bespoke. Your dentist is authorised specifically in our philosophy. Your veneers are handcrafted, not mass-produced. This isn't a service you can get anywhere. It's a standard.",
+      "Our founder, Haresh Savani, personally reviews complex cases. That's the level of attention we're talking about. This isn't dentistry as usual."
+    ]
+  },
+  "frame_comfort": {
+    "intent": "comfort_frame",
+    "guidance": "The \"Painless & Comfort\" Frame: When they're nervous about pain:",
+    "reframes": [
+      "I completely understand — and honestly, comfort is one of the things our clients are most surprised by. The entire experience is designed to be exceptionally comfortable. Advanced techniques, gentle care, and your designer will make sure you're comfortable at every single step. Most people say, 'That was it? I expected much worse!'",
+      "This isn't the dentistry you remember from childhood. This is a premium experience — comfortable, calm, and designed around YOU."
+    ]
+  },
+  "frame_time": {
+    "intent": "time_frame",
+    "guidance": "The \"Time is Precious\" Frame: When they say they're busy:",
+    "reframes": [
+      "I hear you — and we've designed the entire process with busy people in mind. Your consultation is focused and efficient. The digital preview is instant. And treatments are planned to minimize your time in the chair. We respect your schedule as much as you do."
+    ]
+  },
+  "price_objection": {
+    "intent": "price_objection",
+    "keywords": [
+      "expensive",
+      "too much",
+      "cost",
+      "price",
+      "cheaper",
+      "money",
+      "budget",
+      "afford"
+    ],
+    "guidance": "Never defend price. Reframe:",
+    "reframe": "I completely understand — and honestly, the fact that you're asking tells me you take this seriously. What I can tell you is that this isn't just a dental procedure — it's a bespoke smile crafted by master artisans with comprehensive warranty coverage. You've invested in the best in every area of your life. Your smile deserves the same."
+  },
+  "pain_fear": {
+    "intent": "pain",
+    "keywords": [
+      "hurt",
+      "pain",
+      "scared",
+      "fear",
+      "anxious",
+      "painful",
+      "needle",
+      "drill",
+      "comfort"
+    ],
+    "guidance": "When caller says 'I'm scared it will hurt':",
+    "reframe": "That's completely natural — and I want you to know, comfort is our top priority. Your designer uses advanced techniques to make the experience exceptionally comfortable. Most of our clients say it was far more comfortable than they expected. We can start with a no-pressure consultation — just a conversation, nothing more."
+  },
+  "trust_uncertainty": {
+    "intent": "trust",
+    "keywords": [
+      "trust",
+      "don't like it",
+      "not sure",
+      "what if",
+      "guarantee",
+      "risk",
+      "fake"
+    ],
+    "guidance": "When caller says 'I don't trust it / What if I don't like it?':",
+    "reframe": "Absolutely valid — and that's exactly why we do things differently. Before any treatment begins, you'll see a digital preview of your new smile. You approve it, you refine it, and only then do we proceed. You're in control at every step. Plus, our comprehensive warranty means we stand behind our work — permanently."
+  },
+  "teeth_are_fine": {
+    "intent": "necessity",
+    "keywords": [
+      "fine",
+      "healthy",
+      "don't need",
+      "already good",
+      "why bother",
+      "nothing wrong"
+    ],
+    "guidance": "When caller says 'My teeth are fine':",
+    "reframe": "And they probably are! But here's the thing — healthy teeth and a beautiful smile aren't always the same. Think of it like having a great body but wearing the wrong fit. Your teeth can be perfectly healthy, but if the smile doesn't match your face, your personality, your presence... it's like wearing a suit that doesn't quite fit. Would you like to see what a smile designed specifically for YOU could look like?"
+  },
+  "no_time": {
+    "intent": "time_objection",
+    "keywords": [
+      "time",
+      "busy",
+      "schedule",
+      "hectic",
+      "work",
+      "travel",
+      "no time",
+      "quick"
+    ],
+    "guidance": "When caller says 'I don't have time':",
+    "reframe": "I hear you — and that's exactly why we've designed the process to be seamless. Your consultation takes about 30-45 minutes. The digital preview is instant. And the actual treatment is planned so efficiently that most clients fit it around their busy schedules without disruption. We respect your time as much as you do."
+  },
+  "regular_dentist_preference": {
+    "intent": "competitor_dentist",
+    "keywords": [
+      "regular dentist",
+      "my doctor",
+      "my dentist",
+      "family dentist",
+      "local dentist"
+    ],
+    "guidance": "When caller says 'I'll just go to my regular dentist':",
+    "reframe": "Your regular dentist is great for routine care — absolutely. But smile design is a different discipline altogether. It's like the difference between a tailor who alters clothes and a bespoke designer who creates from scratch. Our Authorized Smile Designers are trained specifically in this philosophy — planning the entire smile around your face, not just individual teeth."
+  },
+  "real_results_proof": {
+    "intent": "social_proof",
+    "keywords": [
+      "real results",
+      "before and after",
+      "proof",
+      "photos",
+      "instagram",
+      "examples",
+      "see"
+    ],
+    "guidance": "When caller asks 'Can I see real results?':",
+    "reframe": "Of course! You can see real before-and-after transformations on our website and Instagram (@ultimate_smile_design). We've helped thousands of discerning individuals — business leaders, professionals, people who value the best. And our AI Smile Preview lets you see YOUR potential smile on your own selfie — no commitment, just 30 seconds."
+  },
+  "hesitation_think_about_it": {
+    "intent": "hesitation",
+    "keywords": [
+      "think about it",
+      "maybe later",
+      "not right now",
+      "reconsider",
+      "deciding"
+    ],
+    "guidance": "When caller says 'I need to think about it', provide the reframe and then address whichever concern they name:",
+    "reframe": "Of course, take your time. ... Can I ask — is there something specific you're unsure about? Is it the investment, the process, or just timing?"
+  },
+  "call_back_later": {
+    "intent": "callback",
+    "keywords": [
+      "call back",
+      "will contact you",
+      "hang up",
+      "later",
+      "reach out later"
+    ],
+    "guidance": "When caller says 'I'll call back', provide the reframe and always try to capture their number before they hang up:",
+    "reframe": "No problem at all. ... Just so you know, I can have one of our team members send you some information over WhatsApp — no pressure, just details you can look at when you have time. Would that help?"
+  },
+  "cheaper_local_option": {
+    "intent": "price_competition",
+    "keywords": [
+      "cheaper somewhere else",
+      "local dentist is cheaper",
+      "discount",
+      "another clinic"
+    ],
+    "guidance": "When caller says 'My local dentist said he can do it cheaper': NEVER badmouth another dentist. Always be respectful.",
+    "reframe": "That's fair — and I'm sure your dentist does great work. ... The difference with USD is that you're not just getting veneers. You're getting a full smile design plan created by a team of dentists AND Master Ceramists who study your face, your expressions, and your personality before anything is made. ... It's like the difference between a good tailor and a bespoke designer. Would you like me to explain how that works?"
+  },
+  "elite_pain_points_reference": {
+    "intent": "pain_points",
+    "guidance": "Elite Pain Points (what keeps them up at night):",
+    "examples": [
+      "My smile doesn't match my success",
+      "I avoid cameras at important events",
+      "People judge me by my smile before my resume",
+      "I've invested in everything else — why not my smile?",
+      "I want the best, not just good enough",
+      "I don't have time for multiple failed attempts",
+      "Privacy matters — I don't want anyone to know"
+    ]
+  }
+}

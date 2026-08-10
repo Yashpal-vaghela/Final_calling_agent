@@ -1,0 +1,256 @@
+[
+  {
+    "intent": "veneers",
+    "user_questions": [
+      "What are veneers?",
+      "Are veneers painful?",
+      "Do veneers damage teeth?",
+      "How long do veneers last?",
+      "Can veneers fall off?",
+      "Are veneers permanent?",
+      "Can veneers stain?",
+      "Can veneers break?",
+      "Which material do you use?",
+      "Ceramic or zirconia?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Think of a veneer as the final brushstroke on a masterpiece. It's an ultra-thin, handcrafted ceramic shell that perfects the shape, colour, and harmony of your smile.\n\nAt USD, a veneer is never just a veneer — it's part of a complete smile architecture designed exclusively for you. Every veneer is digitally planned by your Authorized Smile Designer, then individually handcrafted by Master Ceramists at ADE Laboratory.\n\nThe goal isn't just to create beautiful teeth. It's to create a smile that looks like it was always yours.",
+    "follow_up": "Many clients also ask about the investment involved. Would you like me to explain what determines the cost?",
+    "keywords": [
+      "veneers",
+      "ceramic",
+      "zirconia",
+      "porcelain"
+    ]
+  },
+  {
+    "intent": "treatment_comparison",
+    "user_questions": [
+      "Better than whitening?",
+      "Better than braces?",
+      "Better than aligners?",
+      "Better than crowns?",
+      "Better than implants?",
+      "Better than composites?",
+      "Turkey vs India?",
+      "Local clinic vs USD?",
+      "Celebrity dentist vs USD?",
+      "Invisalign first?"
+    ],
+    "emotion": "comparing",
+    "voice_response": "That's a smart question. The truth is, no treatment is always better than another.\n\nThink of eyesight. Some people need glasses, others contact lenses, and some benefit from laser surgery. The right solution depends on the person.\n\nSmile designing works the same way. Whitening, aligners, veneers, implants, and crowns all solve different problems. An Authorized USD Smile Designer first understands your smile before recommending any treatment.\n\nThe best treatment isn't the most expensive one. It's the one that's right for you.",
+    "follow_up": "Would you like me to explain which option might suit your smile best?",
+    "keywords": [
+      "comparison",
+      "braces",
+      "whitening",
+      "veneers",
+      "implants",
+      "aligners"
+    ]
+  },
+  {
+    "intent": "smile_planning",
+    "user_questions": [
+      "Why planning?",
+      "Why before treatment?",
+      "Why facial analysis?",
+      "Why smile analysis?",
+      "Why blueprint?",
+      "Why preview?",
+      "Why smile first?",
+      "Why not start with veneers?",
+      "Why planning matters?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Imagine building a house without a blueprint. Even the best materials can't guarantee a beautiful result.\n\nSmile designing works the same way. Before recommending veneers or any treatment, an Authorized USD Smile Designer studies your face, smile, expressions, and expectations to create a personalised plan.\n\nThat's why the USD philosophy always puts planning before treatment.\n\nThe better the plan, the more natural the smile.",
+    "follow_up": "Would you like to know how the USD Smile Blueprint brings that plan to life?",
+    "keywords": [
+      "planning",
+      "blueprint",
+      "analysis",
+      "preview"
+    ]
+  },
+  {
+    "intent": "smile_identity",
+    "user_questions": [
+      "What is a natural smile?",
+      "What is smile identity?",
+      "Will I look like myself?",
+      "Will I become someone else?",
+      "Can you copy celebrity smile?",
+      "Can I get actor smile?",
+      "Can I copy another person's veneers?"
+    ],
+    "emotion": "hopeful",
+    "voice_response": "That's a thoughtful question.\n\nThink about a fingerprint. Every person has one that's completely unique.\n\nYour smile is just as personal. Instead of copying someone else's teeth, USD creates a smile that complements your own face, expressions, and personality.\n\nThe goal isn't to make you look like someone else. It's to help you look like the very best version of yourself.",
+    "follow_up": "Would you like to know how your smile is personalised before any treatment begins?",
+    "keywords": [
+      "natural smile",
+      "smile identity",
+      "unique",
+      "personal"
+    ]
+  },
+  {
+    "intent": "celebrity_smiles",
+    "user_questions": [
+      "Can you copy a celebrity smile?",
+      "Can I get Virat Kohli's smile?",
+      "Can I get Deepika's smile?",
+      "Can you copy another person's veneers?",
+      "I want the same smile as...",
+      "Can you recreate a Hollywood smile?"
+    ],
+    "emotion": "curious",
+    "voice_response": "We understand the inspiration, but every smile is unique.\n\nThink of tailoring a suit. A suit made for someone else, even if it's beautiful, won't fit you perfectly.\n\nThe same is true for smiles. A celebrity's smile is designed for their face, proportions, and expressions. At USD, we use inspiration if you'd like, but we create a smile that's designed specifically for you.\n\nThe most beautiful smile is never a copy. It's uniquely yours.",
+    "follow_up": "Would you like to know how we personalise a smile to suit your face?",
+    "keywords": [
+      "celebrity",
+      "copy",
+      "virat kohli",
+      "deepika",
+      "hollywood"
+    ]
+  },
+  {
+    "intent": "ceramic_materials",
+    "user_questions": [
+      "Why ceramic?",
+      "Why porcelain?",
+      "Why zirconia?",
+      "Which material is best?",
+      "Why not composite?",
+      "Why ceramic veneers?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Different materials serve different purposes, so there isn't one material that's best for everyone.\n\nThink about building a home. Sometimes you choose wood, sometimes steel, and sometimes stone. Even the finest ceramic material cannot create a premium smile without the right planning and craftsmanship.\n\nYour Authorized USD Smile Designer recommends the most suitable material based on your smile, bite, goals, and treatment needs. Whatever the material, the craftsmanship behind it is just as important.\n\nGreat materials deserve great craftsmanship.",
+    "follow_up": "Would you like to know how dentists and Master Ceramists work together to create your smile?",
+    "keywords": [
+      "ceramic",
+      "porcelain",
+      "zirconia",
+      "composite",
+      "material"
+    ]
+  },
+  {
+    "intent": "digital_smile_design",
+    "user_questions": [
+      "What is Digital Smile Design?",
+      "Do you scan my face?",
+      "3D scanning?",
+      "Facial analysis?",
+      "Digital workflow?",
+      "Smile software?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Digital Smile Design helps us plan your smile with remarkable precision.\n\nBut digital planning is only the beginning. Once the design is complete, experienced Master Ceramists handcraft every restoration using artistic judgment, texture, colour layering, and natural detailing to transform that digital plan into a naturally beautiful smile.\n\nTechnology creates precision. Handcrafted artistry creates beauty.",
+    "follow_up": "Would you like to know whether artificial intelligence actually decides your treatment?",
+    "keywords": [
+      "digital smile design",
+      "facial analysis",
+      "scan",
+      "3D",
+      "smile software"
+    ]
+  },
+  {
+    "intent": "ai_clinical_decisions",
+    "user_questions": [
+      "Can AI make mistakes?",
+      "Can AI replace judgment?",
+      "Should I trust AI?",
+      "Is AI accurate?",
+      "Does AI decide treatment?"
+    ],
+    "emotion": "curious",
+    "voice_response": "AI is an assistant, not the decision maker.\n\nThink of a modern aircraft. Advanced computers constantly support the pilot, but the pilot is always responsible for making the final decisions.\n\nThe same is true at USD. AI helps analyse images, measurements, and facial proportions, but your treatment is planned by experienced dentists working alongside skilled Master Ceramists.\n\nTechnology provides information. Human expertise provides wisdom.",
+    "follow_up": "Would you like me to explain the first step of the Ultimate Smile Design journey?",
+    "keywords": [
+      "AI",
+      "judgment",
+      "accuracy",
+      "technology"
+    ]
+  },
+  {
+    "intent": "smile_vision_analysis",
+    "user_questions": [
+      "What is Smile Vision Analysis?",
+      "What happens during Smile Vision Analysis?",
+      "Facial analysis?",
+      "Smile analysis?",
+      "Vision Analysis?",
+      "Smile assessment?"
+    ],
+    "emotion": "curious",
+    "voice_response": "Once we understand your goals, we begin understanding your smile.\n\nThink of an eye examination. Before recommending glasses, the optometrist carefully measures your vision from different angles.\n\nSmile Vision Analysis works similarly. Your facial proportions, smile line, lip movement, bite, and natural expressions are carefully evaluated to understand what will look most balanced and natural for you.\n\nBeautiful planning begins with careful observation.",
+    "follow_up": "Would you like me to explain how the USD Smile Blueprint is created from this analysis?",
+    "keywords": [
+      "vision analysis",
+      "facial analysis",
+      "smile analysis",
+      "assessment"
+    ]
+  },
+  {
+    "intent": "smile_blueprint",
+    "user_questions": [
+      "What is the Smile Blueprint?",
+      "Smile Blueprint?",
+      "Treatment plan?",
+      "Smile plan?",
+      "Blueprint?",
+      "Personalized plan?"
+    ],
+    "emotion": "curious",
+    "voice_response": "The Smile Blueprint is your personalised smile plan.\n\nThink of a home's blueprint. It shows exactly how every part fits together before construction ever begins.\n\nUsing everything learned during your consultation and Smile Vision Analysis, your Authorized USD Smile Designer creates a customised plan that guides every step of your smile transformation.\n\nThe clearer the blueprint, the better the final result.",
+    "follow_up": "Would you like to know how you can preview your smile before treatment begins?",
+    "keywords": [
+      "blueprint",
+      "treatment plan",
+      "smile plan"
+    ]
+  },
+  {
+    "intent": "smile_preview",
+    "user_questions": [
+      "What is Smile Preview?",
+      "Can I see my smile before treatment?",
+      "Preview?",
+      "Mock-up?",
+      "Trial smile?",
+      "Can I visualize my smile?"
+    ],
+    "emotion": "hopeful",
+    "voice_response": "One of the most exciting parts of the journey is seeing your future smile before treatment begins.\n\nThink about trying on a pair of glasses before buying them. It helps you feel confident that they're right for you.\n\nThe USD Smile Preview allows you to visualise the planned result so you and your dentist can discuss it together before moving forward.\n\nConfidence begins before treatment.",
+    "follow_up": "Would you like to know what happens during the final Smile Reveal?",
+    "keywords": [
+      "preview",
+      "mockup",
+      "visualisation",
+      "trial smile"
+    ]
+  },
+  {
+    "intent": "smile_reveal",
+    "user_questions": [
+      "What is Smile Reveal?",
+      "Final smile?",
+      "Reveal?",
+      "Final appointment?",
+      "Smile Reveal?",
+      "Completion?"
+    ],
+    "emotion": "excited",
+    "voice_response": "Smile Reveal is the moment your smile journey comes together.\n\nThink of an artist finally removing the cloth covering a completed sculpture. Every stage before that moment was carefully planned to create something meaningful.\n\nAfter planning, analysis, craftsmanship, and treatment, your final smile is revealed with the confidence that it was designed specifically for you.\n\nA beautiful smile isn't created in one appointment. It's revealed after a thoughtful journey.",
+    "follow_up": "Would you like me to explain how to care for your smile after treatment?",
+    "keywords": [
+      "reveal",
+      "final smile",
+      "completion"
+    ]
+  }
+]

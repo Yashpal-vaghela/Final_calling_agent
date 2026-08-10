@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "usd-calling-agent"
+version = "0.1.0"
+description = "Ultimate Smile Design AI Voice Calling Agent"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "twilio",
+    "openai",
+    "anthropic",
+    "google-generativeai",
+    "pydantic-settings",
+    "honcho",
+    "httpx"
+]

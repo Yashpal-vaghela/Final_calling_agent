@@ -1,0 +1,15 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Virtual Environments
+.venv/
+venv/
+*.pyi
+env/
+ENV/
+*/venv/
+*/.venv/
+*/env/
+*/ENV/
