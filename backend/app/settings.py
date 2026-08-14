@@ -13,6 +13,13 @@ class Settings(BaseSettings):
     INTERNAL_KEY: str = "default_internal_secret_key"
     ALLOWED_NUMBERS: str = ""
 
+    # Tata Smartflo Configuration
+    SMARTFLO_API_KEY: str = ""
+    SMARTFLO_BEARER_TOKEN: str = ""
+    SMARTFLO_BASE_URL: str = "https://api.smartflo.tatatelebusiness.com"
+    SMARTFLO_CALLER_ID: str = ""
+    SMARTFLO_AGENT_NUMBER: str = ""
+
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",
