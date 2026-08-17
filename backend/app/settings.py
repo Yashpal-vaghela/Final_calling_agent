@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     TWILIO_ACCOUNT_SID: str = ""
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_NUMBER: str = ""
+    TWILIO_APP_HOST: str = ""
 
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-3.6-flash"
@@ -16,7 +17,7 @@ class Settings(BaseSettings):
     # Tata Smartflo Configuration
     SMARTFLO_API_KEY: str = ""
     SMARTFLO_BEARER_TOKEN: str = ""
-    SMARTFLO_BASE_URL: str = "https://api.smartflo.tatatelebusiness.com"
+    SMARTFLO_BASE_URL: str = "https://api-smartflo.tatateleservices.com"
     SMARTFLO_CALLER_ID: str = ""
     SMARTFLO_AGENT_NUMBER: str = ""
 

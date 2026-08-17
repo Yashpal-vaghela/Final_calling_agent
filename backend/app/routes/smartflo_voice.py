@@ -57,11 +57,11 @@ async def smartflo_dynamic_endpoint(request: Request):
         calls_db[str(call_id)] = call_log.to_dict()
         save_calls(calls_db)
 
-    # Determine host for WebSocket URL
-    host = request.headers.get("host", "localhost:8000")
-    protocol = "wss" if "ngrok" in host or request.url.scheme == "https" else "ws"
+    # Determine host for WebSocket URL (Smartflo regex schema requires wss://)
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host", "localhost:8000")
     
-    ws_url = f"{protocol}://{host}/smartflo/media-stream?call_sid={urllib.parse.quote(str(call_id))}"
+    # Smartflo schema strictly requires wss:// pattern (^wss://.+)
+    ws_url = f"wss://{host}/smartflo/media-stream?call_sid={urllib.parse.quote(str(call_id or 'smartflo_session'))}"
     if opening_intent:
         ws_url += f"&opening_intent={urllib.parse.quote(str(opening_intent))}"
     if lead_id:
@@ -69,11 +69,12 @@ async def smartflo_dynamic_endpoint(request: Request):
 
     print(f"[Smartflo Dynamic Endpoint] Resolved wss_url: {ws_url} for callId: {call_id}")
 
-    # Return strict Tata Smartflo JSON response schema
+    # Return strict Tata Smartflo JSON response schema (supporting both 'sucess' and 'success')
     return JSONResponse(
         status_code=200,
         content={
             "sucess": True,
+            "success": True,
             "wss_url": ws_url
         }
     )
@@ -120,6 +121,7 @@ async def smartflo_media_stream(
 
             if event_type == "connected":
                 print("[Smartflo WS] Connected event received from Smartflo.")
+                await websocket.send_text(json.dumps({"event": "connected"}))
 
             elif event_type == "start":
                 start_obj = data.get("start", {})
