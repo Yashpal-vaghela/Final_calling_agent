@@ -1,247 +1,43 @@
 {
-  "treatment_authentication": {
-    "intent": "treatment_authentication",
-    "keywords": [
-      "Is there a warranty?",
-      "Can they use another brand?",
-      "authentic",
-      "How do I know you're using your own products?",
-      "original",
-      "How do I know my restorations are genuine?",
-      "genuine",
-      "Warranty for veneers?",
-      "verify",
-      "How can I confirm my treatment is genuine?",
-      "How do I know my treatment comes from ADE?",
-      "How can I verify my treatment?",
-      "usd products",
-      "Will I receive proof?",
-      "Do you provide warranty?",
-      "Can the dentist use another laboratory?",
-      "Can I verify the products used in my treatment?",
-      "How do I know I'm getting genuine USD treatment?",
-      "Is there any guarantee?",
-      "How do I verify my veneers?",
-      "How do I know it's authentic?",
-      "Will my veneers have warranty?",
-      "authentication card",
-      "authentication",
-      "warranty",
-      "How do I know the dentist is using USD products?",
-      "How do I know my Authorized Smile Designer is using your materials?",
-      "How do I know my veneers are made by Advance Dental Export?",
-      "What is the USD Authentication Card?",
-      "Do you provide an authentication card?",
-      "proof"
-    ],
-    "reframe": "That's an excellent question — and we believe every client deserves complete confidence in their treatment.\n\nEvery genuine USD treatment is planned and delivered by an Authorized USD Smile Designer using restorations exclusively handcrafted by ADE Laboratory under the official USD protocol.\n\nEvery genuine USD case includes a USD Authentication Card with a unique verification number linked exclusively to your treatment. Simply visit the Ultimate Smile Design website and enter your number to instantly verify your restorations were genuinely crafted under the official USD protocol.\n\nYour USD Authentication Card is your proof of authenticity — because confidence doesn't come from promises. We don't just give you a promise — we give you proof.",
-    "follow_up": "Would you like me to explain what makes Ultimate Smile Design different from conventional smile designing?",
-    "emotion": "reassuring",
-    "examples": [
-      "How do I know I'm getting genuine USD treatment?",
-      "How do I know you're using your own products?",
-      "How do I know the dentist is using USD products?",
-      "How can I verify my treatment?",
-      "How do I know my veneers are made by Advance Dental Export?",
-      "How do I know my restorations are genuine?",
-      "Can the dentist use another laboratory?",
-      "Can they use another brand?",
-      "How do I verify my veneers?",
-      "Will I receive proof?",
-      "How do I know it's authentic?",
-      "Do you provide an authentication card?",
-      "What is the USD Authentication Card?",
-      "How can I confirm my treatment is genuine?",
-      "How do I know my Authorized Smile Designer is using your materials?",
-      "How do I know my treatment comes from ADE?",
-      "Can I verify the products used in my treatment?",
-      "Do you provide warranty?",
-      "Is there a warranty?",
-      "Will my veneers have warranty?",
-      "Warranty for veneers?",
-      "Is there any guarantee?"
-    ]
-  },
-  "smile_results": {
-    "intent": "smile_results",
-    "keywords": [
-      "Will I look natural?",
-      "Can I choose the color?",
-      "smile shape",
-      "preview",
-      "confidence",
-      "Will people notice?",
-      "Can I see before and after?",
-      "Will it suit my face?",
-      "Will my family notice?",
-      "Will my smile look fake?",
-      "natural smile",
-      "Can you show me a preview?",
-      "Can I smile confidently?",
-      "Can I choose the shape?",
-      "fake smile"
-    ],
-    "reframe": "That's probably the biggest concern clients have.\n\nThink about meeting an old friend who simply looks happier. You notice something has changed, but you can't immediately tell what.\n\nThat's exactly the goal of USD. Every smile is planned around your face, personality, and expressions, then handcrafted by experienced Master Ceramists so it feels natural, not artificial.\n\nPeople shouldn't notice your veneers. They should notice your smile.",
-    "follow_up": "Would you like me to explain how veneers help achieve that natural result?",
-    "emotion": "hopeful",
-    "examples": [
-      "Will I look natural?",
-      "Will people notice?",
-      "Will my smile look fake?",
-      "Can I see before and after?",
-      "Can you show me a preview?",
-      "Will it suit my face?",
-      "Can I choose the shape?",
-      "Can I choose the color?",
-      "Will my family notice?",
-      "Can I smile confidently?"
-    ]
-  },
-  "privacy_assurance": {
-    "intent": "privacy",
-    "keywords": [
-      "privacy",
-      "discretion",
-      "confidential",
-      "secret",
-      "private",
-      "nobody know",
-      "public figure",
-      "vip",
-      "discreet"
-    ],
-    "guidance": "When They Ask About Privacy:",
-    "script": "Privacy is absolutely built into everything we do. Your consultation, your records, your transformation — everything stays between you, your Authorized Smile Designer, and our team. We work with many high-profile individuals, and discretion is never an afterthought — it's the foundation."
-  },
-  "exclusivity_assurance": {
-    "intent": "exclusivity",
-    "keywords": [
-      "exclusive",
-      "only",
-      "limited",
-      "special",
-      "unique",
-      "not available everywhere"
-    ],
-    "guidance": "When They Ask About Exclusivity:",
-    "script": "USD isn't available everywhere — and that's by design. Only Authorized Smile Designers who complete our rigorous training can offer USD. And every restoration is handcrafted exclusively at our laboratory. This isn't mass-produced dentistry. It's bespoke. It's exclusive. It's yours."
-  },
-  "transfer_triggers": {
-    "intent": "human_transfer",
-    "keywords": [
-      "real person",
-      "human",
-      "agent",
-      "doctor",
-      "dentist",
-      "call back",
-      "representative",
-      "speak to someone",
-      "emergency"
-    ],
-    "guidance": "When to Transfer Immediately:",
-    "conditions": [
-      "1. Caller explicitly asks: \"I want to talk to a real person / doctor / dentist.\"",
-      "2. Caller has a specific medical emergency or severe pain.",
-      "3. Caller asks a question you genuinely cannot answer.",
-      "4. Caller is ready to book and wants to schedule NOW.",
-      "5. Caller is frustrated or angry — human empathy is needed.",
-      "6. Caller asks for a callback from the team."
-    ]
-  },
-  "transfer_wording": {
-    "intent": "transfer_script",
-    "guidance": "Transfer Phrase:",
-    "script": "Absolutely, I'd be happy to connect you. ... Let me transfer you to our client care team. They'll be able to [book your consultation / answer that specifically / connect you with a Smile Designer]. Just one moment please."
-  },
-  "pre_transfer_capture": {
-    "intent": "pre_transfer_checklist",
-    "guidance": "Collect Before Transfer:",
-    "checklist": [
-      "Name",
-      "City / Location",
-      "Phone number (if not already known)",
-      "Brief reason for call (so the human agent is prepared)",
-      "Preferred language"
-    ],
-    "script": "Before I connect you, may I have your name and city so our team can help you better?"
-  },
-  "exploring_ai_preview": {
-    "intent": "exploring_ai",
-    "keywords": [
-      "just looking",
-      "exploring",
-      "not sure yet",
-      "browsing",
-      "curious",
-      "preview",
-      "see first",
-      "try"
-    ],
-    "guidance": "When They're Just Exploring:",
-    "script": "Absolutely no pressure — I understand this is a personal decision. Can I suggest something? Try our AI Smile Preview — just upload a selfie and see how a smile designed for YOUR face could look. It's instant, private, and takes about 30 seconds. It's a wonderful first step."
-  },
-  "wedding_life_event": {
-    "intent": "wedding_event",
-    "keywords": [
-      "wedding",
-      "marriage",
-      "bride",
-      "groom",
-      "reception",
-      "event",
-      "function",
-      "interview",
-      "big day",
-      "occasion"
-    ],
-    "guidance": "When They Mention a Life Event (Wedding, Interview, etc.):",
-    "script": "Oh, that's so exciting! You know, many of our clients come to us before their big moments — and honestly, there's nothing like walking into a room knowing your smile is absolutely perfect. When is the event? Let me make sure we plan your timeline perfectly."
-  },
-  "competitor_comparison": {
-    "intent": "comparison",
-    "keywords": [
-      "other clinic",
-      "compare",
-      "why you",
-      "what makes you different",
-      "traditional dentist",
-      "another brand",
-      "vs"
-    ],
-    "guidance": "When They Compare to Other Options:",
-    "script": "That's smart — you should always explore your options. What I'd say is this: most dental options are designed to fix teeth. USD is designed to craft YOUR signature smile. It's the difference between getting a suit altered and having one bespoke-made by a master tailor. Both work — but only one was made for YOU."
-  },
-  "hesitant_unsure": {
-    "intent": "hesitant_general",
-    "keywords": [
-      "not sure",
-      "don't know",
-      "maybe",
-      "confused",
-      "overwhelmed",
-      "hesitant"
-    ],
-    "guidance": "When They Seem Hesitant or Say \"I don't know\":",
-    "script": "No problem at all! Most people aren't sure where to start. ... Are you looking to improve something about your smile, or are you just exploring your options?"
-  },
-  "opening_variants": {
-    "intent": "opening_greeting",
-    "guidance": "Opening (when they call in):",
-    "scripts": {
-      "en": "Hi! Welcome to Ultimate Smile Design. I'm Kiara — it's wonderful to connect with you. Which language would you like to speak? English, Hindi, or Gujarati?",
-      "hi": "Namaste! Ultimate Smile Design mein aapka swagat hai. Main Kiara hu — aapse baat karke bahut khushi hui. Aap kis bhasha mein baat karna pasand karenge? English, Hindi, ya Gujarati?",
-      "gu": "Namaste! Ultimate Smile Design ma aapnu swagat che. Hu Kiara hu — tame sathe vaat kari ne bahut saru lagyu. Tame kyi bhasha ma vaat karva mangojo? English, Hindi, ya Gujarati?",
-      "hinglish": "Hi! Welcome to Ultimate Smile Design. Main Kiara hu — really nice to connect. Which language would you prefer to speak? English, Hindi, or Gujarati?"
+  "intents": [
+    {
+      "intent": "treatment_authentication",
+      "user_questions": [
+        "How do I know I'm getting genuine USD treatment?",
+        "How do I verify my treatment?",
+        "Will I receive proof it's genuine?",
+        "Is there a warranty?",
+        "Is there any guarantee?"
+      ],
+      "emotion": "reassuring",
+      "voice_response": "Every genuine Ultimate Smile Design treatment is planned by an Authorized Smile Designer and handcrafted exclusively by the Advance Dental Export laboratory. We provide an Authentication Card for every case containing your case details, which you can check and verify on our official website at ultimatesmiledesign.com. We don't just give you a promise, we give you proof.",
+      "follow_up": "Would you like me to explain what makes USD different from conventional smile designing?",
+      "keywords": [
+        "authentication",
+        "genuine",
+        "verify",
+        "warranty",
+        "proof"
+      ]
+    },
+    {
+      "intent": "smile_results",
+      "user_questions": [
+        "Will I look natural?",
+        "Will people notice?",
+        "Will my smile look fake?",
+        "Will it suit my face?",
+        "Can I choose the shape or colour?"
+      ],
+      "emotion": "hopeful",
+      "voice_response": "That's probably the biggest question clients have. Think about meeting an old friend who simply looks happier — you notice something's changed, but you can't quite say what. That's the goal: your smile is planned around your face and expressions, then handcrafted so it feels natural, not artificial.",
+      "follow_up": "Would you like to know how veneers help achieve that natural result?",
+      "keywords": [
+        "natural smile",
+        "fake smile",
+        "preview",
+        "confidence"
+      ]
     }
-  },
-  "closing_templates": {
-    "intent": "closing",
-    "guidance": "Closing:",
-    "scripts": {
-      "en": "It was such a pleasure speaking with you. Whenever you're ready to take the next step, we're here. Take care — and here's to your most confident smile yet.",
-      "hi": "Aapse baat karke sachmein bahut accha laga. Jab bhi aap ready ho, hum yahan hain. Apna khayal rakhiey — aur aapke sabse confident smile ke liye, hum tayyar hain.",
-      "gu": "Tame sathe vaat kari ne khareekh saru lagyu. Jyare pan tame tayyar hoy, hu ahiya chu. Apu dhyaan rakhjo — ane tame na confidence bharelu smile mate, hu tayyar chu."
-    }
-  }
+  ]
 }

@@ -40,17 +40,22 @@ class VoicePipelineOrchestrator:
 
         # Determine greeting based on call intent
         if self.opening_intent == "follow-up":
-            name = self.lead_name or "there"
-            city = self.lead_city or "your city's"
-            self.greeting = (
-                f"Hi {name}, this is Kiara from Ultimate Smile Design, "
-                f"following up on your {city} smile consultation enquiry. How can I help you today? "
-                f"Which language would you prefer to speak? English, Hindi, or Gujarati?"
-            )
+            if self.lead_name and self.lead_name.lower() != "there":
+                city_str = f" {self.lead_city}" if self.lead_city else ""
+                self.greeting = (
+                    f"Hi {self.lead_name}, this is Kiara from Ultimate Smile Design, "
+                    f"following up on your{city_str} smile consultation enquiry. How can I help you today?"
+                )
+            else:
+                city_str = f" {self.lead_city}" if self.lead_city else ""
+                self.greeting = (
+                    f"Hello! This is Kiara from Ultimate Smile Design, "
+                    f"following up on your{city_str} smile consultation enquiry. May I know your name, please?"
+                )
         else:
             self.greeting = (
                 "Hello! Thank you for calling Ultimate Smile Design. "
-                "My name is Kiara. Which language would you like to speak? English, Hindi, or Gujarati?"
+                "My name is Kiara. May I know your name, please?"
             )
 
         # Initialize session and Gemini Live client
@@ -110,6 +115,12 @@ class VoicePipelineOrchestrator:
         self.tts_provider_name = "Gemini Live"
         self.mulaw_frame_size = 160
         self.output_buffer = bytearray()
+        self._send_audio_task: Optional[asyncio.Task] = None
+
+        # Persistent resampler states per stream stage
+        self._inbound_resample_state: Optional[tuple] = None
+        self._outbound_resample_state_24_to_16: Optional[tuple] = None
+        self._outbound_resample_state_16_to_8: Optional[tuple] = None
         
         self._is_running: bool = False
         self._stopped: bool = False
@@ -155,36 +166,54 @@ class VoicePipelineOrchestrator:
             await asyncio.sleep(1)
 
     async def _send_buffered_live_audio(self) -> None:
-        """Send buffered audio to Twilio WebSocket in consistent 160-byte (20ms) mulaw frames in live mode."""
-        while len(self.output_buffer) >= getattr(self, "mulaw_frame_size", 160) and self._is_running:
-            frame = bytes(self.output_buffer[:self.mulaw_frame_size])
-            del self.output_buffer[:self.mulaw_frame_size]
-            payload = base64.b64encode(frame).decode("utf-8")
-            media_message = {
-                "event": "media",
-                "streamSid": self.stream_sid,
-                "media": {"payload": payload},
-            }
-            if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
-                try:
-                    await self.websocket.send_text(json.dumps(media_message))
-                except Exception as e:
-                    print(f"[Orchestrator Warning] Failed to send buffered live audio: {e}")
+        """Send buffered audio to WebSocket in consistent 160-byte (20ms) mulaw frames with wall-clock pacing.
+
+        Uses time.monotonic() to compute the exact remaining sleep after each WebSocket send,
+        so accumulated loop and I/O overhead does not stretch speech playback speed.
+        """
+        FRAME_DURATION = 0.02  # 20 ms per 160-byte 8 kHz μ-law frame
+        try:
+            next_send_at = time.monotonic()
+            while len(self.output_buffer) >= getattr(self, "mulaw_frame_size", 160) and self._is_running and not self._stopped:
+                frame = bytes(self.output_buffer[:self.mulaw_frame_size])
+                del self.output_buffer[:self.mulaw_frame_size]
+                payload = base64.b64encode(frame).decode("utf-8")
+                media_message = {
+                    "event": "media",
+                    "streamSid": self.stream_sid,
+                    "media": {"payload": payload},
+                }
+                if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
+                    try:
+                        await self.websocket.send_text(json.dumps(media_message))
+                    except Exception as e:
+                        print(f"[Orchestrator Warning] Failed to send buffered live audio: {e}")
+                        break
+                else:
                     break
-            else:
-                break
+                next_send_at += FRAME_DURATION
+                sleep_for = next_send_at - time.monotonic()
+                if sleep_for > 0:
+                    await asyncio.sleep(sleep_for)
+        except asyncio.CancelledError:
+            pass
 
     async def _on_live_audio_output(self, data: bytes) -> None:
         """Callback for Gemini Live audio output chunks (24kHz 16-bit PCM)."""
         if not self._is_running or self._stopped or not self.stream_sid:
             return
         try:
-            intermediate, _ = audioop.ratecv(data, 2, 1, 24000, 16000, None)
-            resampled_data, _ = audioop.ratecv(intermediate, 2, 1, 16000, 8000, None)
+            intermediate, self._outbound_resample_state_24_to_16 = audioop.ratecv(
+                data, 2, 1, 24000, 16000, self._outbound_resample_state_24_to_16
+            )
+            resampled_data, self._outbound_resample_state_16_to_8 = audioop.ratecv(
+                intermediate, 2, 1, 16000, 8000, self._outbound_resample_state_16_to_8
+            )
             mulaw_data = audioop.lin2ulaw(resampled_data, 2)
             self.output_buffer.extend(mulaw_data)
             self.session.transition_state("speaking")
-            await self._send_buffered_live_audio()
+            if self._send_audio_task is None or self._send_audio_task.done():
+                self._send_audio_task = asyncio.create_task(self._send_buffered_live_audio())
         except Exception as e:
             print(f"[Orchestrator Error] Error sending live audio to Twilio: {e}")
 
@@ -193,7 +222,11 @@ class VoicePipelineOrchestrator:
         if self._stopped:
             return
         print("[Orchestrator] Gemini Live server interruption received! Clearing output buffer and Twilio stream.")
+        if getattr(self, "_send_audio_task", None) and not self._send_audio_task.done():
+            self._send_audio_task.cancel()
         self.output_buffer.clear()
+        self._outbound_resample_state_24_to_16 = None
+        self._outbound_resample_state_16_to_8 = None
         self.session.transition_state("listening")
         self._waiting_for_user_since = None
         self._silence_state = "active"
@@ -274,7 +307,9 @@ class VoicePipelineOrchestrator:
         if self.gemini_live_client and not getattr(self.gemini_live_client, "_closed", False):
             try:
                 pcm8k = audioop.ulaw2lin(audio_bytes, 2)
-                pcm16k, _ = audioop.ratecv(pcm8k, 2, 1, 8000, 16000, None)
+                pcm16k, self._inbound_resample_state = audioop.ratecv(
+                    pcm8k, 2, 1, 8000, 16000, self._inbound_resample_state
+                )
                 await self.gemini_live_client.send_audio(pcm16k)
             except Exception as e:
                 print(f"[Orchestrator Error] Failed to process and send live audio: {e}")
@@ -285,8 +320,13 @@ class VoicePipelineOrchestrator:
             return
         self._stopped = True
         self._is_running = False
+        self._inbound_resample_state = None
+        self._outbound_resample_state_24_to_16 = None
+        self._outbound_resample_state_16_to_8 = None
         if getattr(self, "_silence_monitor_task", None) and not self._silence_monitor_task.done():
             self._silence_monitor_task.cancel()
+        if getattr(self, "_send_audio_task", None) and not self._send_audio_task.done():
+            self._send_audio_task.cancel()
         print(f"[Orchestrator] Stopping voice pipeline for CallSid: {self.call_id}")
         
         if getattr(self, "gemini_live_client", None):

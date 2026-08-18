@@ -154,5 +154,17 @@
     "duration_seconds": null,
     "transcript": [],
     "status": "started"
+  },
+  "test1234": {
+    "id": "a466a457-a174-4f45-bb77-a39753035bf4",
+    "twilio_call_sid": "test1234",
+    "direction": "inbound",
+    "from_number": "",
+    "to_number": "",
+    "started_at": "2026-08-17T11:56:12.434115+00:00",
+    "ended_at": null,
+    "duration_seconds": null,
+    "transcript": [],
+    "status": "started"
   }
 }

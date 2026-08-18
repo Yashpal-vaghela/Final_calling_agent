@@ -1,117 +1,35 @@
-[
-  {
-    "intent": "consultation_booking",
-    "user_questions": [
-      "Where are you?",
-      "Which city?",
-      "Nearest clinic?",
-      "Book appointment.",
-      "Consultation fee?",
-      "Working hours?",
-      "Emergency?",
-      "Online consultation?",
-      "WhatsApp?",
-      "Phone number?"
-    ],
-    "emotion": "ready",
-    "voice_response": "Your journey begins with a private, one-on-one consultation. No waiting rooms. No rushed decisions. Just you, your Smile Designer, and a conversation about what your smile should say about you.\n\nUltimate Smile Design works through a network of Authorized USD Smile Designers across different cities. I can help you find the nearest location, explain the process, or connect you with the right team.\n\nHow can I help you get started today?",
-    "keywords": [
-      "booking",
-      "consultation",
-      "clinic",
-      "appointment",
-      "nearest clinic"
-    ]
-  },
-  {
-    "intent": "smile_discovery_consultation",
-    "user_questions": [
-      "What is the Smile Discovery Consultation?",
-      "What happens in the first consultation?",
-      "First appointment?",
-      "Initial consultation?",
-      "Smile Discovery?",
-      "Consultation process?"
-    ],
-    "emotion": "curious",
-    "voice_response": "Every great journey begins with understanding.\n\nThink of meeting an architect for the first time. Before drawing any plans, they want to understand your vision, lifestyle, and expectations.\n\nThe USD Smile Discovery Consultation follows the same approach. Your Authorized USD Smile Designer listens to your concerns, understands your goals, evaluates your smile, and begins building a clear picture of what you want to achieve.\n\nEvery beautiful smile begins with listening.",
-    "follow_up": "The next step is the USD Smile Vision Analysis. Would you like me to explain what happens there?",
-    "keywords": [
-      "discovery consultation",
-      "consultation",
-      "first visit"
-    ]
-  },
-  {
-    "intent": "consultation_duration",
-    "user_questions": [
-      "How long is the consultation?",
-      "How much time does it take?",
-      "Is it a long process?",
-      "Quick consultation?"
-    ],
-    "emotion": "curious",
-    "voice_response": "Your first Smile Discovery Consultation typically takes around 30 to 45 minutes. This gives your Authorized USD Smile Designer enough time to understand your concerns, evaluate your smile, discuss your goals, and begin planning the next steps.\n\nWe never rush a consultation because every beautiful smile begins with careful listening.",
-    "follow_up": "Would you like me to explain what happens during the Smile Vision Analysis?",
-    "keywords": [
-      "duration",
-      "time",
-      "how long",
-      "consultation"
-    ]
-  },
-  {
-    "intent": "consultation_cost",
-    "user_questions": [
-      "Is consultation free?",
-      "How much does consultation cost?",
-      "Do I need to pay for the first visit?",
-      "Is there a consultation fee?"
-    ],
-    "emotion": "price_conscious",
-    "voice_response": "The consultation is an investment in clarity. Your Smile Designer will explain all fees upfront — no surprises, no hidden charges.\n\nSome clinics offer a complimentary initial consultation, while others may charge a fee that is adjusted toward your treatment. I recommend asking the clinic directly when you book so there are no surprises.",
-    "follow_up": "Would you like me to help you find an Authorized USD Smile Designer near you?",
-    "keywords": [
-      "consultation fee",
-      "free consultation",
-      "cost",
-      "price"
-    ]
-  },
-  {
-    "intent": "what_to_bring",
-    "user_questions": [
-      "What should I bring?",
-      "Do I need to bring anything?",
-      "What documents do I need?",
-      "Should I bring old dental records?"
-    ],
-    "emotion": "curious",
-    "voice_response": "You don't need to bring anything special for your first consultation. Just come as you are.\n\nIf you have any previous dental records, X-rays, or photos of your smile that you'd like to share, feel free to bring them along — but they're not required.\n\nThe most important thing to bring is an open conversation about what you'd like to change about your smile.",
-    "keywords": [
-      "bring",
-      "documents",
-      "records",
-      "preparation"
-    ]
-  },
-  {
-    "intent": "virtual_consultation",
-    "user_questions": [
-      "Can I get a virtual consultation?",
-      "Online consultation available?",
-      "Can I consult from home?",
-      "Video call consultation?",
-      "Remote consultation?"
-    ],
-    "emotion": "curious",
-    "voice_response": "For our out-of-town clients, we offer a premium virtual consultation experience — same attention, same detail, from anywhere in the world.\n\nSome Authorized USD Smile Designers offer virtual consultations to get started. This is a convenient way to discuss your concerns and understand your options from the comfort of your home.\n\nHowever, a complete smile evaluation and treatment planning typically requires an in-person visit for detailed assessment.\n\nWould you like me to help you find a clinic that offers virtual consultations?",
-    "keywords": [
-      "virtual",
-      "online",
-      "remote",
-      "video call",
-      "home consultation"
-    ]
-  }
-]
+{
+  "intents": [
+    {
+      "intent": "consultation_booking",
+      "user_questions": [
+        "Where are you?",
+        "Which city?",
+        "Nearest clinic?",
+        "Book appointment.",
+        "Consultation fee?",
+        "Working hours?",
+        "Online consultation?",
+        "Phone number?"
+      ],
+      "emotion": "ready",
+      "voice_response": "I'd be happy to help with that. USD works through a network of Authorized USD Smile Designers across different cities, and I can connect you with the nearest one. Your first consultation is about understanding your smile and the options that suit you.",
+      "follow_up": "Which city are you based in, so I can find the right Smile Designer for you?",
+      "keywords": ["booking", "consultation", "clinic", "appointment", "nearest clinic"]
+    },
+    {
+      "intent": "smile_discovery_consultation",
+      "user_questions": [
+        "What is the Smile Discovery Consultation?",
+        "What happens in the first consultation?",
+        "First appointment?",
+        "Initial consultation?",
+        "Consultation process?"
+      ],
+      "emotion": "curious",
+      "voice_response": "Think of meeting an architect for the first time — before any plans are drawn, they want to understand your vision. The USD Smile Discovery Consultation works the same way. Your Authorized Smile Designer listens to your concerns, understands your goals, and evaluates your smile before anything is planned.",
+      "follow_up": "Would you like to know what happens right after that, in the Smile Vision Analysis?",
+      "keywords": ["discovery consultation", "consultation", "first visit"]
+    }
+  ]
+}

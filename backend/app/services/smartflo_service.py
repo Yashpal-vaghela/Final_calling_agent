@@ -48,11 +48,12 @@ class SmartfloClient:
             "Authorization": f"Bearer {self.bearer_token}"
         }
 
-        target_caller_id = caller_id or self.caller_id
-        target_agent = agent_number or self.agent_number
+        target_caller_id = (caller_id or self.caller_id or "").strip().lstrip("+")
+        target_agent = (agent_number or self.agent_number or "").strip().lstrip("+")
+        target_customer = (customer_number or "").strip().lstrip("+")
         
         payload: Dict[str, Any] = {
-            "customer_number": customer_number,
+            "customer_number": target_customer,
             "agent_number": target_agent,
             "caller_id": target_caller_id,
             "async": 1

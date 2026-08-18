@@ -1,31 +1,32 @@
-[
-  {
-    "intent": "investment_philosophy",
-    "user_questions": [
-      "How much does it cost?",
-      "What's the investment?",
-      "What determines the price?",
-      "Why expensive?",
-      "Is it worth it?",
-      "What's included?",
-      "Hidden charges?",
-      "Can I finance it?",
-      "Premium option?",
-      "Average cost?",
-      "How much for full smile?",
-      "Can I negotiate?"
-    ],
-    "emotion": "price_conscious",
-    "voice_response": "Every smile is unique, and so is its investment. The final figure depends on your specific case — the number of units, the complexity, the materials, and the artistry required.\n\nWhat I can tell you is this: USD clients don't ask 'How much does it cost?' They ask 'Is it worth it?' And the answer, from thousands of clients who've transformed their smiles, is always yes.\n\nYour Authorized Smile Designer will give you a complete, transparent investment breakdown during your consultation — no surprises, no pressure.\n\nWould you like to understand what goes into creating a USD smile — so you can see exactly where your investment goes?",
-    "follow_up": "Would you like to understand what goes into creating a USD smile — so you can see exactly where your investment goes?",
-    "keywords": [
-      "cost",
-      "price",
-      "EMI",
-      "finance",
-      "expensive",
-      "budget",
-      "investment"
-    ]
-  }
-]
+{
+  "usage_rule": "The ₹25,000 starting figure below is an EXAMPLE, not a mandatory line for every answer. Use it only when the caller directly asks about cost, price, EMI, or 'what's included'. Do not volunteer it in unrelated answers (trust, treatment, comparison, etc.), and do not repeat it more than once per call unless the caller asks about price again.",
+  "intents": [
+    {
+      "intent": "smile_cost",
+      "user_questions": [
+        "How much does it cost?",
+        "Why is it expensive?",
+        "Can I get EMI?",
+        "Is it worth it?",
+        "What's included?",
+        "Any hidden charges?",
+        "Cheapest option?",
+        "Average cost?",
+        "How much for a full smile?",
+        "Can I negotiate?"
+      ],
+      "emotion": "price_conscious",
+      "voice_response": "Treatment starts from ₹25,000, but the final cost depends on your specific treatment and requirements. The exact investment depends on the material selected, the number of units, your Authorized Smile Designer's expertise, and the handcrafted laboratory work involved. Your precise plan and cost are confirmed only after your smile assessment.",
+      "follow_up": "Would you like me to explain what usually determines that final cost?",
+      "keywords": ["cost", "price", "EMI", "expensive", "hidden charges"]
+    },
+    {
+      "intent": "budget",
+      "user_questions": ["I have a limited budget.", "What can I get within my budget?", "I can't afford the full treatment right now."],
+      "emotion": "price_conscious",
+      "voice_response": "Thank you for sharing that. The right treatment depends on your smile, your goals, and your budget — sometimes a simpler treatment is all that's needed, and sometimes it's planned in stages. We never recommend more than you actually need.",
+      "follow_up": "Would you like me to explain what options might fit your budget?",
+      "keywords": ["budget", "afford", "staged treatment"]
+    }
+  ]
+}

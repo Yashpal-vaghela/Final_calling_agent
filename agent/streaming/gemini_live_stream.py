@@ -69,7 +69,7 @@ class GeminiLiveStreamClient:
         self.voice_name = (
             voice_name 
             or getattr(settings, "GEMINI_LIVE_VOICE", None) 
-            or os.environ.get("GEMINI_LIVE_VOICE", "Puck")
+            or os.environ.get("GEMINI_LIVE_VOICE", "Leda")
         )
 
         # Build system instruction incorporating conversational context
@@ -89,8 +89,7 @@ class GeminiLiveStreamClient:
                 f"## CURRENT SESSION (LIVE VOICE CALL)\n"
                 f"- preferred_language: {lang_instruction}\n"
                 f"- call_id: {self.call_id}\n"
-                f"- session_start: {datetime.now(timezone.utc).isoformat()}\n"
-                f"- call_mode: REAL-TIME TELEPHONY AUDIO STREAM (Keep voice replies strictly to 1-2 conversational sentences with warmth and brevity. No lists or monologues).\n"
+                f"- call_mode: REAL-TIME TELEPHONY AUDIO STREAM (Deliver warm, natural conversational responses of 2-4 sentences, proactively weaving in intuitive real-world comparisons/examples to explain concepts, ending with a natural follow-up question. No dry monologues or reading lists).\n"
             )
 
         if initial_greeting:
