@@ -60,26 +60,64 @@ class KnowledgeRetriever(ABC):
 class JSONFaqRetriever(KnowledgeRetriever):
     """
     Concrete implementation of KnowledgeRetriever using lexical scoring and keyword match
-    against structured FAQ data. Serves as Phase 1 retrieval engine before vector embedding RAG.
+    against structured FAQ and domain knowledge data in data/knowledge/. Serves as Phase 1 retrieval engine before vector embedding RAG.
     """
     def __init__(self, data_path: Optional[str] = None):
         if data_path is None:
             root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-            data_path = os.path.join(root_dir, "data", "faq_knowledge.json")
+            data_path = os.path.join(root_dir, "data", "knowledge")
         self.data_path = data_path
         self._knowledge_items: List[Dict[str, Any]] = []
         self.load_data()
 
     def load_data(self) -> None:
-        """Loads the structured FAQ JSON file into memory."""
+        """Loads all JSON knowledge files from data/knowledge directory into memory."""
+        self._knowledge_items.clear()
         if not os.path.exists(self.data_path):
-            print(f"[JSONFaqRetriever] Warning: data file not found at {self.data_path}")
+            print(f"[JSONFaqRetriever] Warning: data path not found at {self.data_path}")
             return
-        try:
-            with open(self.data_path, "r", encoding="utf-8") as f:
-                self._knowledge_items = json.load(f)
-        except Exception as e:
-            print(f"[JSONFaqRetriever Error] Failed to load JSON knowledge: {e}")
+
+        files_to_load = []
+        if os.path.isdir(self.data_path):
+            for fname in sorted(os.listdir(self.data_path)):
+                if fname.endswith(".json"):
+                    files_to_load.append((os.path.join(self.data_path, fname), fname[:-5]))
+        else:
+            files_to_load.append((self.data_path, "knowledge"))
+
+        for fpath, category in files_to_load:
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                
+                # Check for "intents" list format (standard in data/knowledge/*.json)
+                if isinstance(data, dict) and "intents" in data and isinstance(data["intents"], list):
+                    for idx, item in enumerate(data["intents"]):
+                        intent_name = item.get("intent", f"{category}_{idx}")
+                        content = item.get("voice_response") or item.get("answer") or item.get("content") or ""
+                        if item.get("follow_up"):
+                            content = f"{content} {item.get('follow_up')}".strip()
+                        
+                        keywords = list(item.get("keywords", []))
+                        user_questions = item.get("user_questions", [])
+                        if isinstance(user_questions, list):
+                            keywords.extend(user_questions)
+
+                        self._knowledge_items.append({
+                            "id": intent_name,
+                            "topic": category,
+                            "intent": intent_name,
+                            "keywords": [kw.lower() for kw in keywords if isinstance(kw, str) and kw.strip()],
+                            "related_topics": [category],
+                            "content": content,
+                            "priority": 5
+                        })
+                elif isinstance(data, list):
+                    for idx, item in enumerate(data):
+                        if isinstance(item, dict):
+                            self._knowledge_items.append(item)
+            except Exception as e:
+                print(f"[JSONFaqRetriever Error] Failed to load JSON knowledge from {fpath}: {e}")
 
     def _tokenize(self, text: str) -> List[str]:
         """Tokenizes text, cleans symbols, and filters common stop words."""

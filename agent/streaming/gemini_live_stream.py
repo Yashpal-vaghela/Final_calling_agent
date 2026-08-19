@@ -50,10 +50,12 @@ class GeminiLiveStreamClient:
         tools: Optional[list] = None,
         tool_mapping: Optional[Dict[str, Callable]] = None,
         system_instruction: Optional[str] = None,
+        caller_context: Optional[Dict[str, Any]] = None,
     ):
         self.call_id = call_id or "live-session"
         self.preferred_language = preferred_language
         self.input_sample_rate = input_sample_rate
+        self.caller_context = caller_context or {}
         
         # Load credentials and configuration from settings with fallback to environment
         self.api_key = getattr(settings, "GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY")
@@ -69,7 +71,7 @@ class GeminiLiveStreamClient:
         self.voice_name = (
             voice_name 
             or getattr(settings, "GEMINI_LIVE_VOICE", None) 
-            or os.environ.get("GEMINI_LIVE_VOICE", "Leda")
+            or os.environ.get("GEMINI_LIVE_VOICE", "Callirrhoe")
         )
 
         # Build system instruction incorporating conversational context
@@ -91,6 +93,40 @@ class GeminiLiveStreamClient:
                 f"- call_id: {self.call_id}\n"
                 f"- call_mode: REAL-TIME TELEPHONY AUDIO STREAM (Deliver warm, natural conversational responses of 2-4 sentences, proactively weaving in intuitive real-world comparisons/examples to explain concepts, ending with a natural follow-up question. No dry monologues or reading lists).\n"
             )
+
+        if self.caller_context:
+            context_lines = []
+            name = self.caller_context.get("name")
+            phone = self.caller_context.get("phone")
+            email = self.caller_context.get("email")
+            city = self.caller_context.get("city")
+            subject = self.caller_context.get("subject")
+            message = self.caller_context.get("message") or self.caller_context.get("notes")
+
+            if name:
+                context_lines.append(f"- Name: {name} (Known outbound caller — per Section 7, DO NOT ask for caller's name again)")
+            if phone:
+                context_lines.append(f"- Phone: {phone}")
+            if email:
+                context_lines.append(f"- Email: {email}")
+            if city:
+                context_lines.append(f"- City: {city}")
+            if subject:
+                context_lines.append(f"- Subject / Topic: {subject}")
+            if message:
+                context_lines.append(f"- Message / Enquiry Details: {message}")
+
+            if context_lines:
+                instruction_text = (
+                    "When the call starts: if Subject and/or Message are provided above, answer the question or topic from their message first using our knowledge base and guidance, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                    "If Subject and Message are empty, follow standard conversation behavior. "
+                    "DO NOT ask for information that is already provided (especially the caller's name)."
+                )
+                self.system_instruction += (
+                    f"\n\n## CALLER INFORMATION (FROM SUBMITTED CONTACT FORM)\n"
+                    + "\n".join(context_lines)
+                    + f"\n({instruction_text})\n"
+                )
 
         if initial_greeting:
             self.system_instruction += f"\nNote: You have just initiated the conversation by greeting the caller: '{initial_greeting}'"

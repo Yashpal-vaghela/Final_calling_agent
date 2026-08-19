@@ -5,7 +5,7 @@ import uuid
 
 class Call(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    twilio_call_sid: str
+    call_sid: str
     direction: str
     from_number: str
     to_number: str

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultimate Smile Design — Outbound Consultation Form</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #080B11;
+      --bg-secondary: #0F1420;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --bg-card-border: rgba(212, 175, 55, 0.2);
+      --bg-card-border-focus: rgba(212, 175, 55, 0.6);
+      --gold-primary: #D4AF37;
+      --gold-light: #F3E5AB;
+      --gold-gradient: linear-gradient(135deg, #ECC85B 0%, #D4AF37 50%, #A67C1E 100%);
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --accent-glow: rgba(212, 175, 55, 0.15);
+      --input-bg: rgba(10, 14, 23, 0.8);
+      --input-border: rgba(148, 163, 184, 0.15);
+      --success-green: #10B981;
+      --error-red: #EF4444;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      background-image: 
+        radial-gradient(circle at 20% 15%, rgba(212, 175, 55, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 80% 85%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
+        linear-gradient(180deg, #080B11 0%, #0D121D 100%);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 620px;
+    }
+
+    .brand-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .brand-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      color: var(--gold-light);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .brand-tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold-primary);
+      box-shadow: 0 0 8px var(--gold-primary);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .brand-title span {
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 32px 28px;
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.5),
+        0 0 30px var(--accent-glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gold-gradient);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--gold-light);
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .required-badge {
+      color: var(--gold-primary);
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    .locked-badge {
+      color: var(--gold-primary);
+      font-size: 11px;
+      font-weight: 500;
+      background: rgba(212, 175, 55, 0.12);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+    }
+
+    input, textarea {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13.5px;
+      outline: none;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--gold-primary);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+      background: rgba(15, 20, 32, 0.95);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    input.locked-input {
+      background: rgba(10, 14, 23, 0.6);
+      border-color: rgba(212, 175, 55, 0.25);
+      color: var(--gold-light);
+      font-weight: 600;
+      cursor: not-allowed;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 85px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: var(--gold-gradient);
+      color: #080B11;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.25);
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 25px rgba(212, 175, 55, 0.35);
+      filter: brightness(1.05);
+    }
+
+    .submit-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #080B11;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status-banner {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      display: none;
+      line-height: 1.4;
+    }
+
+    .status-banner.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6EE7B7;
+    }
+
+    .status-banner.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #FCA5A5;
+    }
+
+    .status-title {
+      font-weight: 700;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-details {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 18px;
+    }
+
+    .footer-note a {
+      color: var(--gold-primary);
+      text-decoration: none;
+    }
+
+    @media (max-width: 540px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .brand-title {
+        font-size: 24px;
+      }
+      .form-card {
+        padding: 24px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand-header">
+      <div class="brand-tag">
+        <span class="brand-tag-dot"></span>
+        Advance Dental Export
+      </div>
+      <h1 class="brand-title">Ultimate Smile <span>Design</span></h1>
+      <p class="brand-subtitle">Fill in the caller's consultation details before initiating the outbound voice session with Kiara.</p>
+    </div>
+
+    <div class="form-card">
+      <form id="contactForm">
+        <div class="form-grid">
+          
+          <div class="form-group">
+            <label for="name">Full Name <span class="required-badge">*</span></label>
+            <input type="text" id="name" name="name" placeholder="e.g. Yashpal Vaghela" required autofocus>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address <span class="required-badge">*</span></label>
+            <input type="email" id="email" name="email" placeholder="e.g. yashpal@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">
+              Phone Number
+              <span class="locked-badge" id="phoneBadge">Target Destination</span>
+            </label>
+            <input type="tel" id="phone" name="phone" placeholder="+91 98765 43210" class="locked-input" readonly required>
+          </div>
+
+          <div class="form-group">
+            <label for="city">City <span class="required-badge">*</span></label>
+            <input type="text" id="city" name="city" placeholder="e.g. Surat, Mumbai, Ahmedabad" required>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="subject">Subject / Consultation Topic</label>
+            <input type="text" id="subject" name="subject" placeholder="e.g. Smile Transformation with Master Ceramists">
+          </div>
+
+          <div class="form-group full-width">
+            <label for="message">Message / Enquiry Notes</label>
+            <textarea id="message" name="message" placeholder="e.g. Interested in bespoke veneers and digital preview before an upcoming wedding..."></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <button type="submit" id="submitBtn" class="submit-btn">
+              <span class="spinner" id="btnSpinner"></span>
+              <span id="btnText">Submit Details & Start Call</span>
+            </button>
+          </div>
+
+        </div>
+      </form>
+
+      <div id="statusBanner" class="status-banner">
+        <div class="status-title" id="statusTitle"></div>
+        <div class="status-details" id="statusDetails"></div>
+      </div>
+    </div>
+
+    <p class="footer-note">
+      Official Portal: <a href="https://ultimatesmiledesign.com" target="_blank" rel="noopener">ultimatesmiledesign.com</a> &bull; Handcrafted by Master Ceramists
+    </p>
+  </div>
+
+  <script>
+    // Extract phone parameter from URL query string
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialPhone = urlParams.get('phone') || urlParams.get('customer_number') || '+918758657212';
+    
+    const phoneInput = document.getElementById('phone');
+    if (initialPhone) {
+      phoneInput.value = initialPhone.trim();
+    }
+
+    const form = document.getElementById('contactForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const btnText = document.getElementById('btnText');
+    const statusBanner = document.getElementById('statusBanner');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusDetails = document.getElementById('statusDetails');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = phoneInput.value.trim();
+      const city = document.getElementById('city').value.trim();
+      const subject = document.getElementById('subject').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      if (!name || !email || !phone || !city) {
+        showStatus('error', 'Incomplete Form', 'Please fill in all required fields (Name, Email, Phone, City).');
+        return;
+      }
+
+      // Set loading state
+      submitBtn.disabled = true;
+      btnSpinner.style.display = 'inline-block';
+      btnText.textContent = 'Initiating Smartflo Call...';
+      hideStatus();
+
+      try {
+        const response = await fetch('/api/contact-form/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            phone: phone,
+            city: city,
+            subject: subject,
+            message: message
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          showStatus(
+            'success',
+            'Outbound Call Triggered Successfully!',
+            `Smartflo is calling ${phone}. Kiara has been equipped with ${name}'s details and will conduct the consultation seamlessly.`
+          );
+          btnText.textContent = 'Call in Progress...';
+        } else {
+          showStatus(
+            'error',
+            'Failed to Trigger Outbound Call',
+            result.detail || result.error || 'An unexpected error occurred while communicating with Tata Smartflo.'
+          );
+          submitBtn.disabled = false;
+          btnSpinner.style.display = 'none';
+          btnText.textContent = 'Submit Details & Start Call';
+        }
+      } catch (err) {
+        showStatus('error', 'Network Error', `Could not reach the server: ${err.message}`);
+        submitBtn.disabled = false;
+        btnSpinner.style.display = 'none';
+        btnText.textContent = 'Submit Details & Start Call';
+      }
+    });
+
+    function showStatus(type, title, details) {
+      statusBanner.className = `status-banner ${type}`;
+      statusTitle.textContent = title;
+      statusDetails.textContent = details;
+    }
+
+    function hideStatus() {
+      statusBanner.className = 'status-banner';
+      statusBanner.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

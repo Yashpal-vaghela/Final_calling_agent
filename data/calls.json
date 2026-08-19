@@ -1,7 +1,7 @@
 {
   "CA5b06ec0733dcaceac6449c25ca9458cc": {
     "id": "d55415c1-ce25-4efc-9e8a-5f2e32a9301c",
-    "twilio_call_sid": "CA5b06ec0733dcaceac6449c25ca9458cc",
+    "call_sid": "CA5b06ec0733dcaceac6449c25ca9458cc",
     "direction": "outbound-api",
     "from_number": "+16895886584",
     "to_number": "+918758657212",
@@ -13,7 +13,7 @@
   },
   "CA4a689dbd7fcdbd9d63847399995a9f12": {
     "id": "7896c69c-c4fb-4a5a-a7c8-ad3b4c4f94ec",
-    "twilio_call_sid": "CA4a689dbd7fcdbd9d63847399995a9f12",
+    "call_sid": "CA4a689dbd7fcdbd9d63847399995a9f12",
     "direction": "outbound-api",
     "from_number": "+16895886584",
     "to_number": "+918758657212",
@@ -25,7 +25,7 @@
   },
   "CAba2421f0c479799ce5dd6b9f64a7e9e2": {
     "id": "e366e21c-68aa-47f9-a57d-b14f2d3245ab",
-    "twilio_call_sid": "CAba2421f0c479799ce5dd6b9f64a7e9e2",
+    "call_sid": "CAba2421f0c479799ce5dd6b9f64a7e9e2",
     "direction": "outbound-api",
     "from_number": "+16895886584",
     "to_number": "+918758657212",
@@ -37,7 +37,7 @@
   },
   "CA24e1625452504582c7e1ce61266525d2": {
     "id": "2ab1c31c-32c2-4623-80f4-58fe7eb2604b",
-    "twilio_call_sid": "CA24e1625452504582c7e1ce61266525d2",
+    "call_sid": "CA24e1625452504582c7e1ce61266525d2",
     "direction": "outbound-api",
     "from_number": "+16895886584",
     "to_number": "+918758657212",
@@ -49,7 +49,7 @@
   },
   "CA7e29f02d3ca1d87cfe47426b9b2ddd18": {
     "id": "21a75fc7-8ea2-4f9c-9a14-a123213b7eeb",
-    "twilio_call_sid": "CA7e29f02d3ca1d87cfe47426b9b2ddd18",
+    "call_sid": "CA7e29f02d3ca1d87cfe47426b9b2ddd18",
     "direction": "outbound-api",
     "from_number": "+16895886584",
     "to_number": "+918758657212",
@@ -61,7 +61,7 @@
   },
   "CA393bd0d1b7080094063e63cbe1c8cc6b": {
     "id": "e8572448-0e10-4369-bbee-07abad5213a2",
-    "twilio_call_sid": "CA393bd0d1b7080094063e63cbe1c8cc6b",
+    "call_sid": "CA393bd0d1b7080094063e63cbe1c8cc6b",
     "direction": "outbound-api",
     "from_number": "+16895886584",
     "to_number": "+918758657212",
@@ -73,7 +73,7 @@
   },
   "CA43705fbe87444be15f17e987114437d3": {
     "id": "9c9a5f3c-e4db-41b9-b51a-d13d4b5ab2aa",
-    "twilio_call_sid": "CA43705fbe87444be15f17e987114437d3",
+    "call_sid": "CA43705fbe87444be15f17e987114437d3",
     "direction": "outbound-api",
     "from_number": "+16895886584",
     "to_number": "+918758657212",
@@ -85,7 +85,7 @@
   },
   "CA84b8c76e309934dadb4b0d44f76d2dc6": {
     "id": "23495bd0-ff5b-42c2-8391-945db8a24478",
-    "twilio_call_sid": "CA84b8c76e309934dadb4b0d44f76d2dc6",
+    "call_sid": "CA84b8c76e309934dadb4b0d44f76d2dc6",
     "direction": "outbound-api",
     "from_number": "+16895886584",
     "to_number": "+918758657212",
@@ -97,7 +97,7 @@
   },
   "CA92579676b254d6a5323a597a376d5eec": {
     "id": "b62ed8a4-2c75-43c9-8907-ffe8f8d97c07",
-    "twilio_call_sid": "CA92579676b254d6a5323a597a376d5eec",
+    "call_sid": "CA92579676b254d6a5323a597a376d5eec",
     "direction": "outbound-api",
     "from_number": "+16895886584",
     "to_number": "+918758657212",
@@ -109,7 +109,7 @@
   },
   "$callId": {
     "id": "2770cbed-b561-4c4e-98fd-56b608659695",
-    "twilio_call_sid": "$callId",
+    "call_sid": "$callId",
     "direction": "outbound",
     "from_number": "$fromNumber",
     "to_number": "$toNumber",
@@ -121,7 +121,7 @@
   },
   "123": {
     "id": "0a362948-ac9e-4091-b235-d9e0cd261e09",
-    "twilio_call_sid": "123",
+    "call_sid": "123",
     "direction": "inbound",
     "from_number": "",
     "to_number": "",
@@ -133,7 +133,7 @@
   },
   "HYD1-D5-1786963454.102034": {
     "id": "2cec117f-a489-49cd-923e-9afa8ee0537c",
-    "twilio_call_sid": "HYD1-D5-1786963454.102034",
+    "call_sid": "HYD1-D5-1786963454.102034",
     "direction": "inbound",
     "from_number": "",
     "to_number": "",
@@ -145,7 +145,7 @@
   },
   "H2-D6-1786964959.175948": {
     "id": "1fdb4cd3-7f2e-4fcd-8a97-cdb2d343d3dd",
-    "twilio_call_sid": "H2-D6-1786964959.175948",
+    "call_sid": "H2-D6-1786964959.175948",
     "direction": "inbound",
     "from_number": "",
     "to_number": "",
@@ -157,7 +157,7 @@
   },
   "test1234": {
     "id": "a466a457-a174-4f45-bb77-a39753035bf4",
-    "twilio_call_sid": "test1234",
+    "call_sid": "test1234",
     "direction": "inbound",
     "from_number": "",
     "to_number": "",

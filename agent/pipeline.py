@@ -1,6 +1,6 @@
 """
 Framework-agnostic voice pipeline orchestrator.
-Coordinates Twilio Media Streams and Gemini Live real-time bidirectional audio streaming and tool calling.
+Coordinates WebSocket Media Streams and Gemini Live real-time bidirectional audio streaming and tool calling.
 """
 
 import os
@@ -28,7 +28,12 @@ class VoicePipelineOrchestrator:
         opening_intent: Optional[str] = None,
         lead_id: Optional[str] = None,
         lead_name: Optional[str] = None,
-        lead_city: Optional[str] = None
+        lead_city: Optional[str] = None,
+        lead_phone: Optional[str] = None,
+        lead_email: Optional[str] = None,
+        lead_subject: Optional[str] = None,
+        lead_message: Optional[str] = None,
+        caller_context: Optional[dict] = None
     ):
         self.websocket = websocket
         self.call_id = call_id
@@ -37,9 +42,22 @@ class VoicePipelineOrchestrator:
         self.lead_id = lead_id
         self.lead_name = lead_name
         self.lead_city = lead_city
+        self.lead_phone = lead_phone
+        self.lead_email = lead_email
+        self.lead_subject = lead_subject
+        self.lead_message = lead_message
+
+        # Assemble full caller context dictionary
+        self.caller_context = caller_context or {}
+        if self.lead_name: self.caller_context.setdefault("name", self.lead_name)
+        if self.lead_city: self.caller_context.setdefault("city", self.lead_city)
+        if self.lead_phone: self.caller_context.setdefault("phone", self.lead_phone)
+        if self.lead_email: self.caller_context.setdefault("email", self.lead_email)
+        if self.lead_subject: self.caller_context.setdefault("subject", self.lead_subject)
+        if self.lead_message: self.caller_context.setdefault("message", self.lead_message)
 
         # Determine greeting based on call intent
-        if self.opening_intent == "follow-up":
+        if self.opening_intent in ("follow-up", "outbound_contact_form"):
             if self.lead_name and self.lead_name.lower() != "there":
                 city_str = f" {self.lead_city}" if self.lead_city else ""
                 self.greeting = (
@@ -60,6 +78,16 @@ class VoicePipelineOrchestrator:
 
         # Initialize session and Gemini Live client
         self.session = CallSession(call_id=call_id, opening_intent=opening_intent, lead_id=lead_id)
+        if self.caller_context:
+            self.session.update_user_info(
+                name=self.caller_context.get("name"),
+                phone=self.caller_context.get("phone"),
+                email=self.caller_context.get("email"),
+                city=self.caller_context.get("city"),
+                subject=self.caller_context.get("subject"),
+                intent=self.caller_context.get("subject") or opening_intent,
+                notes=self.caller_context.get("message") or self.caller_context.get("notes")
+            )
         print(f"[Orchestrator] Pipeline Mode: LIVE (using GeminiLiveStreamClient for CallSid: {call_id})")
         
         from agent.tools.check_city_coverage import check_city_coverage
@@ -110,7 +138,8 @@ class VoicePipelineOrchestrator:
             call_id=call_id,
             preferred_language="multi",
             initial_greeting=self.greeting,
-            tool_mapping=live_tool_mapping
+            tool_mapping=live_tool_mapping,
+            caller_context=self.caller_context
         )
         self.tts_provider_name = "Gemini Live"
         self.mulaw_frame_size = 160
@@ -128,40 +157,44 @@ class VoicePipelineOrchestrator:
         self._silence_state: str = "active"
         self._silence_monitor_task: Optional[asyncio.Task] = None
 
-    async def _terminate_twilio_call(self) -> None:
-        try:
-            from twilio.rest import Client
-            from backend.app.settings import settings
-            if settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN:
-                def _do_terminate():
-                    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-                    client.calls(self.call_id).update(status="completed")
-                
-                await asyncio.to_thread(_do_terminate)
-                print(f"[Orchestrator] Forcefully terminated Twilio call {self.call_id}")
-        except Exception as e:
-            print(f"[Orchestrator Error] Failed to terminate Twilio call {self.call_id}: {e}")
 
     async def _silence_monitor(self) -> None:
-        """Background task to monitor for user silence and prompt or disconnect."""
+        """Background task to monitor for user silence: prompts after 15s, disconnects after an additional 25s."""
         while self._is_running and not self._stopped:
+            # If audio is currently playing or actively streaming through buffer, do not count user silence
+            if len(self.output_buffer) > 0 or (self._send_audio_task and not self._send_audio_task.done()):
+                await asyncio.sleep(1)
+                continue
+
             if self._waiting_for_user_since is not None:
                 elapsed = time.time() - self._waiting_for_user_since
                 state = getattr(self, "_silence_state", "active")
-                if state == "waiting_initial" and elapsed >= 15:
-                    print(f"[Orchestrator] User silent for {elapsed:.1f}s. Sending silence prompt.")
-                    self._silence_state = "waiting_second"
+                
+                # Stage 1: User silent for 15 seconds after assistant finishes speaking
+                if state == "stage_1_waiting" and elapsed >= 15:
+                    print(f"[Orchestrator] User silent for {elapsed:.1f}s. Sending silence check: 'Hello, are you still there?'")
+                    self._silence_state = "stage_1_prompting"
+                    self._waiting_for_user_since = None
                     if getattr(self, "gemini_live_client", None):
-                        await self.gemini_live_client.send_text("The user has been silent for 15 seconds. Say exactly: 'Hello, are you still there?' and wait for their reply.")
-                elif state == "waiting_second" and elapsed >= 40:
-                    print(f"[Orchestrator] User silent for {elapsed:.1f}s. Ending call.")
-                    await self.stop()
+                        await self.gemini_live_client.send_text("The user has been silent. Say exactly: 'Hello, are you still there?' and wait for their reply.")
+
+                # Stage 2: User silent for 25 seconds AFTER assistant finishes asking 'Hello, are you still there?'
+                elif state == "stage_2_waiting" and elapsed >= 25:
+                    print(f"[Orchestrator] User silent for {elapsed:.1f}s after check prompt. Disconnecting call automatically.")
+                    self._silence_state = "disconnecting"
                     if getattr(self, "websocket", None):
                         try:
-                            await self.websocket.close()
+                            await self.websocket.send_text(json.dumps({
+                                "event": "stop",
+                                "streamSid": self.stream_sid
+                            }))
                         except Exception:
                             pass
-                    await self._terminate_twilio_call()
+                        try:
+                            await self.websocket.close(code=1000)
+                        except Exception:
+                            pass
+                    await self.stop()
                     break
             await asyncio.sleep(1)
 
@@ -195,6 +228,17 @@ class VoicePipelineOrchestrator:
                 sleep_for = next_send_at - time.monotonic()
                 if sleep_for > 0:
                     await asyncio.sleep(sleep_for)
+            
+            # When buffer is fully drained and assistant is done speaking
+            if len(self.output_buffer) == 0 and self._is_running and not self._stopped:
+                self.session.transition_state("listening")
+                if getattr(self, "_silence_state", "") == "stage_1_prompting":
+                    print("[Orchestrator] Finished asking if user is there. Now waiting 25s for user response before disconnect.")
+                    self._silence_state = "stage_2_waiting"
+                    self._waiting_for_user_since = time.time()
+                elif getattr(self, "_silence_state", "") != "stage_2_waiting":
+                    self._silence_state = "stage_1_waiting"
+                    self._waiting_for_user_since = time.time()
         except asyncio.CancelledError:
             pass
 
@@ -212,16 +256,18 @@ class VoicePipelineOrchestrator:
             mulaw_data = audioop.lin2ulaw(resampled_data, 2)
             self.output_buffer.extend(mulaw_data)
             self.session.transition_state("speaking")
+            if getattr(self, "_silence_state", "") != "stage_1_prompting":
+                self._waiting_for_user_since = None
             if self._send_audio_task is None or self._send_audio_task.done():
                 self._send_audio_task = asyncio.create_task(self._send_buffered_live_audio())
         except Exception as e:
-            print(f"[Orchestrator Error] Error sending live audio to Twilio: {e}")
+            print(f"[Orchestrator Error] Error sending live audio to WebSocket: {e}")
 
     async def _on_live_interruption(self) -> None:
         """Callback invoked when Gemini Live detects caller interruption (barge-in)."""
         if self._stopped:
             return
-        print("[Orchestrator] Gemini Live server interruption received! Clearing output buffer and Twilio stream.")
+        print("[Orchestrator] Gemini Live server interruption received! Clearing output buffer and media stream.")
         if getattr(self, "_send_audio_task", None) and not self._send_audio_task.done():
             self._send_audio_task.cancel()
         self.output_buffer.clear()
@@ -236,9 +282,9 @@ class VoicePipelineOrchestrator:
                     "event": "clear",
                     "streamSid": self.stream_sid
                 }))
-                print(f"[Orchestrator] Sent Twilio 'clear' event for StreamSid: {self.stream_sid}")
+                print(f"[Orchestrator] Sent 'clear' event for StreamSid: {self.stream_sid}")
             except Exception as e:
-                print(f"[Orchestrator Warning] Failed to send Twilio clear event during live interruption: {e}")
+                print(f"[Orchestrator Warning] Failed to send clear event during live interruption: {e}")
 
     async def _on_live_event(self, event: dict) -> None:
         """Callback for general Gemini Live events (transcripts, turn completions, tool calls)."""
@@ -246,6 +292,7 @@ class VoicePipelineOrchestrator:
             return
         event_type = event.get("type")
         if event_type == "user":
+            # User spoke! Reset silence timer back to active conversation
             self._waiting_for_user_since = None
             self._silence_state = "active"
             text = event.get("text", "").strip()
@@ -259,21 +306,15 @@ class VoicePipelineOrchestrator:
                 print(f"[Live Output Transcript] Assistant: '{text}'")
                 self.session.add_transcript(text, role="assistant")
         elif event_type == "turn_complete":
-            self.session.transition_state("listening")
-            if getattr(self, "_silence_state", None) == "waiting_second":
-                pass
-            else:
-                self._waiting_for_user_since = time.time()
-                self._silence_state = "waiting_initial"
-            print("[Orchestrator] Live turn complete; transitioned to listening.")
+            print("[Orchestrator] Live turn complete; output buffer draining to caller.")
         elif event_type == "error":
             print(f"[Orchestrator Error] Gemini Live event error: {event.get('error')}")
 
     async def start(self) -> None:
         """Starts the voice pipeline connections and initiates the opening greeting."""
         self._is_running = True
-        self._waiting_for_user_since = time.time()
-        self._silence_state = "waiting_initial"
+        self._waiting_for_user_since = None
+        self._silence_state = "active"
         self._silence_monitor_task = asyncio.create_task(self._silence_monitor())
         print(f"[Orchestrator] Starting voice pipeline for CallSid: {self.call_id}, StreamSid: {self.stream_sid}")
         
@@ -286,7 +327,31 @@ class VoicePipelineOrchestrator:
                     audio_interrupt_callback=self._on_live_interruption,
                     event_callback=self._on_live_event,
                 )
-                await self.gemini_live_client.send_text(f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply.")
+
+                # If message and/or subject are provided, answer the question from the message first
+                msg = (self.lead_message or "").strip()
+                subj = (self.lead_subject or "").strip()
+                name_str = f"to {self.lead_name}" if self.lead_name and self.lead_name.lower() != "there" else ""
+
+                if msg:
+                    subj_str = f" regarding '{subj}'" if subj else ""
+                    initial_prompt = (
+                        f"The outbound call has just connected {name_str}. "
+                        f"The caller submitted a contact form enquiry{subj_str} with the message / question: '{msg}'. "
+                        f"Start the call with your warm introduction as Kiara from Ultimate Smile Design, answer their question/message directly and clearly based on our knowledge base, "
+                        f"and then ask: 'Do you have any other questions or any additional details you’d like to know?'"
+                    )
+                    await self.gemini_live_client.send_text(initial_prompt)
+                elif subj:
+                    initial_prompt = (
+                        f"The outbound call has just connected {name_str}. "
+                        f"The caller submitted a contact form enquiry on the topic: '{subj}'. "
+                        f"Start the call with your warm introduction as Kiara from Ultimate Smile Design, address their topic clearly based on our knowledge base, "
+                        f"and then ask: 'Do you have any other questions or any additional details you’d like to know?'"
+                    )
+                    await self.gemini_live_client.send_text(initial_prompt)
+                else:
+                    await self.gemini_live_client.send_text(f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply.")
         except Exception as e:
             print(f"[Orchestrator] Failed to open Gemini Live connection: {e}")
             await self.stop()
@@ -297,7 +362,7 @@ class VoicePipelineOrchestrator:
 
     async def handle_media_payload(self, ulaw_base64: str) -> None:
         """
-        Processes an inbound chunk of 8kHz ulaw audio from Twilio Media Streams and sends to Gemini Live.
+        Processes an inbound chunk of 8kHz ulaw audio from Smartflo Streams and sends to Gemini Live.
         """
         if not self._is_running:
             return

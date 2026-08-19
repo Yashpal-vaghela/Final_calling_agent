@@ -1,15 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    TWILIO_ACCOUNT_SID: str = ""
-    TWILIO_AUTH_TOKEN: str = ""
-    TWILIO_NUMBER: str = ""
-    TWILIO_APP_HOST: str = ""
 
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-3.1-flash-lite"
     GEMINI_LIVE_MODEL: str = "gemini-3.1-flash-live-preview"
-    GEMINI_LIVE_VOICE: str = "Leda"
+    GEMINI_LIVE_VOICE: str = "Callirrhoe"
 
     INTERNAL_KEY: str = "default_internal_secret_key"
     ALLOWED_NUMBERS: str = ""

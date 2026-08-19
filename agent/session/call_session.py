@@ -28,7 +28,9 @@ class CallSession:
         self.collected_user_info: dict[str, str] = {
             "name": "",
             "phone": "",
+            "email": "",
             "city": "",
+            "subject": "",
             "intent": "",
             "notes": ""
         }
@@ -79,11 +81,13 @@ class CallSession:
             if self.booking_stage == "greeting":
                 self.booking_stage = "discovery"
 
-    def update_user_info(self, name: Optional[str] = None, phone: Optional[str] = None, city: Optional[str] = None, intent: Optional[str] = None, notes: Optional[str] = None) -> None:
+    def update_user_info(self, name: Optional[str] = None, phone: Optional[str] = None, email: Optional[str] = None, city: Optional[str] = None, subject: Optional[str] = None, intent: Optional[str] = None, notes: Optional[str] = None) -> None:
         """Updates collected user entities across conversational turns."""
         if name: self.collected_user_info["name"] = name
         if phone: self.collected_user_info["phone"] = phone
+        if email: self.collected_user_info["email"] = email
         if city: self.collected_user_info["city"] = city
+        if subject: self.collected_user_info["subject"] = subject
         if intent: self.collected_user_info["intent"] = intent
         if notes: self.collected_user_info["notes"] = notes
         

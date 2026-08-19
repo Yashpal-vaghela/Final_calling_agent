@@ -15,7 +15,7 @@ def generate_sine_wave_pcm16(frequency: float, duration_sec: float, sample_rate:
     return bytes(pcm_data)
 
 def test_mulaw_pcm_roundtrip():
-    # 20ms of audio at 8kHz is 160 samples (Twilio frame size)
+    # 20ms of audio at 8kHz is 160 samples (20ms frame size)
     original_pcm = generate_sine_wave_pcm16(440.0, 0.02, 8000)
     
     # PCM -> mulaw
