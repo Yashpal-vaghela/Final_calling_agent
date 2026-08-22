@@ -32,20 +32,11 @@ async def trigger_callback(payload: TriggerCallbackRequest, request: Request, _ 
     """
     Triggers an outbound follow-up call to a lead via Tata Smartflo Click-to-Call API.
     """
-    # 1. Load lead
-    leads_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "leads.json"))
-    if not os.path.exists(leads_file):
-        raise HTTPException(status_code=404, detail="No leads data found")
-        
-    with open(leads_file, "r", encoding="utf-8") as f:
-        try:
-            leads = json.load(f)
-        except json.JSONDecodeError:
-            leads = []
-            
-    lead = next((l for l in leads if l["id"] == payload.lead_id), None)
+    # 1. Load lead from active in-memory context
+    from backend.app.routes.contact_form import lookup_caller_context
+    lead = lookup_caller_context(payload.lead_id)
     if not lead:
-        raise HTTPException(status_code=404, detail="Lead not found")
+        raise HTTPException(status_code=404, detail="Lead not found or expired")
         
     phone = lead.get("phone")
     if not phone:

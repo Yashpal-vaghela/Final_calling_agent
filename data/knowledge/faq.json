@@ -52,10 +52,10 @@
         "Do you speak my language?"
       ],
       "emotion": "neutral",
-      "voice_response": "Yes — I speak English, Hindi, and Gujarati, and I'll naturally continue in whichever language you're most comfortable with.",
+      "voice_response": "Yes — I am multilingual and speak English, Hindi, Gujarati, Marathi, and several other languages. I will naturally continue in whichever language you prefer.",
       "follow_up": null,
-      "keywords": ["language", "hindi", "gujarati", "english"],
-      "note": "This intent only fires if the caller explicitly asks what languages Kiara speaks. Kiara should never proactively ask the caller to choose a language — she mirrors whatever language the caller opens the call in, per the system prompt."
+      "keywords": ["language", "hindi", "gujarati", "marathi", "french", "english"],
+      "note": "This intent only fires if the caller explicitly asks what languages Kiara speaks. Kiara should never proactively ask the caller to choose a language — she dynamically mirrors whatever language the caller speaks in real-time."
     }
   ]
 }

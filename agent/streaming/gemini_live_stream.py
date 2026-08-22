@@ -80,18 +80,16 @@ class GeminiLiveStreamClient:
         else:
             base_prompt = get_system_prompt()
             lang_instruction = (
-                "Mirror caller language naturally (English, Hindi, Gujarati, Hinglish, or Gujlish). "
-                "Switch automatically when the caller switches."
-                if self.preferred_language in ("multi", "auto")
-                else f"{self.preferred_language} (mirror caller language if they switch)"
+                "DYNAMIC REAL-TIME MIRRORING: Dynamically mirror whatever language the caller speaks (English, Hindi, Gujarati, Marathi, French, Hinglish, Gujlish, etc.). "
+                "If the caller switches to another language mid-conversation, you MUST immediately switch to that exact language on that very turn. Never stay stuck in English.\n"
+                "DELIVERY INSTRUCTION: You MUST speak with a warm, completely natural, and highly conversational tone. Sound like a friendly, relaxed human being. Use a gentle and natural Indian female cadence, but prioritize sounding smooth and human over forcing an accent. Absolutely DO NOT sound robotic, rigid, or like an AI."
             )
             self.system_instruction = (
                 f"{base_prompt}\n\n"
                 f"---\n\n"
                 f"## CURRENT SESSION (LIVE VOICE CALL)\n"
                 f"- preferred_language: {lang_instruction}\n"
-                f"- call_id: {self.call_id}\n"
-                f"- call_mode: REAL-TIME TELEPHONY AUDIO STREAM (Deliver warm, natural conversational responses of 2-4 sentences, proactively weaving in intuitive real-world comparisons/examples to explain concepts, ending with a natural follow-up question. No dry monologues or reading lists).\n"
+                f"- call_mode: REAL-TIME TELEPHONY AUDIO STREAM (Deliver warm, natural conversational responses of approximately 4-5 sentences for explanatory/treatment questions and 1-2 sentences for simple questions. For any treatment, philosophy, trust, or concept question, PROACTIVELY weave in a vivid real-world example or analogy directly in your response without waiting for the caller to ask for one, ending with a natural follow-up question).\n"
             )
 
         if self.caller_context:
@@ -118,18 +116,17 @@ class GeminiLiveStreamClient:
 
             if context_lines:
                 instruction_text = (
-                    "When the call starts: if Subject and/or Message are provided above, answer the question or topic from their message first using our knowledge base and guidance, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
-                    "If Subject and Message are empty, follow standard conversation behavior. "
-                    "DO NOT ask for information that is already provided (especially the caller's name)."
+                    "CRITICAL OUTBOUND CALLER CONTEXT & FLOW:\n"
+                    f"1. You are speaking with {name or 'the customer'}. Address them respectfully by their name. NEVER ask for their name, phone, email, or city — all of these are already captured above.\n"
+                    f"2. YOUR FIRST PRIORITY: When answering or opening the conversation, you MUST directly answer the question/enquiry from their submitted message ('{message}') and subject ('{subject}') first using our knowledge base and an intuitive real-world analogy.\n"
+                    "3. IMMEDIATELY AFTER answering their enquiry, ask: 'Do you have any other questions or any additional details you’d like to know?'\n"
+                    "4. If Subject and Message are empty, follow standard conversation behavior."
                 )
                 self.system_instruction += (
                     f"\n\n## CALLER INFORMATION (FROM SUBMITTED CONTACT FORM)\n"
                     + "\n".join(context_lines)
                     + f"\n({instruction_text})\n"
                 )
-
-        if initial_greeting:
-            self.system_instruction += f"\nNote: You have just initiated the conversation by greeting the caller: '{initial_greeting}'"
 
         # Initialize native tool schemas and execution dispatch mapping
         if tools is not None:

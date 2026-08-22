@@ -26,8 +26,9 @@ def normalize_phone(phone_str: str) -> str:
 
 def register_caller_context(context_data: Dict[str, Any]) -> str:
     """
-    Registers a caller context into both in-memory lookup cache and leads.json file.
+    Registers a caller context into in-memory lookup cache (ephemeral).
     Indexes by lead_id, normalized full digits, and last-10 digits.
+    No data is saved to disk.
     """
     lead_id = context_data.get("id") or str(uuid.uuid4())
     context_data["id"] = lead_id
@@ -39,6 +40,9 @@ def register_caller_context(context_data: Dict[str, Any]) -> str:
     
     # Store by lead_id
     ACTIVE_CALLER_CONTEXTS[lead_id] = context_data
+    # Store as latest pending lead for fallback session bridging
+    ACTIVE_CALLER_CONTEXTS["_latest_pending_lead"] = context_data
+
     # Store by full digits (e.g. 918758657212)
     if digits:
         ACTIVE_CALLER_CONTEXTS[digits] = context_data
@@ -46,50 +50,24 @@ def register_caller_context(context_data: Dict[str, Any]) -> str:
         if len(digits) >= 10:
             ACTIVE_CALLER_CONTEXTS[digits[-10:]] = context_data
 
-    # Persist to data/leads.json
-    try:
-        leads_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "leads.json"))
-        leads = []
-        if os.path.exists(leads_path):
-            with open(leads_path, "r", encoding="utf-8") as f:
-                try:
-                    leads = json.load(f)
-                    if not isinstance(leads, list):
-                        leads = []
-                except Exception:
-                    leads = []
-        
-        # Avoid duplicate append if ID exists
-        existing_idx = next((i for i, l in enumerate(leads) if l.get("id") == lead_id), None)
-        if existing_idx is not None:
-            leads[existing_idx] = context_data
-        else:
-            leads.append(context_data)
-
-        with open(leads_path, "w", encoding="utf-8") as f:
-            json.dump(leads, f, indent=2)
-    except Exception as e:
-        print(f"[ContactForm] Warning: Could not write to leads.json: {e}")
-
     return lead_id
 
 
 def lookup_caller_context(identifier: Optional[Any]) -> Optional[Dict[str, Any]]:
     """
-    Looks up caller context by lead_id or phone number from in-memory cache and leads.json.
+    Looks up caller context by lead_id, phone number, or session fallback from ephemeral in-memory cache.
     """
-    if identifier is None:
-        return None
-
     if isinstance(identifier, str):
         clean_id = identifier.strip()
-    else:
+    elif identifier is not None:
         clean_id = str(identifier).strip()
+    else:
+        clean_id = "_latest_pending_lead"
 
-    if not clean_id:
-        return None
-    
-    # 1. Exact match in memory cache
+    if clean_id == "" or clean_id == "latest":
+        clean_id = "_latest_pending_lead"
+
+    # 1. Exact match in memory cache (including _latest_pending_lead)
     if clean_id in ACTIVE_CALLER_CONTEXTS:
         return ACTIVE_CALLER_CONTEXTS[clean_id]
 
@@ -100,22 +78,35 @@ def lookup_caller_context(identifier: Optional[Any]) -> Optional[Dict[str, Any]]
     if digits and len(digits) >= 10 and digits[-10:] in ACTIVE_CALLER_CONTEXTS:
         return ACTIVE_CALLER_CONTEXTS[digits[-10:]]
 
-    # 3. Fallback search in data/leads.json
-    try:
-        leads_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "leads.json"))
-        if os.path.exists(leads_path):
-            with open(leads_path, "r", encoding="utf-8") as f:
-                leads = json.load(f)
-                for l in reversed(leads):  # Check newest first
-                    if l.get("id") == clean_id:
-                        return l
-                    l_phone_digits = normalize_phone(l.get("phone", ""))
-                    if digits and l_phone_digits and (digits == l_phone_digits or (len(digits) >= 10 and digits[-10:] == l_phone_digits[-10:])):
-                        return l
-    except Exception as e:
-        print(f"[ContactForm] Warning: Error looking up lead in leads.json: {e}")
+    # 3. Fallback to latest pending lead in active memory
+    return ACTIVE_CALLER_CONTEXTS.get("_latest_pending_lead")
 
-    return None
+
+def remove_caller_context(lead_id: Optional[str] = None, phone: Optional[str] = None, call_id: Optional[str] = None) -> None:
+    """
+    Removes caller context from the active memory cache to free resources after a call ends.
+    """
+    keys_to_remove = []
+    if lead_id:
+        keys_to_remove.append(lead_id)
+    if call_id:
+        keys_to_remove.append(call_id)
+    if phone:
+        digits = normalize_phone(phone)
+        if digits:
+            keys_to_remove.append(digits)
+            if len(digits) >= 10:
+                keys_to_remove.append(digits[-10:])
+                
+    for k in keys_to_remove:
+        ACTIVE_CALLER_CONTEXTS.pop(k, None)
+
+    # Check _latest_pending_lead
+    latest = ACTIVE_CALLER_CONTEXTS.get("_latest_pending_lead")
+    if latest:
+        if (lead_id and latest.get("id") == lead_id) or \
+           (phone and normalize_phone(latest.get("phone", "")) == normalize_phone(phone)):
+            ACTIVE_CALLER_CONTEXTS.pop("_latest_pending_lead", None)
 
 
 class ContactFormSubmission(BaseModel):
@@ -175,6 +166,15 @@ async def submit_contact_form(form_data: ContactFormSubmission):
     )
 
     print(f"[ContactForm] Smartflo click-to-call response: {result}")
+    if isinstance(result, dict):
+        resp_call_id = (
+            result.get("call_id") or result.get("call_uuid") or
+            result.get("id") or result.get("ref_id") or
+            (result.get("data") if isinstance(result.get("data"), dict) else {}).get("call_id")
+        )
+        if resp_call_id:
+            ACTIVE_CALLER_CONTEXTS[str(resp_call_id)] = context_data
+            print(f"[ContactForm] Associated Smartflo response callId '{resp_call_id}' to lead '{lead_id}'")
 
     return {
         "success": True,

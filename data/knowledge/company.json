@@ -30,7 +30,7 @@
         "What is the purpose of USD?"
       ],
       "emotion": "curious",
-      "voice_response": "Ultimate Smile Design is the premium aesthetic brand of Advance Dental Export, created by Master Ceramist Haresh Savani. He built USD because a premium smile needs more than technology — it needs imagination, planning, and artistic craftsmanship. That's why USD works only through Authorized USD Smile Designers, under the official USD Protocol.",
+      "voice_response": "Ultimate Smile Design is the premium aesthetic brand of Advance Dental Export, created by Master Ceramist Haresh Savani. He built USD because a premium smile needs more than technology — it needs imagination, planning, and artistic craftsmanship backed by over 20 years of ceramic experience. That's why USD works only through Authorized USD Smile Designers, under the official USD Protocol.",
       "follow_up": "Curious how the USD Protocol protects the quality of your smile journey?",
       "keywords": [
         "about usd",
@@ -151,7 +151,7 @@
         "Which city is your headquarters?"
       ],
       "emotion": "curious",
-      "voice_response": "Our global headquarters and handcrafting laboratory are in Surat, Gujarat. While the laboratory work happens there, Authorized USD Smile Designers are available across multiple cities for your consultation and treatment.",
+      "voice_response": "Our global headquarters and handcrafting laboratory are in Surat, Gujarat. Founded in 2009, the ADE laboratory handles 100% in-house production in Surat, while Authorized USD Smile Designers are available across multiple cities for your consultation and treatment.",
       "follow_up": "Would you like help finding an Authorized Smile Designer near your city?",
       "keywords": [
         "headquarters",
@@ -170,7 +170,7 @@
         "Why specialization?"
       ],
       "emotion": "curious",
-      "voice_response": "Think of a pilot. Every pilot is trained, but experience brings judgment and an eye for subtle detail. Smile design works the same way — experience helps a Master Ceramist read proportion, light, and texture, which is exactly why USD follows a structured protocol.",
+      "voice_response": "Think of a pilot. Every pilot is trained, but experience brings judgment and an eye for subtle detail. Smile design works the same way — over 20 years of experience helps a Master Ceramist read proportion, light, and texture, which is exactly why USD follows a structured protocol.",
       "follow_up": "Would you like to know how digital planning supports that experience?",
       "keywords": [
         "experience",
@@ -243,7 +243,7 @@
         "What is ADE's track record?"
       ],
       "emotion": "curious",
-      "voice_response": "Advance Dental Export works with over 12,000 trusted dentists, has delivered more than 1,20,000 cases, and serves clients across 20 countries. The laboratory has over 750 qualified professionals, all dedicated to handcrafting restorations to the highest standard — every single case.",
+      "voice_response": "Founded in 2009, Advance Dental Export works with over 12,000 trusted dentists, has delivered more than 1,20,000 cases, and serves clients across 20 countries. The laboratory has over 750 qualified professionals, all dedicated to handcrafting restorations to the highest standard — every single case.",
       "follow_up": "Would you like to know how that scale of experience translates to your own smile journey?",
       "keywords": [
         "how big",
@@ -256,4 +256,4 @@
       ]
     }
   ]
-} 
+}

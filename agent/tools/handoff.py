@@ -21,9 +21,8 @@ def _load_leads() -> list:
             return []
 
 def _save_leads(leads: list) -> None:
-    os.makedirs(os.path.dirname(LEADS_FILE), exist_ok=True)
-    with open(LEADS_FILE, "w", encoding="utf-8") as f:
-        json.dump(leads, f, indent=2, ensure_ascii=False)
+    # Ephemeral mode: disk saving disabled to avoid storing user data
+    pass
 
 def human_handoff(reason: str, phone_number: Optional[str] = None, call_id: Optional[str] = None) -> dict:
     """

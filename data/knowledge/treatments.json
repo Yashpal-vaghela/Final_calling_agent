@@ -4,7 +4,7 @@
       "intent": "veneers",
       "user_questions": ["What are veneers?", "Are veneers painful?", "Do veneers damage teeth?", "How long do veneers last?", "Can veneers fall off?", "Are veneers permanent?", "Which material do you use?", "Ceramic or zirconia?"],
       "emotion": "curious",
-      "voice_response": "Think of a veneer as the final brushstroke on a masterpiece — an ultra-thin, handcrafted ceramic shell that perfects the shape, colour, and harmony of your smile. It's first digitally planned by your Authorized Smile Designer, then individually handcrafted by a Master Ceramist at Advance Dental Export, so it blends naturally with your face.",
+      "voice_response": "Think of a veneer as the final brushstroke on a masterpiece — an ultra-thin, handcrafted ceramic shell that perfects the shape, colour, and harmony of your smile. It's first digitally planned using 3D scanning and facial analysis by your Authorized Smile Designer, then individually handcrafted by a Master Ceramist at Advance Dental Export using state-of-the-art CAD/CAM milling and ceramic materials.",
       "follow_up": "Many clients also ask what determines the investment — would that help?",
       "keywords": ["veneers", "ceramic", "zirconia", "porcelain"]
     },
@@ -20,7 +20,7 @@
       "intent": "smile_planning",
       "user_questions": ["Why is planning needed?", "Why facial analysis?", "Why a blueprint before treatment?", "Why not start with veneers directly?"],
       "emotion": "curious",
-      "voice_response": "Imagine building a house without a blueprint — even the best materials can't guarantee a beautiful result. Before recommending any treatment, your Authorized Smile Designer studies your face, smile, and expectations to build a personalised plan first. The better the plan, the more natural the smile.",
+      "voice_response": "Imagine building a luxury home without an architectural plan — even the best materials can't guarantee a beautiful result. Before recommending any treatment, your Authorized Smile Designer evaluates your facial features, lip line, and expressions to design a personalized plan first. Proper planning ensures your final smile looks natural and feels truly yours.",
       "follow_up": "Would you like to see how that plan comes to life in the Smile Blueprint?",
       "keywords": ["planning", "blueprint", "facial analysis"]
     },
@@ -52,7 +52,7 @@
       "intent": "ceramic_materials",
       "user_questions": ["Why ceramic?", "Why zirconia?", "Which material is best?", "Why not composite?"],
       "emotion": "curious",
-      "voice_response": "Different materials serve different purposes, so there isn't one that's best for everyone. Even the finest ceramic can't create a premium smile without the right planning and craftsmanship behind it. Your Authorized Smile Designer recommends the material suited to your smile, bite, and goals.",
+      "voice_response": "Different materials serve different purposes, so there isn't one that's best for everyone. Advance Dental Export uses premium bio-compatible ceramic and advanced zirconia with state-of-the-art CAD/CAM milling to ensure strength, natural light reflection, and authentic manufacturer warranty guarantees. Your Authorized Smile Designer recommends the exact material suited to your bite and goals.",
       "follow_up": "Would you like to know how dentists and Master Ceramists work together on this?",
       "keywords": ["ceramic", "porcelain", "zirconia", "composite"]
     },
@@ -60,7 +60,7 @@
       "intent": "digital_smile_design",
       "user_questions": ["What is Digital Smile Design?", "Do you scan my face?", "3D scanning?", "Facial analysis?"],
       "emotion": "curious",
-      "voice_response": "Digital Smile Design lets us plan your smile with remarkable precision — but that's only the beginning. Once the design is approved, a Master Ceramist handcrafts every restoration, adding texture, colour, and natural detail by hand. Technology gives precision. Craftsmanship gives it beauty.",
+      "voice_response": "Digital Smile Design replaces traditional messy impressions with instant 3D digital scanning and facial analysis. We support leading CAD/CAM systems including Cerec Connect, 3Shape, iTero, 3M ESPE, and Carestream. Once the digital plan is approved, a Master Ceramist handcrafts every restoration to perfection.",
       "follow_up": "Curious whether AI actually decides your treatment, or just supports it?",
       "keywords": ["digital smile design", "facial analysis", "scan", "3D"]
     },
@@ -84,7 +84,7 @@
       "intent": "smile_blueprint",
       "user_questions": ["What is the Smile Blueprint?", "What is the treatment plan?", "Is there a personalized plan?"],
       "emotion": "curious",
-      "voice_response": "The Smile Blueprint is your personalised smile plan — like a home's blueprint, it shows how every part fits together before construction begins. It's built from everything learned in your consultation and Smile Vision Analysis, and it guides every step of your transformation.",
+      "voice_response": "The Smile Blueprint is your comprehensive treatment roadmap — showing exact proportions, material choices, and aesthetic goals before any physical work begins. It combines insights from your consultation and 3D digital scan to guide every step of your transformation.",
       "follow_up": "Would you like to know how you can preview your smile before treatment starts?",
       "keywords": ["blueprint", "treatment plan", "smile plan"]
     },
@@ -100,7 +100,7 @@
       "intent": "smile_reveal",
       "user_questions": ["What is the Smile Reveal?", "What happens at the final appointment?"],
       "emotion": "excited",
-      "voice_response": "Smile Reveal is the moment your journey comes together — like an artist unveiling a finished sculpture. After planning, analysis, and handcraftsmanship, your final smile is revealed, designed specifically for you. It isn't created in one appointment — it's revealed after a thoughtful journey.",
+      "voice_response": "Smile Reveal is the moment your journey comes together — like an artist unveiling a finished sculpture. After digital planning, 3D analysis, and Master Ceramist handcraftsmanship, your final smile is revealed, designed specifically for you. It isn't created in one appointment — it's revealed after a thoughtful journey.",
       "follow_up": "Would you like to know how to care for your smile afterward?",
       "keywords": ["reveal", "final smile", "completion"]
     },
@@ -108,7 +108,7 @@
       "intent": "digital_planning",
       "user_questions": ["What is digital planning?", "What is digital smile planning?", "How do you plan my smile?", "Is my smile designed digitally?", "What happens after the scan?", "Is everything done on a computer?"],
       "emotion": "curious",
-      "voice_response": "Think of an architect creating a digital blueprint before building a luxury home — every proportion is planned before construction starts. Your Authorized Smile Designer does the same, studying your face and expressions to plan your smile digitally. But that's only step one — once approved, a Master Ceramist handcrafts every restoration by hand. Technology creates precision. Handcrafted artistry creates the beauty.",
+      "voice_response": "Think of it like an architect creating a 3D digital model before constructing a landmark building. Digital planning begins with instant 3D intraoral scanning and facial harmony analysis using advanced CAD/CAM technology, allowing you to visualize and refine your smile. Once approved, Master Ceramists at Advance Dental Export handcraft every ceramic restoration by hand in our Surat laboratory to ensure natural texture and beauty.",
       "follow_up": "Curious why the handcrafted laboratory step matters just as much as the digital plan?",
       "keywords": ["digital planning", "digital smile design", "digital workflow", "facial analysis"]
     },

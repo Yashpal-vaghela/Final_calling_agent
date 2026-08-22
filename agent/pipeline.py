@@ -56,25 +56,38 @@ class VoicePipelineOrchestrator:
         if self.lead_subject: self.caller_context.setdefault("subject", self.lead_subject)
         if self.lead_message: self.caller_context.setdefault("message", self.lead_message)
 
-        # Determine greeting based on call intent
-        if self.opening_intent in ("follow-up", "outbound_contact_form"):
-            if self.lead_name and self.lead_name.lower() != "there":
-                city_str = f" {self.lead_city}" if self.lead_city else ""
+        self.lead_name = self.lead_name or self.caller_context.get("name")
+        self.lead_city = self.lead_city or self.caller_context.get("city")
+        self.lead_phone = self.lead_phone or self.caller_context.get("phone")
+        self.lead_email = self.lead_email or self.caller_context.get("email")
+        self.lead_subject = self.lead_subject or self.caller_context.get("subject")
+        self.lead_message = self.lead_message or self.caller_context.get("message")
+
+        # Determine greeting based on call intent and whether caller name is already known
+        if self.lead_name and self.lead_name.lower() not in ("there", "none", ""):
+            city_str = f" in {self.lead_city}" if self.lead_city else ""
+            if self.opening_intent in ("follow-up", "outbound_contact_form"):
                 self.greeting = (
                     f"Hi {self.lead_name}, this is Kiara from Ultimate Smile Design, "
                     f"following up on your{city_str} smile consultation enquiry. How can I help you today?"
                 )
             else:
+                self.greeting = (
+                    f"Hi {self.lead_name}, this is Kiara from Ultimate Smile Design. "
+                    f"How can I help you today?"
+                )
+        else:
+            if self.opening_intent in ("follow-up", "outbound_contact_form"):
                 city_str = f" {self.lead_city}" if self.lead_city else ""
                 self.greeting = (
                     f"Hello! This is Kiara from Ultimate Smile Design, "
                     f"following up on your{city_str} smile consultation enquiry. May I know your name, please?"
                 )
-        else:
-            self.greeting = (
-                "Hello! Thank you for calling Ultimate Smile Design. "
-                "My name is Kiara. May I know your name, please?"
-            )
+            else:
+                self.greeting = (
+                    "Hello! Thank you for calling Ultimate Smile Design. "
+                    "My name is Kiara. May I know your name, please?"
+                )
 
         # Initialize session and Gemini Live client
         self.session = CallSession(call_id=call_id, opening_intent=opening_intent, lead_id=lead_id)
@@ -143,13 +156,14 @@ class VoicePipelineOrchestrator:
         )
         self.tts_provider_name = "Gemini Live"
         self.mulaw_frame_size = 160
+        self.prebuffer_threshold = 480  # 3 frames (60ms) jitter buffer for ultra-low latency & smooth speech
         self.output_buffer = bytearray()
         self._send_audio_task: Optional[asyncio.Task] = None
+        self._outbound_chunk_counter: int = 1
 
         # Persistent resampler states per stream stage
         self._inbound_resample_state: Optional[tuple] = None
-        self._outbound_resample_state_24_to_16: Optional[tuple] = None
-        self._outbound_resample_state_16_to_8: Optional[tuple] = None
+        self._outbound_resample_state: Optional[tuple] = None
         
         self._is_running: bool = False
         self._stopped: bool = False
@@ -207,27 +221,57 @@ class VoicePipelineOrchestrator:
         FRAME_DURATION = 0.02  # 20 ms per 160-byte 8 kHz μ-law frame
         try:
             next_send_at = time.monotonic()
-            while len(self.output_buffer) >= getattr(self, "mulaw_frame_size", 160) and self._is_running and not self._stopped:
-                frame = bytes(self.output_buffer[:self.mulaw_frame_size])
-                del self.output_buffer[:self.mulaw_frame_size]
-                payload = base64.b64encode(frame).decode("utf-8")
-                media_message = {
-                    "event": "media",
-                    "streamSid": self.stream_sid,
-                    "media": {"payload": payload},
-                }
-                if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
-                    try:
-                        await self.websocket.send_text(json.dumps(media_message))
-                    except Exception as e:
-                        print(f"[Orchestrator Warning] Failed to send buffered live audio: {e}")
+            while self._is_running and not self._stopped:
+                if len(self.output_buffer) >= getattr(self, "mulaw_frame_size", 160):
+                    frame = bytes(self.output_buffer[:self.mulaw_frame_size])
+                    del self.output_buffer[:self.mulaw_frame_size]
+                    payload = base64.b64encode(frame).decode("utf-8")
+                    media_message = {
+                        "event": "media",
+                        "streamSid": self.stream_sid,
+                        "media": {
+                            "payload": payload,
+                            "chunk": self._outbound_chunk_counter
+                        },
+                    }
+                    self._outbound_chunk_counter += 1
+                    if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
+                        try:
+                            await self.websocket.send_text(json.dumps(media_message))
+                        except Exception as e:
+                            print(f"[Orchestrator Warning] Failed to send buffered live audio: {e}")
+                            break
+                    else:
                         break
+                    next_send_at += FRAME_DURATION
+                    sleep_for = next_send_at - time.monotonic()
+                    if sleep_for > 0:
+                        await asyncio.sleep(sleep_for)
                 else:
-                    break
-                next_send_at += FRAME_DURATION
-                sleep_for = next_send_at - time.monotonic()
-                if sleep_for > 0:
-                    await asyncio.sleep(sleep_for)
+                    # Brief drain wait (20ms) for any immediately following chunk from active Gemini stream
+                    await asyncio.sleep(0.02)
+                    if len(self.output_buffer) < getattr(self, "mulaw_frame_size", 160):
+                        # If there are remaining trailing bytes at turn end, pad to 160 (0xff is silence in mu-law)
+                        if len(self.output_buffer) > 0:
+                            trailing = bytes(self.output_buffer)
+                            self.output_buffer.clear()
+                            padded_frame = trailing.ljust(self.mulaw_frame_size, b"\xff")
+                            payload = base64.b64encode(padded_frame).decode("utf-8")
+                            media_message = {
+                                "event": "media",
+                                "streamSid": self.stream_sid,
+                                "media": {
+                                    "payload": payload,
+                                    "chunk": self._outbound_chunk_counter
+                                },
+                            }
+                            self._outbound_chunk_counter += 1
+                            if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
+                                try:
+                                    await self.websocket.send_text(json.dumps(media_message))
+                                except Exception:
+                                    pass
+                        break
             
             # When buffer is fully drained and assistant is done speaking
             if len(self.output_buffer) == 0 and self._is_running and not self._stopped:
@@ -247,19 +291,20 @@ class VoicePipelineOrchestrator:
         if not self._is_running or self._stopped or not self.stream_sid:
             return
         try:
-            intermediate, self._outbound_resample_state_24_to_16 = audioop.ratecv(
-                data, 2, 1, 24000, 16000, self._outbound_resample_state_24_to_16
+            # Direct single-stage 24kHz -> 8kHz stateful resampling (3:1 integer decimation)
+            resampled_8k, self._outbound_resample_state = audioop.ratecv(
+                data, 2, 1, 24000, 8000, self._outbound_resample_state
             )
-            resampled_data, self._outbound_resample_state_16_to_8 = audioop.ratecv(
-                intermediate, 2, 1, 16000, 8000, self._outbound_resample_state_16_to_8
-            )
-            mulaw_data = audioop.lin2ulaw(resampled_data, 2)
+            mulaw_data = audioop.lin2ulaw(resampled_8k, 2)
             self.output_buffer.extend(mulaw_data)
             self.session.transition_state("speaking")
             if getattr(self, "_silence_state", "") != "stage_1_prompting":
                 self._waiting_for_user_since = None
+            
+            # Kick off playback task once jitter buffer threshold is satisfied or if sender task is active
             if self._send_audio_task is None or self._send_audio_task.done():
-                self._send_audio_task = asyncio.create_task(self._send_buffered_live_audio())
+                if len(self.output_buffer) >= getattr(self, "prebuffer_threshold", 480):
+                    self._send_audio_task = asyncio.create_task(self._send_buffered_live_audio())
         except Exception as e:
             print(f"[Orchestrator Error] Error sending live audio to WebSocket: {e}")
 
@@ -271,8 +316,7 @@ class VoicePipelineOrchestrator:
         if getattr(self, "_send_audio_task", None) and not self._send_audio_task.done():
             self._send_audio_task.cancel()
         self.output_buffer.clear()
-        self._outbound_resample_state_24_to_16 = None
-        self._outbound_resample_state_16_to_8 = None
+        self._outbound_resample_state = None
         self.session.transition_state("listening")
         self._waiting_for_user_since = None
         self._silence_state = "active"
@@ -331,27 +375,48 @@ class VoicePipelineOrchestrator:
                 # If message and/or subject are provided, answer the question from the message first
                 msg = (self.lead_message or "").strip()
                 subj = (self.lead_subject or "").strip()
-                name_str = f"to {self.lead_name}" if self.lead_name and self.lead_name.lower() != "there" else ""
+                known_name = self.lead_name if (self.lead_name and self.lead_name.lower() != "there") else ""
 
                 if msg:
-                    subj_str = f" regarding '{subj}'" if subj else ""
+                    subj_str = f" regarding {subj}" if subj else ""
+                    if known_name:
+                        greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your consultation enquiry{subj_str}."
+                    else:
+                        greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your smile consultation enquiry{subj_str}."
+                    
                     initial_prompt = (
-                        f"The outbound call has just connected {name_str}. "
-                        f"The caller submitted a contact form enquiry{subj_str} with the message / question: '{msg}'. "
-                        f"Start the call with your warm introduction as Kiara from Ultimate Smile Design, answer their question/message directly and clearly based on our knowledge base, "
-                        f"and then ask: 'Do you have any other questions or any additional details you’d like to know?'"
+                        f"The outbound call has connected to {known_name or 'the customer'}. "
+                        f"The customer submitted a consultation enquiry with message: '{msg}' and subject: '{subj}'. "
+                        f"Speak now: Greet the customer ('{greet_phrase}'), then directly and thoroughly answer the question from their message ('{msg}') using our knowledge base and an intuitive real-world analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                        f"CRITICAL: Do NOT ask for the caller's name or contact details."
                     )
                     await self.gemini_live_client.send_text(initial_prompt)
                 elif subj:
+                    if known_name:
+                        greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}."
+                    else:
+                        greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}."
+                    
                     initial_prompt = (
-                        f"The outbound call has just connected {name_str}. "
-                        f"The caller submitted a contact form enquiry on the topic: '{subj}'. "
-                        f"Start the call with your warm introduction as Kiara from Ultimate Smile Design, address their topic clearly based on our knowledge base, "
-                        f"and then ask: 'Do you have any other questions or any additional details you’d like to know?'"
+                        f"The outbound call has connected to {known_name or 'the customer'}. "
+                        f"The customer submitted a consultation enquiry on the topic: '{subj}'. "
+                        f"Speak now: Greet the customer ('{greet_phrase}'), then address their topic clearly in 2-3 sentences based on our knowledge base and an intuitive analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                        f"CRITICAL: Do NOT ask for the caller's name or contact details."
                     )
                     await self.gemini_live_client.send_text(initial_prompt)
                 else:
-                    await self.gemini_live_client.send_text(f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply.")
+                    if known_name:
+                        initial_prompt = (
+                            f"The outbound call has connected to {known_name}. "
+                            f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply. "
+                            f"CRITICAL: DO NOT ask for their name. You already know their name is {known_name}."
+                        )
+                    else:
+                        initial_prompt = (
+                            f"The call has just connected. "
+                            f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply."
+                        )
+                    await self.gemini_live_client.send_text(initial_prompt)
         except Exception as e:
             print(f"[Orchestrator] Failed to open Gemini Live connection: {e}")
             await self.stop()
@@ -386,8 +451,8 @@ class VoicePipelineOrchestrator:
         self._stopped = True
         self._is_running = False
         self._inbound_resample_state = None
-        self._outbound_resample_state_24_to_16 = None
-        self._outbound_resample_state_16_to_8 = None
+        self._outbound_resample_state = None
+        self._outbound_chunk_counter = 1
         if getattr(self, "_silence_monitor_task", None) and not self._silence_monitor_task.done():
             self._silence_monitor_task.cancel()
         if getattr(self, "_send_audio_task", None) and not self._send_audio_task.done():

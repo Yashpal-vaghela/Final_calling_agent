@@ -48,9 +48,20 @@ class SmartfloClient:
             "Authorization": f"Bearer {self.bearer_token}"
         }
 
-        target_caller_id = (caller_id or self.caller_id or "").strip().lstrip("+")
-        target_agent = (agent_number or self.agent_number or "").strip().lstrip("+")
-        target_customer = (customer_number or "").strip().lstrip("+")
+        # Clean phone numbers (remove spaces, dashes, plus)
+        raw_cust = (customer_number or "").strip()
+        raw_agent = (agent_number or self.agent_number or "").strip()
+        raw_caller = (caller_id or self.caller_id or "").strip()
+
+        # If 12-digit Indian number starting with 91, also support 10 digits if needed
+        cust_digits = "".join(filter(str.isdigit, raw_cust))
+        if len(cust_digits) == 12 and cust_digits.startswith("91"):
+            target_customer = cust_digits[2:]  # 10 digits
+        else:
+            target_customer = cust_digits
+
+        target_agent = "".join(filter(str.isdigit, raw_agent))
+        target_caller_id = "".join(filter(str.isdigit, raw_caller))
         
         payload: Dict[str, Any] = {
             "customer_number": target_customer,
@@ -64,6 +75,9 @@ class SmartfloClient:
 
         if custom_params:
             payload.update(custom_params)
+
+        import json
+        print(f"[SmartfloClient Debug] EXACT JSON payload being sent: {json.dumps(payload)}")
 
         logger.info(f"[SmartfloClient] Triggering Click-to-Call for customer: {customer_number} via {url}")
 

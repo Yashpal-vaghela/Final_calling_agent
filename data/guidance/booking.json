@@ -24,7 +24,7 @@
       "start"
     ],
     "guidance": "When They're Ready to Decide:",
-    "script": "I'm so glad you're taking this step — it's truly a decision you'll thank yourself for every time you look in the mirror. Let me get your details and we'll have our team reach out to arrange everything for you. What's the best number to reach you on?"
+    "script": "I'm so glad you're taking this step — it's truly a decision you'll thank yourself for every time you look in the mirror. Let me get your details so our team can reach out to arrange everything for you. What's the best number to reach you on?"
   },
   "private_booking": {
     "intent": "private_consultation",
@@ -41,17 +41,17 @@
   },
   "cta_soft": {
     "intent": "booking_cta_soft",
-    "guidance": "Soft CTA (when they show mild interest):",
+    "guidance": "Soft CTA (when they show mild interest in booking):",
     "script": "Would you like me to help you find the nearest Authorized Smile Designer? I just need your city."
   },
   "cta_medium": {
     "intent": "booking_cta_medium",
-    "guidance": "Medium CTA (when they're clearly interested):",
-    "script": "It sounds like this could be a great fit for you. ... The next step is a Smile Discovery Consultation — it's complimentary, and there's no obligation. Should I connect you with our team to book one?"
+    "guidance": "Medium CTA (when they're clearly interested in booking):",
+    "script": "It sounds like this could be a great fit for you. The next step is a Smile Discovery Consultation. Should I connect you with our team to arrange one near you?"
   },
   "cta_strong": {
     "intent": "booking_cta_strong",
-    "guidance": "Strong CTA (when they're ready to move):",
-    "script": "Perfect! Let me get your details so our team can reach out today. ... What's your name and which city are you in?"
+    "guidance": "Strong CTA (when they're ready to move forward):",
+    "script": "Perfect! Let me get your details so our team can reach out today. What's your name and which city are you in?"
   }
 }

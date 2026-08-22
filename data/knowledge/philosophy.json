@@ -36,7 +36,7 @@
       "intent": "haresh_savani",
       "user_questions": ["Who is Haresh Savani?", "Tell me about Haresh Savani.", "Who founded USD?", "Is Haresh a dentist?", "What is his role?"],
       "emotion": "curious",
-      "voice_response": "Haresh Savani is a Master Ceramist and the founder of the Ultimate Smile Design philosophy — think of a film director who may never appear on screen, yet shapes every scene the audience remembers. For more than two decades, he's worked alongside dentists, handcrafting a vast number of smile restorations. He realised technology alone couldn't create truly natural smiles — it takes thoughtful planning and master craftsmanship together. That belief became USD.",
+      "voice_response": "Haresh Savani is a Master Ceramist and the founder of the Ultimate Smile Design philosophy — think of a film director who may never appear on screen, yet shapes every scene the audience remembers. With over 20 years of experience working alongside leading dentists, he realized technology alone couldn't create truly natural smiles — it takes thoughtful planning and master craftsmanship together. That belief became USD.",
       "follow_up": "Would you like to know how his philosophy is carried forward by Authorized USD Smile Designers?",
       "keywords": ["haresh savani", "founder", "master ceramist", "philosophy"]
     },
@@ -44,7 +44,7 @@
       "intent": "advance_dental_export",
       "user_questions": ["What is Advance Dental Export?", "What does ADE do?", "Where are the veneers made?", "Where are restorations crafted?"],
       "emotion": "curious",
-      "voice_response": "Advance Dental Export, or ADE, is the dental laboratory behind Ultimate Smile Design. While your dentist plans the treatment, the restorations are handcrafted at ADE by experienced Master Ceramists, combining digital technology with artistic craftsmanship. It's also where Haresh Savani developed the USD philosophy itself.",
+      "voice_response": "Advance Dental Export, or ADE, is the dental laboratory behind Ultimate Smile Design, founded in 2009 in Surat, Gujarat. While your dentist plans the treatment, the restorations are handcrafted at ADE by experienced Master Ceramists, combining digital technology with artistic craftsmanship. It's also where Haresh Savani developed the USD philosophy itself.",
       "follow_up": "Would you like me to explain what a Master Ceramist actually does day to day?",
       "keywords": ["advance dental export", "ade", "laboratory", "restorations"]
     },
@@ -86,7 +86,7 @@
       "emotion": "curious",
       "voice_response": "Ultimate Smile Design isn't a product you can buy off the shelf — it's a philosophy and a standard. Only dentists who complete our training and become Authorized can offer USD, and every restoration is handcrafted exclusively at our laboratory. We work with a select few. Your smile is never mass-produced.",
       "follow_up": "Would you like to know how we make sure every USD smile meets the same standard?",
-      "keywords": ["exclusive", "selective", "authorized only", "bespoke"]
+      "keywords": ["exclusive", "selective", "authorized only", "personalized concept"]
     }
   ]
 }

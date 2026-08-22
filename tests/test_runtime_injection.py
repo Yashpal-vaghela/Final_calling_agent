@@ -16,6 +16,13 @@ from agent.session.call_session import CallSession
 from agent.knowledge.guidance import _format_guidance_for_prompt
 
 
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
+
 class TestRuntimeInjection(unittest.TestCase):
 
     @classmethod
