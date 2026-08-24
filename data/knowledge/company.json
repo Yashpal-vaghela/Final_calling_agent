@@ -10,8 +10,8 @@
         "What is the USD concept?"
       ],
       "emotion": "curious",
-      "voice_response": "Ultimate Smile Design is a premium, personalised smile transformation concept. It combines digital smile planning, facial harmony analysis, and handcrafted artistry by Master Ceramists. Every smile is designed for your face and personality, never copied from a template.",
-      "follow_up": "Shall I walk you through how your smile is planned before treatment even begins?",
+      "voice_response": "Ultimate Smile Design is a premium, personalised approach to smile transformation combining digital planning, facial harmony and handcrafted artistry. The intention is to create a smile that feels naturally aligned with your face and personality rather than copied from a template.",
+      "follow_up": "Shall I walk you through how your smile is planned before treatment begins?",
       "keywords": [
         "ultimate smile design",
         "usd",
@@ -30,8 +30,8 @@
         "What is the purpose of USD?"
       ],
       "emotion": "curious",
-      "voice_response": "Ultimate Smile Design is the premium aesthetic brand of Advance Dental Export, created by Master Ceramist Haresh Savani. He built USD because a premium smile needs more than technology — it needs imagination, planning, and artistic craftsmanship backed by over 20 years of ceramic experience. That's why USD works only through Authorized USD Smile Designers, under the official USD Protocol.",
-      "follow_up": "Curious how the USD Protocol protects the quality of your smile journey?",
+      "voice_response": "Ultimate Smile Design is the premium aesthetic brand of Advance Dental Export, created by Master Ceramist Haresh Savani. The philosophy combines digital precision with planning and ceramic craftsmanship developed over more than 20 years.",
+      "follow_up": "Would you like to know more about the USD Protocol?",
       "keywords": [
         "about usd",
         "founder",
@@ -51,7 +51,7 @@
         "Who trains them?"
       ],
       "emotion": "curious",
-      "voice_response": "An Authorized USD Smile Designer has completed the official USD training under Master Ceramist Haresh Savani and follows the USD Protocol. Many dentists can do routine smile work, but an Authorized designer focuses on facial harmony, digital planning, and handcrafted laboratory artistry, so your result is unique and natural.",
+      "voice_response": "An Authorized USD Smile Designer has completed the official training and follows the USD Protocol. The focus is on facial harmony, digital planning and the handcrafted laboratory process rather than routine treatment alone.",
       "follow_up": "Would you like help finding the nearest Authorized USD Smile Designer?",
       "keywords": [
         "authorized",
@@ -69,8 +69,8 @@
         "Whose philosophy is this?"
       ],
       "emotion": "curious",
-      "voice_response": "The USD Protocol was established by Master Ceramist Haresh Savani, drawing on over 20 years of ceramic craftsmanship. It's the standard every Authorized USD Smile Designer follows — from digital planning to the final handcrafted result.",
-      "follow_up": "Would you like to know what that protocol actually covers, step by step?",
+      "voice_response": "The USD Protocol was established by Master Ceramist Haresh Savani, drawing on more than 20 years of ceramic craftsmanship. It provides a consistent philosophy from digital planning through to the final handcrafted restoration.",
+      "follow_up": "Would you like to know what the protocol covers?",
       "keywords": [
         "usd protocol",
         "who set the protocol",
@@ -88,8 +88,8 @@
         "Success rate?"
       ],
       "emotion": "uncertain",
-      "voice_response": "That's an important question. Every Ultimate Smile Design journey follows a structured protocol, uses premium materials, and is delivered through Authorized Ultimate Smile Designers, with restorations handcrafted by Master Ceramists at Advance Dental Export. For your confidence, every case comes with an Authentication Card containing your case details, which you can verify directly on our official website, ultimatesmiledesign.com.",
-      "follow_up": "Would you like me to explain how your Authentication Card helps verify your treatment?",
+      "voice_response": "That's an important consideration. The structured protocol, digital planning, authorised process, handcrafted restorations and Authentication Card are designed to give you greater clarity and confidence before treatment.",
+      "follow_up": "Would you like me to explain the Authentication Card?",
       "keywords": [
         "trust",
         "authenticity",
@@ -110,8 +110,8 @@
         "Where can I check my Authentication Card?"
       ],
       "emotion": "reassuring",
-      "voice_response": "We provide an Authentication Card for every Ultimate Smile Design case. It helps you verify that your case was handcrafted through the premium aesthetic laboratory of Advance Dental Export, and contains information related to your specific case. You can easily check and verify your Authentication Card on our official website, ultimatesmiledesign.com.",
-      "follow_up": "Would you like to know more about how our Master Ceramists handcraft each case?",
+      "voice_response": "The Authentication Card provides information connected to your Ultimate Smile Design case and allows you to verify it through the official website. It comes with a validity of 5 years, 10 years, 15 years, or a lifetime, depending on the treatment you choose.",
+      "follow_up": "Would you like to know more about our Master Ceramist craftsmanship?",
       "keywords": [
         "authentication card",
         "authentication",
@@ -131,8 +131,8 @@
         "Can I see cases on your website?"
       ],
       "emotion": "curious",
-      "voice_response": "You can visit our official website at ultimatesmiledesign.com to explore our philosophy, view smile transformations, and verify your Authentication Card.",
-      "follow_up": "Would you like me to help you find an Authorized Smile Designer near your city as well?",
+      "voice_response": "You can visit the official Ultimate Smile Design website to explore the philosophy, smile transformations and Authentication Card verification.",
+      "follow_up": "Would you like help finding an Authorized Smile Designer near your city?",
       "keywords": [
         "website",
         "official website",
@@ -151,7 +151,7 @@
         "Which city is your headquarters?"
       ],
       "emotion": "curious",
-      "voice_response": "Our global headquarters and handcrafting laboratory are in Surat, Gujarat. Founded in 2009, the ADE laboratory handles 100% in-house production in Surat, while Authorized USD Smile Designers are available across multiple cities for your consultation and treatment.",
+      "voice_response": "Advance Dental Export was founded in Surat in 2009, where its laboratory and production capabilities are based. Authorized Smile Designers are available across multiple cities.",
       "follow_up": "Would you like help finding an Authorized Smile Designer near your city?",
       "keywords": [
         "headquarters",
@@ -170,7 +170,7 @@
         "Why specialization?"
       ],
       "emotion": "curious",
-      "voice_response": "Think of a pilot. Every pilot is trained, but experience brings judgment and an eye for subtle detail. Smile design works the same way — over 20 years of experience helps a Master Ceramist read proportion, light, and texture, which is exactly why USD follows a structured protocol.",
+      "voice_response": "Experience matters because refinement often comes from details that aren't immediately obvious. More than 20 years of ceramic craftsmanship brings judgement around proportion, texture, colour and light.",
       "follow_up": "Would you like to know how digital planning supports that experience?",
       "keywords": [
         "experience",
@@ -188,8 +188,8 @@
         "Are you AI?"
       ],
       "emotion": "curious",
-      "voice_response": "I'm Kiara, the consultant for Ultimate Smile Design. I can explain the USD philosophy, guide you through the journey, and connect you with an Authorized USD Smile Designer.",
-      "follow_up": "Would you like to start with the USD philosophy, or find a Smile Designer near you?",
+      "voice_response": "I'm Kiara, the consultant for Ultimate Smile Design. I can explain the philosophy and process and connect you with an Authorized USD Smile Designer.",
+      "follow_up": "Would you like to explore the USD philosophy?",
       "keywords": [
         "ai identity",
         "who are you",
@@ -205,7 +205,7 @@
         "Customer support."
       ],
       "emotion": "neutral",
-      "voice_response": "Of course. I can connect you with our team or an Authorized USD Smile Designer directly.",
+      "voice_response": "Of course. I can connect you with our team or an Authorized USD Smile Designer.",
       "follow_up": "May I know your preferred city and a contact number?",
       "keywords": [
         "human",
@@ -223,8 +223,8 @@
         "Is this confidential?"
       ],
       "emotion": "concerned",
-      "voice_response": "Your privacy matters a great deal to us. Anything you share — photos or information — is used only to understand your smile and assist your consultation. For high-profile clients, we maintain complete discretion throughout.",
-      "follow_up": "Is there anything specific you'd like to know about how we handle your privacy?",
+      "voice_response": "Your privacy matters a great deal to us. For high-profile clients, discretion is maintained throughout the consultation and treatment journey.",
+      "follow_up": "Is there anything specific you'd like to know about privacy?",
       "keywords": [
         "privacy",
         "confidential",
@@ -243,8 +243,8 @@
         "What is ADE's track record?"
       ],
       "emotion": "curious",
-      "voice_response": "Founded in 2009, Advance Dental Export works with over 12,000 trusted dentists, has delivered more than 1,20,000 cases, and serves clients across 20 countries. The laboratory has over 750 qualified professionals, all dedicated to handcrafting restorations to the highest standard — every single case.",
-      "follow_up": "Would you like to know how that scale of experience translates to your own smile journey?",
+      "voice_response": "Founded in 2009, Advance Dental Export works with over 12,000 dentists, has delivered more than 1,20,000 cases and serves clients across 20 countries. The laboratory has more than 750 professionals.",
+      "follow_up": "Would you like to know how that experience translates to your smile journey?",
       "keywords": [
         "how big",
         "track record",

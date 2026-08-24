@@ -13,9 +13,15 @@
         "What if it fails?"
       ],
       "emotion": "anxious",
-      "voice_response": "Thank you for sharing that — many people feel exactly the same before starting. Think of your first flight: uncertain before takeoff, but far less daunting once you understand the journey. Your Authorized Smile Designer explains every step and recommends only what suits you. You're never rushed into anything.",
-      "follow_up": "Would you like me to walk you through what happens at your first consultation?",
-      "keywords": ["pain", "fear", "nervous", "anesthesia", "recovery"]
+      "voice_response": "Of course. The first consultation is about understanding the process and your options, so you know what to expect before anything is decided.",
+      "follow_up": "Would you like me to explain what happens at your first consultation?",
+      "keywords": [
+        "pain",
+        "fear",
+        "nervous",
+        "anesthesia",
+        "recovery"
+      ]
     },
     {
       "intent": "medical_conditions",
@@ -26,9 +32,15 @@
         "I smoke, will that affect treatment?"
       ],
       "emotion": "concerned",
-      "voice_response": "Thank you for letting me know. Conditions like diabetes, pregnancy, teeth grinding, or smoking don't automatically rule out treatment, but they do shape the right approach. Your Authorized Smile Designer reviews your medical history and recommends the safest plan for you.",
+      "voice_response": "Thank you for letting me know. These conditions can affect treatment planning, so your medical history should be reviewed properly by the Authorized Smile Designer before any recommendation is made.",
       "follow_up": "Would you like to tell me a little more about your situation?",
-      "keywords": ["medical condition", "diabetes", "pregnancy", "grinding", "smoking"]
+      "keywords": [
+        "medical condition",
+        "diabetes",
+        "pregnancy",
+        "grinding",
+        "smoking"
+      ]
     },
     {
       "intent": "second_opinion",
@@ -39,9 +51,13 @@
         "Should I compare options first?"
       ],
       "emotion": "uncertain",
-      "voice_response": "That's completely understandable. There's a lot of information out there, and every smile is unique, so different dentists may see different priorities. USD encourages you to ask questions and compare, because a confident decision is always a better one.",
+      "voice_response": "Absolutely. With something as personal as your smile, comparing the approach and understanding your options before deciding is entirely reasonable.",
       "follow_up": "Is there something specific another opinion raised that I can help clarify?",
-      "keywords": ["second opinion", "compare", "conflicting advice"]
+      "keywords": [
+        "second opinion",
+        "compare",
+        "conflicting advice"
+      ]
     },
     {
       "intent": "language_capability",
@@ -52,10 +68,17 @@
         "Do you speak my language?"
       ],
       "emotion": "neutral",
-      "voice_response": "Yes — I am multilingual and speak English, Hindi, Gujarati, Marathi, and several other languages. I will naturally continue in whichever language you prefer.",
+      "voice_response": "Yes. I can speak English, Hindi, Gujarati, Marathi, French and several other languages, and I naturally mirror whichever language you use.",
       "follow_up": null,
-      "keywords": ["language", "hindi", "gujarati", "marathi", "french", "english"],
-      "note": "This intent only fires if the caller explicitly asks what languages Kiara speaks. Kiara should never proactively ask the caller to choose a language — she dynamically mirrors whatever language the caller speaks in real-time."
+      "keywords": [
+        "language",
+        "hindi",
+        "gujarati",
+        "marathi",
+        "french",
+        "english"
+      ],
+      "note": "This intent only fires if the caller explicitly asks what languages Kiara speaks. Kiara should never proactively ask the caller to choose a language."
     }
   ]
 }

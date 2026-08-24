@@ -11,8 +11,9 @@
       "clinic"
     ],
     "guidance": "When They Want to Book:",
-    "script": "Wonderful! I'd love to help arrange that. Could you tell me which city you're based in? I'll connect you with the nearest Authorized USD Smile Designer — and we'll make sure the entire experience is seamless for you."
+    "script": "Certainly. I'll help arrange the next step and connect you with the appropriate Authorized USD Smile Designer for your city."
   },
+
   "ready_to_decide": {
     "intent": "closing_booking",
     "keywords": [
@@ -24,8 +25,9 @@
       "start"
     ],
     "guidance": "When They're Ready to Decide:",
-    "script": "I'm so glad you're taking this step — it's truly a decision you'll thank yourself for every time you look in the mirror. Let me get your details so our team can reach out to arrange everything for you. What's the best number to reach you on?"
+    "script": "Certainly. I'll take your details and have our team arrange the next step for you. We'll keep the process straightforward from here."
   },
+
   "private_booking": {
     "intent": "private_consultation",
     "keywords": [
@@ -37,21 +39,24 @@
       "celebrity"
     ],
     "guidance": "For High-Profile Clients Who Need Discretion:",
-    "script": "For our high-profile clients, we offer private, after-hours consultations. Your privacy is paramount — no waiting rooms, no unnecessary exposure. Just you, your Smile Designer, and complete discretion. Would you prefer a private booking?"
+    "script": "Certainly. For clients who value discretion, we can arrange a more private consultation experience. The journey should feel comfortable, confidential and unhurried."
   },
+
   "cta_soft": {
     "intent": "booking_cta_soft",
-    "guidance": "Soft CTA (when they show mild interest in booking):",
-    "script": "Would you like me to help you find the nearest Authorized Smile Designer? I just need your city."
+    "guidance": "Soft CTA:",
+    "script": "If you'd like, I can help you find the appropriate Authorized Smile Designer for your city."
   },
+
   "cta_medium": {
     "intent": "booking_cta_medium",
-    "guidance": "Medium CTA (when they're clearly interested in booking):",
-    "script": "It sounds like this could be a great fit for you. The next step is a Smile Discovery Consultation. Should I connect you with our team to arrange one near you?"
+    "guidance": "Medium CTA:",
+    "script": "The natural next step would be a Smile Discovery Consultation, where your goals and options can be properly understood."
   },
+
   "cta_strong": {
     "intent": "booking_cta_strong",
-    "guidance": "Strong CTA (when they're ready to move forward):",
-    "script": "Perfect! Let me get your details so our team can reach out today. What's your name and which city are you in?"
+    "guidance": "Strong CTA:",
+    "script": "Certainly. I'll take your name and city, and our team can arrange the consultation from there."
   }
 }

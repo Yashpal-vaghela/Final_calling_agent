@@ -1,5 +1,6 @@
 {
-  "usage_rule": "The ₹25,000 starting figure below is an EXAMPLE, not a mandatory line for every answer. Use it only when the caller directly asks about cost, price, EMI, or 'what's included'. Do not volunteer it in unrelated answers (trust, treatment, comparison, etc.), and do not repeat it more than once per call unless the caller asks about price again.",
+  "usage_rule": "The ₹25,000 starting figure is used only when the caller directly asks about cost, price, EMI, or what's included. Do not volunteer it in unrelated answers and do not repeat it more than once per call unless the caller asks again.",
+
   "intents": [
     {
       "intent": "smile_cost",
@@ -15,18 +16,32 @@
         "How much for a full smile?",
         "Can I negotiate?"
       ],
-      "emotion": "price_conscious",
-      "voice_response": "Treatment starts from ₹25,000, but the final cost depends on your specific treatment and requirements. The exact investment depends on the material selected, the number of units, your Authorized Smile Designer's expertise, and the handcrafted laboratory work involved. Your precise plan and cost are confirmed only after your smile assessment.",
-      "follow_up": "Would you like me to explain what usually determines that final cost?",
-      "keywords": ["cost", "price", "EMI", "expensive", "hidden charges"]
+      "emotion": "investment_minded",
+      "voice_response": "Treatment starts from ₹25,000 per unit, but the final investment depends on your treatment, materials, number of units and individual requirements. The important distinction is the standard of planning, expertise and craftsmanship behind the final result.",
+      "follow_up": "Would you like me to explain what determines the final investment?",
+      "keywords": [
+        "cost",
+        "price",
+        "EMI",
+        "expensive",
+        "hidden charges"
+      ]
     },
     {
       "intent": "budget",
-      "user_questions": ["I have a limited budget.", "What can I get within my budget?", "I can't afford the full treatment right now."],
-      "emotion": "price_conscious",
-      "voice_response": "Thank you for sharing that. The right treatment depends on your smile, your goals, and your budget — sometimes a simpler treatment is all that's needed, and sometimes it's planned in stages. We never recommend more than you actually need.",
-      "follow_up": "Would you like me to explain what options might fit your budget?",
-      "keywords": ["budget", "afford", "staged treatment"]
+      "user_questions": [
+        "I have a limited budget.",
+        "What can I get within my budget?",
+        "I can't afford the full treatment right now."
+      ],
+      "emotion": "investment_minded",
+      "voice_response": "Of course. The right treatment should be based on what you genuinely need and what suits your goals, rather than adding treatment simply because it is available.",
+      "follow_up": "Would you like me to explain what options may be appropriate?",
+      "keywords": [
+        "budget",
+        "afford",
+        "staged treatment"
+      ]
     }
   ]
-}
+} 

@@ -82,14 +82,14 @@ class GeminiLiveStreamClient:
             lang_instruction = (
                 "DYNAMIC REAL-TIME MIRRORING: Dynamically mirror whatever language the caller speaks (English, Hindi, Gujarati, Marathi, French, Hinglish, Gujlish, etc.). "
                 "If the caller switches to another language mid-conversation, you MUST immediately switch to that exact language on that very turn. Never stay stuck in English.\n"
-                "DELIVERY INSTRUCTION: You MUST speak with a warm, completely natural, and highly conversational tone. Sound like a friendly, relaxed human being. Use a gentle and natural Indian female cadence, but prioritize sounding smooth and human over forcing an accent. Absolutely DO NOT sound robotic, rigid, or like an AI."
+                "DELIVERY INSTRUCTION: You MUST speak like an old-money, cultured, and wealthy Indian woman of unshakeable confidence and understated elegance. Speak with calm authority, serene poise, and natural grace. Use an elegant Indian female voice cadence across all languages. Absolutely DO NOT sound robotic, rushed, timid, or defensive."
             )
             self.system_instruction = (
                 f"{base_prompt}\n\n"
                 f"---\n\n"
                 f"## CURRENT SESSION (LIVE VOICE CALL)\n"
                 f"- preferred_language: {lang_instruction}\n"
-                f"- call_mode: REAL-TIME TELEPHONY AUDIO STREAM (Deliver warm, natural conversational responses of approximately 4-5 sentences for explanatory/treatment questions and 1-2 sentences for simple questions. For any treatment, philosophy, trust, or concept question, PROACTIVELY weave in a vivid real-world example or analogy directly in your response without waiting for the caller to ask for one, ending with a natural follow-up question).\n"
+                f"- call_mode: REAL-TIME TELEPHONY AUDIO STREAM (Deliver concise 2-3 sentence responses with unshakeable confidence and old-money poise. Sentence 1: Direct Answer to caller's question, Sentence 2: Real-World Analogy / Example, Sentence 3: Poised Follow-up question. NEVER skip the analogy).\n"
             )
 
         if self.caller_context:

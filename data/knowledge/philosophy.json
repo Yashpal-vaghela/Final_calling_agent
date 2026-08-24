@@ -2,91 +2,205 @@
   "intents": [
     {
       "intent": "usd_vs_smile_design",
-      "user_questions": ["What's the difference between Smile Design and Ultimate Smile Design?", "Is USD just Smile Designing?", "How does USD compare with Smile Designing?", "Why is Ultimate Smile Design different?"],
+      "user_questions": [
+        "What's the difference between Smile Design and Ultimate Smile Design?",
+        "Is USD just Smile Designing?",
+        "How does USD compare with Smile Designing?",
+        "Why is Ultimate Smile Design different?"
+      ],
       "emotion": "curious",
-      "voice_response": "Think of it like comparing a ready-made suit to a tailored creation — both cover you, but only one is made exclusively for you. Regular smile design improves teeth. USD designs the entire smile around your face and personality, using a standardised protocol, digital planning, and handcrafted artistry, exclusively at the ADE laboratory.",
-      "follow_up": "Curious how that personalised planning works before treatment even begins?",
-      "keywords": ["difference", "compare", "vs", "same", "different"]
+      "voice_response": "It's the difference between something made to fit and something designed around the individual. Ultimate Smile Design considers facial proportions, planning and craftsmanship together rather than treating the smile as a collection of separate teeth.",
+      "follow_up": "Curious how that personalised planning works?",
+      "keywords": [
+        "difference",
+        "compare",
+        "vs",
+        "same",
+        "different"
+      ]
     },
     {
       "intent": "teeth_vs_smile",
-      "user_questions": ["Isn't fixing teeth enough?", "My teeth are healthy already.", "Isn't whitening enough?", "Why do some smiles look fake?"],
+      "user_questions": [
+        "Isn't fixing teeth enough?",
+        "My teeth are healthy already.",
+        "Isn't whitening enough?",
+        "Why do some smiles look fake?"
+      ],
       "emotion": "confused",
-      "voice_response": "That's a thoughtful question. Think about someone with healthy hair but a hairstyle that doesn't suit their face — the hair is fine, but the look still feels wrong. Teeth work the same way. They can be healthy and white, yet the smile still looks unnatural if it doesn't suit your face. That's why USD designs the entire smile, not just individual teeth.",
-      "follow_up": "Would you like to know what sets an Authorized USD Smile Designer apart from a regular clinic?",
-      "keywords": ["healthy teeth", "fake smile", "whitening", "harmony"]
+      "voice_response": "Healthy teeth are an excellent foundation, but the overall smile is also about proportion and harmony with the face. Like a beautifully designed interior by Kelly Wearstler, individual elements only feel right when everything works together.",
+      "follow_up": "Shall I explain how we plan those proportions?",
+      "keywords": [
+        "healthy teeth",
+        "fake smile",
+        "whitening",
+        "harmony"
+      ]
     },
     {
       "intent": "why_usd",
-      "user_questions": ["Why should I choose USD?", "What's different about USD?", "What makes USD unique?", "Give me one reason to choose USD.", "Why shouldn't I just go nearby?"],
+      "user_questions": [
+        "Why should I choose USD?",
+        "What's different about USD?",
+        "What makes USD unique?",
+        "Give me one reason to choose USD.",
+        "Why shouldn't I just go nearby?"
+      ],
       "emotion": "skeptical",
-      "voice_response": "That's a fair question, and you deserve a real answer. Ultimate Smile Design isn't just about changing your teeth — it's a standardised protocol combining digital planning, facial analysis, and master craftsmanship, available only through Authorized Smile Designers. Every genuine treatment is handcrafted at the Advance Dental Export laboratory and includes an Authentication Card you can verify on our official website, ultimatesmiledesign.com. We don't just give you a beautiful smile, we give you proof.",
-      "follow_up": "Would you like me to explain how that's different from conventional smile designing?",
-      "keywords": ["why usd", "unique", "premium", "authentication", "verification"]
+      "voice_response": "The distinction is in the complete process rather than one individual treatment. Digital planning, facial analysis, authorised protocols and handcrafted laboratory work are brought together to create a more considered result.",
+      "follow_up": "Would you like me to explain how that differs from conventional smile designing?",
+      "keywords": [
+        "why usd",
+        "unique",
+        "premium",
+        "authentication",
+        "verification"
+      ]
     },
     {
       "intent": "laboratory",
-      "user_questions": ["Why does a laboratory matter?", "Isn't the dentist enough?", "Who actually makes my veneers?", "Who designs my teeth?", "Isn't AI enough for this?"],
+      "user_questions": [
+        "Why does a laboratory matter?",
+        "Isn't the dentist enough?",
+        "Who actually makes my veneers?",
+        "Who designs my teeth?",
+        "Isn't AI enough for this?"
+      ],
       "emotion": "curious",
-      "voice_response": "Most people are surprised to learn creating a smile is a true partnership. Think of a luxury watch — one person designs it, but master craftsmen shape every detail that makes it exceptional. Your dentist plans the treatment, while Master Ceramists handcraft your veneers in the laboratory, recreating the texture and light of natural teeth. Beautiful smiles aren't manufactured. They're handcrafted.",
-      "follow_up": "Would you like to see where digital technology fits into that process?",
-      "keywords": ["laboratory", "master ceramist", "who makes veneers", "craftsmanship"]
+      "voice_response": "A refined smile is a collaboration between clinical expertise and craftsmanship. The dentist establishes the clinical direction, while the Master Ceramist refines texture, colour, translucency and detail.",
+      "follow_up": "Would you like to know where digital technology fits into the process?",
+      "keywords": [
+        "laboratory",
+        "master ceramist",
+        "who makes veneers",
+        "craftsmanship"
+      ]
     },
     {
       "intent": "haresh_savani",
-      "user_questions": ["Who is Haresh Savani?", "Tell me about Haresh Savani.", "Who founded USD?", "Is Haresh a dentist?", "What is his role?"],
+      "user_questions": [
+        "Who is Haresh Savani?",
+        "Tell me about Haresh Savani.",
+        "Who founded USD?",
+        "Is Haresh a dentist?",
+        "What is his role?"
+      ],
       "emotion": "curious",
-      "voice_response": "Haresh Savani is a Master Ceramist and the founder of the Ultimate Smile Design philosophy — think of a film director who may never appear on screen, yet shapes every scene the audience remembers. With over 20 years of experience working alongside leading dentists, he realized technology alone couldn't create truly natural smiles — it takes thoughtful planning and master craftsmanship together. That belief became USD.",
-      "follow_up": "Would you like to know how his philosophy is carried forward by Authorized USD Smile Designers?",
-      "keywords": ["haresh savani", "founder", "master ceramist", "philosophy"]
+      "voice_response": "Haresh Savani is the Master Ceramist and founder behind the Ultimate Smile Design philosophy, with more than 20 years of experience. His approach combines digital precision with the judgement and craftsmanship required for natural-looking ceramic work.",
+      "follow_up": "Would you like to know how his philosophy is carried forward?",
+      "keywords": [
+        "haresh savani",
+        "founder",
+        "master ceramist",
+        "philosophy"
+      ]
     },
     {
       "intent": "advance_dental_export",
-      "user_questions": ["What is Advance Dental Export?", "What does ADE do?", "Where are the veneers made?", "Where are restorations crafted?"],
+      "user_questions": [
+        "What is Advance Dental Export?",
+        "What does ADE do?",
+        "Where are the veneers made?",
+        "Where are restorations crafted?"
+      ],
       "emotion": "curious",
-      "voice_response": "Advance Dental Export, or ADE, is the dental laboratory behind Ultimate Smile Design, founded in 2009 in Surat, Gujarat. While your dentist plans the treatment, the restorations are handcrafted at ADE by experienced Master Ceramists, combining digital technology with artistic craftsmanship. It's also where Haresh Savani developed the USD philosophy itself.",
-      "follow_up": "Would you like me to explain what a Master Ceramist actually does day to day?",
-      "keywords": ["advance dental export", "ade", "laboratory", "restorations"]
+      "voice_response": "Advance Dental Export is the laboratory behind Ultimate Smile Design, founded in 2009 in Surat, Gujarat. It combines digital dentistry with skilled ceramic craftsmanship for the restorations used in the process.",
+      "follow_up": "Would you like to know what a Master Ceramist does?",
+      "keywords": [
+        "advance dental export",
+        "ade",
+        "laboratory",
+        "restorations"
+      ]
     },
     {
       "intent": "master_ceramist",
-      "user_questions": ["What is a Master Ceramist?", "What does a ceramist do?", "Can dentists make veneers themselves?", "Who creates the natural texture?"],
+      "user_questions": [
+        "What is a Master Ceramist?",
+        "What does a ceramist do?",
+        "Can dentists make veneers themselves?",
+        "Who creates the natural texture?"
+      ],
       "emotion": "curious",
-      "voice_response": "A Master Ceramist is the artist behind your ceramic restorations. Think of a sculptor turning stone into a lifelike statue — the material matters, but it's the artist's hands that bring it to life. After your dentist plans the treatment, the Master Ceramist handcrafts your veneers, recreating natural texture, colour, and how light reflects off real teeth.",
-      "follow_up": "Curious why that craftsmanship still can't be fully replaced by machines?",
-      "keywords": ["master ceramist", "ceramist", "veneers", "artistry"]
+      "voice_response": "A Master Ceramist is responsible for the artistic and technical refinement of ceramic restorations. It is similar to the final stage of couture at houses like Dior, where the craftsman's eye determines the texture, colour, proportion and finishing.",
+      "follow_up": "Would you like to know how they work with your Smile Designer?",
+      "keywords": [
+        "master ceramist",
+        "ceramist",
+        "veneers",
+        "artistry"
+      ]
     },
     {
       "intent": "usd_philosophy",
-      "user_questions": ["What is the USD philosophy?", "Explain your philosophy.", "What do you believe?", "What's your approach?"],
+      "user_questions": [
+        "What is the USD philosophy?",
+        "Explain your philosophy.",
+        "What do you believe?",
+        "What's your approach?"
+      ],
       "emotion": "curious",
-      "voice_response": "Our philosophy is simple — a smile shouldn't just improve your teeth, it should naturally belong to your face. Master Ceramist Haresh Savani developed this after years of seeing that technology alone couldn't create truly natural smiles. At USD, every decision begins with understanding the person before choosing the treatment.",
-      "follow_up": "Would you like to know why planning always comes before treatment?",
-      "keywords": ["philosophy", "approach", "believe"]
+      "voice_response": "The philosophy is simple: your smile should belong to you. It should complement your face, expressions and personality rather than look like a standard cosmetic result.",
+      "follow_up": "Would you like to know why planning comes before treatment?",
+      "keywords": [
+        "philosophy",
+        "approach",
+        "believe"
+      ]
     },
     {
       "intent": "handcrafted_craftsmanship",
-      "user_questions": ["Why handcrafted?", "Why not machine-made?", "Is handmade really better?", "Why does artistry matter?"],
+      "user_questions": [
+        "Why handcrafted?",
+        "Why not machine-made?",
+        "Is handmade really better?",
+        "Why does artistry matter?"
+      ],
       "emotion": "curious",
-      "voice_response": "Think of a handwritten painting — a printer can copy the image perfectly, but it can't recreate the artist's judgment or attention to tiny detail. Digital technology helps with precision, but natural texture, colour, and lifelike character are still created by experienced Master Ceramists. Technology creates precision. People create beauty.",
-      "follow_up": "Would you like to know how we make a smile look natural rather than artificial?",
-      "keywords": ["handcrafted", "machine", "AI", "craftsmanship"]
+      "voice_response": "Digital technology provides precision, but precision alone doesn't create character. The final refinement comes from the trained eye and hands of the Master Ceramist.",
+      "follow_up": "Would you like to know how we make a smile look natural?",
+      "keywords": [
+        "handcrafted",
+        "machine",
+        "AI",
+        "craftsmanship"
+      ]
     },
     {
       "intent": "natural_smile",
-      "user_questions": ["How do you make it natural?", "How do you avoid fake-looking veneers?", "How do you match faces?", "Why do proportions matter?"],
+      "user_questions": [
+        "How do you make it natural?",
+        "How do you avoid fake-looking veneers?",
+        "How do you match faces?",
+        "Why do proportions matter?"
+      ],
       "emotion": "hopeful",
-      "voice_response": "A natural smile isn't created by copying someone else's teeth. Think of choosing glasses — the right frame suits your face, while the wrong one looks out of place even if it's expensive. USD studies your facial features and expressions before designing your smile, and every restoration is handcrafted to blend naturally with you.",
-      "follow_up": "Curious why every smile ends up designed differently, even for similar goals?",
-      "keywords": ["natural smile", "fake smile", "harmony", "proportions"]
+      "voice_response": "A refined smile should feel as though it belongs naturally to the person rather than announcing the treatment. That is why facial proportions, expressions, colour and texture are considered together.",
+      "follow_up": "Curious why every smile is designed differently?",
+      "keywords": [
+        "natural smile",
+        "fake smile",
+        "harmony",
+        "proportions"
+      ]
     },
     {
       "intent": "exclusivity",
-      "user_questions": ["Is USD available everywhere?", "Can any dentist offer this?", "Is this exclusive?", "Why is USD so selective?"],
+      "user_questions": [
+        "Is USD available everywhere?",
+        "Can any dentist offer this?",
+        "Is this exclusive?",
+        "Why is USD so selective?"
+      ],
       "emotion": "curious",
-      "voice_response": "Ultimate Smile Design isn't a product you can buy off the shelf — it's a philosophy and a standard. Only dentists who complete our training and become Authorized can offer USD, and every restoration is handcrafted exclusively at our laboratory. We work with a select few. Your smile is never mass-produced.",
-      "follow_up": "Would you like to know how we make sure every USD smile meets the same standard?",
-      "keywords": ["exclusive", "selective", "authorized only", "personalized concept"]
+      "voice_response": "Ultimate Smile Design is not intended to be a mass-market treatment. It follows a defined philosophy through trained Authorized Smile Designers, with restorations handcrafted through Advance Dental Export.",
+      "follow_up": "Would you like to know how the standard is maintained?",
+      "keywords": [
+        "exclusive",
+        "selective",
+        "authorized only",
+        "personalized concept"
+      ]
     }
   ]
 }

@@ -13,9 +13,15 @@
         "Phone number?"
       ],
       "emotion": "ready",
-      "voice_response": "I'd be happy to help with that. USD works through a network of Authorized USD Smile Designers across different cities, and I can connect you with the nearest one. Your first consultation is about understanding your smile and the options that suit you.",
-      "follow_up": "Which city are you based in, so I can find the right Smile Designer for you?",
-      "keywords": ["booking", "consultation", "clinic", "appointment", "nearest clinic"]
+      "voice_response": "I'd be happy to help with that. Ultimate Smile Design works through Authorized USD Smile Designers across different cities, and I can help you find the appropriate one for your location.",
+      "follow_up": "Which city are you based in?",
+      "keywords": [
+        "booking",
+        "consultation",
+        "clinic",
+        "appointment",
+        "nearest clinic"
+      ]
     },
     {
       "intent": "smile_discovery_consultation",
@@ -27,9 +33,13 @@
         "Consultation process?"
       ],
       "emotion": "curious",
-      "voice_response": "Think of meeting an architect for the first time — before any plans are drawn, they want to understand your vision. The USD Smile Discovery Consultation works the same way. Your Authorized Smile Designer listens to your concerns, understands your goals, and evaluates your smile before anything is planned.",
-      "follow_up": "Would you like to know what happens right after that, in the Smile Vision Analysis?",
-      "keywords": ["discovery consultation", "consultation", "first visit"]
+      "voice_response": "The first consultation is more like commissioning a piece of design than attending a routine appointment. Your Smile Designer understands your preferences, facial characteristics and objectives before anything is planned.",
+      "follow_up": "Would you like to know what happens after the consultation?",
+      "keywords": [
+        "discovery consultation",
+        "consultation",
+        "first visit"
+      ]
     }
   ]
 }

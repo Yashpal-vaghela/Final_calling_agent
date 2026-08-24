@@ -2,123 +2,267 @@
   "intents": [
     {
       "intent": "veneers",
-      "user_questions": ["What are veneers?", "Are veneers painful?", "Do veneers damage teeth?", "How long do veneers last?", "Can veneers fall off?", "Are veneers permanent?", "Which material do you use?", "Ceramic or zirconia?"],
+      "user_questions": [
+        "What are veneers?",
+        "Are veneers painful?",
+        "Do veneers damage teeth?",
+        "How long do veneers last?",
+        "Can veneers fall off?",
+        "Are veneers permanent?",
+        "Which material do you use?",
+        "Ceramic or zirconia?"
+      ],
       "emotion": "curious",
-      "voice_response": "Think of a veneer as the final brushstroke on a masterpiece — an ultra-thin, handcrafted ceramic shell that perfects the shape, colour, and harmony of your smile. It's first digitally planned using 3D scanning and facial analysis by your Authorized Smile Designer, then individually handcrafted by a Master Ceramist at Advance Dental Export using state-of-the-art CAD/CAM milling and ceramic materials.",
-      "follow_up": "Many clients also ask what determines the investment — would that help?",
-      "keywords": ["veneers", "ceramic", "zirconia", "porcelain"]
+      "voice_response": "A veneer is a thin ceramic restoration designed to refine the shape, colour and proportion of a tooth. The restoration is digitally planned and then individually handcrafted to suit the overall smile.",
+      "follow_up": "Would you like to know what determines the investment?",
+      "keywords": [
+        "veneers",
+        "ceramic",
+        "zirconia",
+        "porcelain"
+      ]
     },
     {
       "intent": "treatment_comparison",
-      "user_questions": ["Is this better than whitening?", "Better than braces?", "Better than aligners?", "Better than implants?", "Local clinic vs USD?", "Should I try Invisalign first?"],
+      "user_questions": [
+        "Is this better than whitening?",
+        "Better than braces?",
+        "Better than aligners?",
+        "Better than implants?",
+        "Local clinic vs USD?",
+        "Should I try Invisalign first?"
+      ],
       "emotion": "comparing",
-      "voice_response": "That's a smart question, and the truth is no treatment is universally better. Think of eyesight — some people need glasses, others contact lenses. Whitening, aligners, veneers, and implants all solve different problems, and your Authorized Smile Designer recommends based on what your smile actually needs.",
-      "follow_up": "Curious which option might suit your smile best?",
-      "keywords": ["comparison", "braces", "whitening", "veneers", "implants", "aligners"]
+      "voice_response": "There isn't one treatment that is universally better; each solves a different problem. The appropriate choice depends on your smile, goals and long-term requirements.",
+      "follow_up": "Curious which option may suit your smile?",
+      "keywords": [
+        "comparison",
+        "braces",
+        "whitening",
+        "veneers",
+        "implants",
+        "aligners"
+      ]
     },
     {
       "intent": "smile_planning",
-      "user_questions": ["Why is planning needed?", "Why facial analysis?", "Why a blueprint before treatment?", "Why not start with veneers directly?"],
+      "user_questions": [
+        "Why is planning needed?",
+        "Why facial analysis?",
+        "Why a blueprint before treatment?",
+        "Why not start with veneers directly?"
+      ],
       "emotion": "curious",
-      "voice_response": "Imagine building a luxury home without an architectural plan — even the best materials can't guarantee a beautiful result. Before recommending any treatment, your Authorized Smile Designer evaluates your facial features, lip line, and expressions to design a personalized plan first. Proper planning ensures your final smile looks natural and feels truly yours.",
-      "follow_up": "Would you like to see how that plan comes to life in the Smile Blueprint?",
-      "keywords": ["planning", "blueprint", "facial analysis"]
+      "voice_response": "Planning comes first because even beautiful materials cannot compensate for poor proportions. Like fine architecture from firms like Foster + Partners, the structure and relationship between the elements are established before the finishing details.",
+      "follow_up": "Would you like to see how that plan becomes your Smile Blueprint?",
+      "keywords": [
+        "planning",
+        "blueprint",
+        "facial analysis"
+      ]
     },
     {
       "intent": "smile_identity",
-      "user_questions": ["What is a natural smile?", "Will I still look like myself?", "Can you copy a celebrity smile?", "Can I copy someone else's veneers?"],
+      "user_questions": [
+        "What is a natural smile?",
+        "Will I still look like myself?",
+        "Can you copy a celebrity smile?",
+        "Can I copy someone else's veneers?"
+      ],
       "emotion": "hopeful",
-      "voice_response": "Think about a fingerprint — every person's is completely unique. Your smile is just as personal. Instead of copying someone else's teeth, USD designs a smile that complements your own face and expressions, so you look like the best version of yourself, not someone else.",
-      "follow_up": "Shall I explain how your smile gets personalised before treatment begins?",
-      "keywords": ["smile identity", "natural smile", "unique smile", "personality"]
+      "voice_response": "Your smile should feel like an extension of your own appearance rather than a borrowed aesthetic. The design is therefore considered around your facial features, expressions and personality.",
+      "follow_up": "Shall I explain how your smile is personalised?",
+      "keywords": [
+        "smile identity",
+        "natural smile",
+        "unique smile",
+        "personality"
+      ]
     },
     {
       "intent": "celebrity_smiles",
-      "user_questions": ["Can you copy a celebrity smile?", "I want the same smile as an actor.", "Can you recreate a Hollywood smile?"],
+      "user_questions": [
+        "Can you copy a celebrity smile?",
+        "I want the same smile as an actor.",
+        "Can you recreate a Hollywood smile?"
+      ],
       "emotion": "curious",
-      "voice_response": "We understand the inspiration, but every smile is unique. Think of tailoring a suit — one made for someone else won't fit you perfectly, no matter how beautiful. We can use a celebrity smile as inspiration, but the final design is created specifically for your face.",
-      "follow_up": "Would you like to know how we personalise a smile to suit your own features?",
-      "keywords": ["celebrity smile", "copy smile", "inspiration"]
+      "voice_response": "A celebrity smile can certainly be inspiration, but it shouldn't become a template. The final design is interpreted according to your own face and proportions.",
+      "follow_up": "Would you like to know how we personalise a smile?",
+      "keywords": [
+        "celebrity smile",
+        "copy smile",
+        "inspiration"
+      ]
     },
     {
       "intent": "smile_identity_extended",
-      "user_questions": ["Will I still look like me?", "Can my smile reflect my personality?", "Why shouldn't I copy celebrities?", "Why is every smile unique?"],
+      "user_questions": [
+        "Will I still look like me?",
+        "Can my smile reflect my personality?",
+        "Why shouldn't I copy celebrities?",
+        "Why is every smile unique?"
+      ],
       "emotion": "hopeful",
-      "voice_response": "Think of your signature — no one else's represents you, even if theirs looks beautiful. We don't copy another person's smile. We study your facial features, expressions, and personality to create one that feels naturally yours. The best smile isn't someone else's — it's the one that tells your story.",
-      "follow_up": "Curious how we make sure it still feels unmistakably you?",
-      "keywords": ["smile identity", "personality", "unique smile"]
+      "voice_response": "The most convincing aesthetic work is rarely the most obvious. The intention is for your smile to feel completely yours while remaining refined and natural.",
+      "follow_up": "Curious how we keep it unmistakably you?",
+      "keywords": [
+        "smile identity",
+        "personality",
+        "unique smile"
+      ]
     },
     {
       "intent": "ceramic_materials",
-      "user_questions": ["Why ceramic?", "Why zirconia?", "Which material is best?", "Why not composite?"],
+      "user_questions": [
+        "Why ceramic?",
+        "Why zirconia?",
+        "Which material is best?",
+        "Why not composite?"
+      ],
       "emotion": "curious",
-      "voice_response": "Different materials serve different purposes, so there isn't one that's best for everyone. Advance Dental Export uses premium bio-compatible ceramic and advanced zirconia with state-of-the-art CAD/CAM milling to ensure strength, natural light reflection, and authentic manufacturer warranty guarantees. Your Authorized Smile Designer recommends the exact material suited to your bite and goals.",
-      "follow_up": "Would you like to know how dentists and Master Ceramists work together on this?",
-      "keywords": ["ceramic", "porcelain", "zirconia", "composite"]
+      "voice_response": "Different materials have different characteristics, so the appropriate choice depends on the individual case. Factors such as strength, aesthetics, translucency, bite and overall design are considered together.",
+      "follow_up": "Would you like to know how dentists and Master Ceramists work together?",
+      "keywords": [
+        "ceramic",
+        "porcelain",
+        "zirconia",
+        "composite"
+      ]
     },
     {
       "intent": "digital_smile_design",
-      "user_questions": ["What is Digital Smile Design?", "Do you scan my face?", "3D scanning?", "Facial analysis?"],
+      "user_questions": [
+        "What is Digital Smile Design?",
+        "Do you scan my face?",
+        "3D scanning?",
+        "Facial analysis?"
+      ],
       "emotion": "curious",
-      "voice_response": "Digital Smile Design replaces traditional messy impressions with instant 3D digital scanning and facial analysis. We support leading CAD/CAM systems including Cerec Connect, 3Shape, iTero, 3M ESPE, and Carestream. Once the digital plan is approved, a Master Ceramist handcrafts every restoration to perfection.",
-      "follow_up": "Curious whether AI actually decides your treatment, or just supports it?",
-      "keywords": ["digital smile design", "facial analysis", "scan", "3D"]
+      "voice_response": "Digital Smile Design uses digital scanning and facial analysis to plan the smile with greater precision before physical treatment begins. The approved direction is then translated into the handcrafted restoration.",
+      "follow_up": "Curious whether AI decides your treatment?",
+      "keywords": [
+        "digital smile design",
+        "facial analysis",
+        "scan",
+        "3D"
+      ]
     },
     {
       "intent": "ai_clinical_decisions",
-      "user_questions": ["Can AI make mistakes?", "Does AI decide my treatment?", "Should I trust AI?"],
+      "user_questions": [
+        "Can AI make mistakes?",
+        "Does AI decide my treatment?",
+        "Should I trust AI?"
+      ],
       "emotion": "curious",
-      "voice_response": "AI is an assistant, not the decision-maker. Think of a modern aircraft — computers support the pilot constantly, but the pilot always makes the final call. At USD, AI helps analyse proportions and measurements, but your treatment is planned by experienced dentists and Master Ceramists.",
-      "follow_up": "Shall I walk you through the first step of your smile journey?",
-      "keywords": ["AI", "judgment", "accuracy", "technology"]
+      "voice_response": "AI can support analysis and precision, but it should not replace professional judgement. Think of it as a highly capable instrument while experienced professionals make the final clinical and aesthetic decisions.",
+      "follow_up": "Shall I walk you through the first step?",
+      "keywords": [
+        "AI",
+        "judgment",
+        "accuracy",
+        "technology"
+      ]
     },
     {
       "intent": "smile_vision_analysis",
-      "user_questions": ["What is Smile Vision Analysis?", "What happens during the smile assessment?"],
+      "user_questions": [
+        "What is Smile Vision Analysis?",
+        "What happens during the smile assessment?"
+      ],
       "emotion": "curious",
-      "voice_response": "Think of an eye examination — before recommending glasses, the optometrist measures your vision from several angles. Smile Vision Analysis works the same way: your facial proportions, smile line, and bite are carefully evaluated to understand what will look most natural on you.",
+      "voice_response": "Smile Vision Analysis looks at the smile as part of the face rather than as separate teeth. Facial proportions, smile line and other relevant characteristics are considered together.",
       "follow_up": "Would you like to know how that becomes your Smile Blueprint?",
-      "keywords": ["vision analysis", "facial analysis", "smile assessment"]
+      "keywords": [
+        "vision analysis",
+        "facial analysis",
+        "smile assessment"
+      ]
     },
     {
       "intent": "smile_blueprint",
-      "user_questions": ["What is the Smile Blueprint?", "What is the treatment plan?", "Is there a personalized plan?"],
+      "user_questions": [
+        "What is the Smile Blueprint?",
+        "What is the treatment plan?",
+        "Is there a personalized plan?"
+      ],
       "emotion": "curious",
-      "voice_response": "The Smile Blueprint is your comprehensive treatment roadmap — showing exact proportions, material choices, and aesthetic goals before any physical work begins. It combines insights from your consultation and 3D digital scan to guide every step of your transformation.",
-      "follow_up": "Would you like to know how you can preview your smile before treatment starts?",
-      "keywords": ["blueprint", "treatment plan", "smile plan"]
+      "voice_response": "The Smile Blueprint is the design direction for your transformation, bringing together proportions, aesthetic goals and treatment considerations. It provides a clear roadmap before physical work begins.",
+      "follow_up": "Would you like to know how you preview the smile?",
+      "keywords": [
+        "blueprint",
+        "treatment plan",
+        "smile plan"
+      ]
     },
     {
       "intent": "smile_preview",
-      "user_questions": ["What is the Smile Preview?", "Can I see my smile before treatment?", "Is there a mock-up or trial smile?"],
+      "user_questions": [
+        "What is the Smile Preview?",
+        "Can I see my smile before treatment?",
+        "Is there a mock-up or trial smile?"
+      ],
       "emotion": "hopeful",
-      "voice_response": "One of the most exciting parts of the journey is seeing your future smile before treatment even begins — much like trying on glasses before buying them. The USD Smile Preview lets you and your Smile Designer discuss the planned result together first, so confidence begins before treatment.",
+      "voice_response": "The Smile Preview allows you to see and discuss the proposed direction before treatment. It's similar to reviewing a finished interior concept by a designer like Kelly Hoppen before the work begins.",
       "follow_up": "Curious what happens at the final Smile Reveal?",
-      "keywords": ["preview", "mockup", "trial smile"]
+      "keywords": [
+        "preview",
+        "mockup",
+        "trial smile"
+      ]
     },
     {
       "intent": "smile_reveal",
-      "user_questions": ["What is the Smile Reveal?", "What happens at the final appointment?"],
+      "user_questions": [
+        "What is the Smile Reveal?",
+        "What happens at the final appointment?"
+      ],
       "emotion": "excited",
-      "voice_response": "Smile Reveal is the moment your journey comes together — like an artist unveiling a finished sculpture. After digital planning, 3D analysis, and Master Ceramist handcraftsmanship, your final smile is revealed, designed specifically for you. It isn't created in one appointment — it's revealed after a thoughtful journey.",
+      "voice_response": "Smile Reveal is where the planning and craftsmanship come together. The final result is the culmination of the digital design, clinical process and detailed laboratory work.",
       "follow_up": "Would you like to know how to care for your smile afterward?",
-      "keywords": ["reveal", "final smile", "completion"]
+      "keywords": [
+        "reveal",
+        "final smile",
+        "completion"
+      ]
     },
     {
       "intent": "digital_planning",
-      "user_questions": ["What is digital planning?", "What is digital smile planning?", "How do you plan my smile?", "Is my smile designed digitally?", "What happens after the scan?", "Is everything done on a computer?"],
+      "user_questions": [
+        "What is digital planning?",
+        "What is digital smile planning?",
+        "How do you plan my smile?",
+        "Is my smile designed digitally?",
+        "What happens after the scan?",
+        "Is everything done on a computer?"
+      ],
       "emotion": "curious",
-      "voice_response": "Think of it like an architect creating a 3D digital model before constructing a landmark building. Digital planning begins with instant 3D intraoral scanning and facial harmony analysis using advanced CAD/CAM technology, allowing you to visualize and refine your smile. Once approved, Master Ceramists at Advance Dental Export handcraft every ceramic restoration by hand in our Surat laboratory to ensure natural texture and beauty.",
-      "follow_up": "Curious why the handcrafted laboratory step matters just as much as the digital plan?",
-      "keywords": ["digital planning", "digital smile design", "digital workflow", "facial analysis"]
+      "voice_response": "Digital planning is the architectural stage of the smile journey, where facial proportions and smile characteristics are analysed before treatment. The approved direction is then translated into handcrafted restorations.",
+      "follow_up": "Curious why the handcrafted laboratory step matters?",
+      "keywords": [
+        "digital planning",
+        "digital smile design",
+        "digital workflow",
+        "facial analysis"
+      ]
     },
     {
       "intent": "laboratory_handcrafting",
-      "user_questions": ["Who actually makes my veneers?", "Is my smile made by a machine or a person?", "Does a computer design my final smile?"],
+      "user_questions": [
+        "Who actually makes my veneers?",
+        "Is my smile made by a machine or a person?",
+        "Does a computer design my final smile?"
+      ],
       "emotion": "curious",
-      "voice_response": "The digital tool gives you a preview of your future smile — it shows proportion and shape with precision. But the actual restoration is handcrafted by hand, by Master Ceramist Haresh Savani and his team at Advance Dental Export. The screen shows you the plan. His hands create the smile.",
-      "follow_up": "Shall I explain how that handcrafting process actually works?",
-      "keywords": ["handcrafted", "laboratory", "master ceramist", "digital preview"]
+      "voice_response": "Digital technology establishes precision, but the final restoration is refined by skilled hands. The technology provides the framework while the Master Ceramist brings the texture, colour and character together.",
+      "follow_up": "Shall I explain how that handcrafting process works?",
+      "keywords": [
+        "handcrafted",
+        "laboratory",
+        "master ceramist",
+        "digital preview"
+      ]
     }
   ]
 }
