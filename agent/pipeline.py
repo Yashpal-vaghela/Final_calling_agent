@@ -14,6 +14,7 @@ from typing import Optional
 
 from agent.streaming.gemini_live_stream import GeminiLiveStreamClient
 from agent.session.call_session import CallSession
+from agent.audio.codecs import resample_pcm16
 
 
 class VoicePipelineOrchestrator:
@@ -66,7 +67,12 @@ class VoicePipelineOrchestrator:
         # Determine greeting based on call intent and whether caller name is already known
         if self.lead_name and self.lead_name.lower() not in ("there", "none", ""):
             city_str = f" in {self.lead_city}" if self.lead_city else ""
-            if self.opening_intent in ("follow-up", "outbound_contact_form"):
+            if self.opening_intent == "outbound_booking_form":
+                self.greeting = (
+                    f"Hi {self.lead_name}, this is Kiara from Ultimate Smile Design, "
+                    f"following up on your{city_str} appointment booking request. How can I help you today?"
+                )
+            elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 self.greeting = (
                     f"Hi {self.lead_name}, this is Kiara from Ultimate Smile Design, "
                     f"following up on your{city_str} smile consultation enquiry. How can I help you today?"
@@ -77,7 +83,13 @@ class VoicePipelineOrchestrator:
                     f"How can I help you today?"
                 )
         else:
-            if self.opening_intent in ("follow-up", "outbound_contact_form"):
+            if self.opening_intent == "outbound_booking_form":
+                city_str = f" {self.lead_city}" if self.lead_city else ""
+                self.greeting = (
+                    f"Hello! This is Kiara from Ultimate Smile Design, "
+                    f"following up on your{city_str} appointment booking request. May I know your name, please?"
+                )
+            elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 city_str = f" {self.lead_city}" if self.lead_city else ""
                 self.greeting = (
                     f"Hello! This is Kiara from Ultimate Smile Design, "
@@ -156,7 +168,7 @@ class VoicePipelineOrchestrator:
         )
         self.tts_provider_name = "Gemini Live"
         self.mulaw_frame_size = 160
-        self.prebuffer_threshold = 480  # 3 frames (60ms) jitter buffer for ultra-low latency & smooth speech
+        self.prebuffer_threshold = 3200  # 400ms jitter buffer for ultra-low latency & smooth speech
         self.output_buffer = bytearray()
         self._send_audio_task: Optional[asyncio.Task] = None
         self._outbound_chunk_counter: int = 1
@@ -173,7 +185,7 @@ class VoicePipelineOrchestrator:
 
 
     async def _silence_monitor(self) -> None:
-        """Background task to monitor for user silence: prompts after 15s, disconnects after an additional 25s."""
+        """Hybrid background task to monitor for user silence. Acts as a safety net if no VAD/events trigger for 15s."""
         while self._is_running and not self._stopped:
             # If audio is currently playing or actively streaming through buffer, do not count user silence
             if len(self.output_buffer) > 0 or (self._send_audio_task and not self._send_audio_task.done()):
@@ -213,50 +225,77 @@ class VoicePipelineOrchestrator:
             await asyncio.sleep(1)
 
     async def _send_buffered_live_audio(self) -> None:
-        """Send buffered audio to WebSocket in consistent 160-byte (20ms) mulaw frames with wall-clock pacing.
-
-        Uses time.monotonic() to compute the exact remaining sleep after each WebSocket send,
-        so accumulated loop and I/O overhead does not stretch speech playback speed.
-        """
-        FRAME_DURATION = 0.02  # 20 ms per 160-byte 8 kHz μ-law frame
+        """Send buffered audio to WebSocket in Smartflo-compliant chunk sizes (multiples of 160 bytes)."""
+        # We process in larger chunks (e.g., 1600 bytes = 200ms) to avoid precise OS-level thread sleeping dependencies
+        CHUNK_MULTIPLIER = 10
+        target_chunk_size = getattr(self, "mulaw_frame_size", 160) * CHUNK_MULTIPLIER
+        FRAME_DURATION = 0.02 * CHUNK_MULTIPLIER
+        
         try:
             next_send_at = time.monotonic()
             while self._is_running and not self._stopped:
-                if len(self.output_buffer) >= getattr(self, "mulaw_frame_size", 160):
-                    frame = bytes(self.output_buffer[:self.mulaw_frame_size])
-                    del self.output_buffer[:self.mulaw_frame_size]
-                    payload = base64.b64encode(frame).decode("utf-8")
-                    media_message = {
-                        "event": "media",
-                        "streamSid": self.stream_sid,
-                        "media": {
-                            "payload": payload,
-                            "chunk": self._outbound_chunk_counter
-                        },
-                    }
-                    self._outbound_chunk_counter += 1
-                    if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
-                        try:
-                            await self.websocket.send_text(json.dumps(media_message))
-                        except Exception as e:
-                            print(f"[Orchestrator Warning] Failed to send buffered live audio: {e}")
+                # Calculate time-based owed chunks to compensate for sleep inaccuracies
+                now = time.monotonic()
+                
+                # If we're catching up, or buffer reached threshold
+                if now >= next_send_at and len(self.output_buffer) >= target_chunk_size:
+                    frames_owed = max(1, int((now - next_send_at) / FRAME_DURATION) + 1)
+                    
+                    # Extract up to frames_owed
+                    bytes_to_extract = target_chunk_size * frames_owed
+                    
+                    # Ensure we don't extract more than we have
+                    if bytes_to_extract > len(self.output_buffer):
+                        # Floor to nearest multiple of target_chunk_size
+                        available_frames = len(self.output_buffer) // target_chunk_size
+                        bytes_to_extract = available_frames * target_chunk_size
+                        frames_owed = available_frames
+
+                    if bytes_to_extract > 0:
+                        chunk_data = bytes(self.output_buffer[:bytes_to_extract])
+                        del self.output_buffer[:bytes_to_extract]
+                        
+                        payload = base64.b64encode(chunk_data).decode("utf-8")
+                        media_message = {
+                            "event": "media",
+                            "streamSid": self.stream_sid,
+                            "media": {
+                                "payload": payload,
+                                "chunk": self._outbound_chunk_counter
+                            },
+                        }
+                        self._outbound_chunk_counter += 1
+                        if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
+                            try:
+                                await self.websocket.send_text(json.dumps(media_message))
+                            except Exception as e:
+                                print(f"[Orchestrator Warning] Failed to send buffered live audio: {e}")
+                                break
+                        else:
                             break
-                    else:
-                        break
-                    next_send_at += FRAME_DURATION
-                    sleep_for = next_send_at - time.monotonic()
-                    if sleep_for > 0:
-                        await asyncio.sleep(sleep_for)
-                else:
-                    # Brief drain wait (20ms) for any immediately following chunk from active Gemini stream
+                        
+                        next_send_at += frames_owed * FRAME_DURATION
+
+                # Calculate sleep time
+                sleep_for = max(0.005, next_send_at - time.monotonic())
+                
+                # If we don't have a full chunk, wait for more data OR drain if it's the end of a turn
+                if len(self.output_buffer) < target_chunk_size:
+                    # Brief wait to see if more data arrives
                     await asyncio.sleep(0.02)
-                    if len(self.output_buffer) < getattr(self, "mulaw_frame_size", 160):
-                        # If there are remaining trailing bytes at turn end, pad to 160 (0xff is silence in mu-law)
+                    # If it's still small, we might be at the end of the turn
+                    if len(self.output_buffer) < target_chunk_size and (self._send_audio_task is not None):
+                        # Drain remaining buffer padded to nearest 160 multiple
                         if len(self.output_buffer) > 0:
                             trailing = bytes(self.output_buffer)
                             self.output_buffer.clear()
-                            padded_frame = trailing.ljust(self.mulaw_frame_size, b"\xff")
-                            payload = base64.b64encode(padded_frame).decode("utf-8")
+                            
+                            remainder = len(trailing) % getattr(self, "mulaw_frame_size", 160)
+                            if remainder > 0:
+                                pad_amount = getattr(self, "mulaw_frame_size", 160) - remainder
+                                trailing += b"\xff" * pad_amount
+                                
+                            payload = base64.b64encode(trailing).decode("utf-8")
                             media_message = {
                                 "event": "media",
                                 "streamSid": self.stream_sid,
@@ -271,10 +310,24 @@ class VoicePipelineOrchestrator:
                                     await self.websocket.send_text(json.dumps(media_message))
                                 except Exception:
                                     pass
-                        break
+                        break # Done with this burst of speech
+                else:
+                    await asyncio.sleep(sleep_for)
             
             # When buffer is fully drained and assistant is done speaking
             if len(self.output_buffer) == 0 and self._is_running and not self._stopped:
+                # Send Mark Event to indicate end of speech turn
+                if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
+                    try:
+                        await self.websocket.send_text(json.dumps({
+                            "event": "mark",
+                            "streamSid": self.stream_sid,
+                            "mark": {"name": "assistant_turn_complete"}
+                        }))
+                        print(f"[Orchestrator] Sent 'mark' event for StreamSid: {self.stream_sid}")
+                    except Exception:
+                        pass
+                        
                 self.session.transition_state("listening")
                 if getattr(self, "_silence_state", "") == "stage_1_prompting":
                     print("[Orchestrator] Finished asking if user is there. Now waiting 25s for user response before disconnect.")
@@ -292,8 +345,8 @@ class VoicePipelineOrchestrator:
             return
         try:
             # Direct single-stage 24kHz -> 8kHz stateful resampling (3:1 integer decimation)
-            resampled_8k, self._outbound_resample_state = audioop.ratecv(
-                data, 2, 1, 24000, 8000, self._outbound_resample_state
+            resampled_8k, self._outbound_resample_state = resample_pcm16(
+                data, 24000, 8000, self._outbound_resample_state
             )
             mulaw_data = audioop.lin2ulaw(resampled_8k, 2)
             self.output_buffer.extend(mulaw_data)
@@ -377,21 +430,43 @@ class VoicePipelineOrchestrator:
                 subj = (self.lead_subject or "").strip()
                 known_name = self.lead_name if (self.lead_name and self.lead_name.lower() != "there") else ""
 
+                city_display = self.lead_city or "their city"
+                location_rule = (
+                    f"CRITICAL LOCATION & PARTNER RULE: The caller's consultation will be arranged with our Authorized USD Smile Designer in {city_display}. "
+                    f"If they ask where the meeting or consultation will take place, confidently confirm it will be with our local Authorized Smile Designer in {city_display}. "
+                    f"NEVER invent, guess, or suggest other cities (like Hyderabad, Delhi, or Mumbai) if the user explicitly selected {city_display}."
+                )
+                crucial_instruction = (
+                    f"CRITICAL: You already know the caller's Name and City ({city_display}) from the form they just submitted. "
+                    "DO NOT ask them for their name or city. Acknowledge the details they provided naturally, "
+                    f"and move directly to the consultation guidance. {location_rule}"
+                )
+                if self.opening_intent == "outbound_booking_form":
+                    doctor = self.caller_context.get("doctor") if self.caller_context else None
+                    if doctor:
+                        crucial_instruction = (
+                            f"CRITICAL: You already know the caller's First Name, Last Name, City ({city_display}), and selected Doctor ({doctor}) from the form they just submitted. "
+                            f"DO NOT ask them for their name or city. Acknowledge the details they provided naturally (e.g., 'I see you're looking to book an appointment with {doctor} in {city_display}...'), "
+                            f"and move directly to the booking guidance. {location_rule}"
+                        )
+
                 if msg:
                     subj_str = f" regarding {subj}" if subj else ""
+                    enquiry_type = "appointment booking request" if self.opening_intent == "outbound_booking_form" else "consultation enquiry"
                     if known_name:
-                        greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your consultation enquiry{subj_str}."
+                        greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}."
                     else:
-                        greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your smile consultation enquiry{subj_str}."
+                        greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}."
                     
                     initial_prompt = (
                         f"The outbound call has connected to {known_name or 'the customer'}. "
-                        f"The customer submitted a consultation enquiry with message: '{msg}' and subject: '{subj}'. "
+                        f"The customer submitted a {enquiry_type} with message: '{msg}' and subject: '{subj}'. "
                         f"Speak now: Greet the customer ('{greet_phrase}'), then directly and thoroughly answer the question from their message ('{msg}') using our knowledge base and an intuitive real-world analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
-                        f"CRITICAL: Do NOT ask for the caller's name or contact details."
+                        f"{crucial_instruction}"
                     )
                     await self.gemini_live_client.send_text(initial_prompt)
                 elif subj:
+                    enquiry_type = "appointment booking request" if self.opening_intent == "outbound_booking_form" else "consultation enquiry"
                     if known_name:
                         greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}."
                     else:
@@ -399,9 +474,9 @@ class VoicePipelineOrchestrator:
                     
                     initial_prompt = (
                         f"The outbound call has connected to {known_name or 'the customer'}. "
-                        f"The customer submitted a consultation enquiry on the topic: '{subj}'. "
+                        f"The customer submitted a {enquiry_type} on the topic: '{subj}'. "
                         f"Speak now: Greet the customer ('{greet_phrase}'), then address their topic clearly in 2-3 sentences based on our knowledge base and an intuitive analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
-                        f"CRITICAL: Do NOT ask for the caller's name or contact details."
+                        f"{crucial_instruction}"
                     )
                     await self.gemini_live_client.send_text(initial_prompt)
                 else:
@@ -409,7 +484,7 @@ class VoicePipelineOrchestrator:
                         initial_prompt = (
                             f"The outbound call has connected to {known_name}. "
                             f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply. "
-                            f"CRITICAL: DO NOT ask for their name. You already know their name is {known_name}."
+                            f"{crucial_instruction}"
                         )
                     else:
                         initial_prompt = (
@@ -437,8 +512,8 @@ class VoicePipelineOrchestrator:
         if self.gemini_live_client and not getattr(self.gemini_live_client, "_closed", False):
             try:
                 pcm8k = audioop.ulaw2lin(audio_bytes, 2)
-                pcm16k, self._inbound_resample_state = audioop.ratecv(
-                    pcm8k, 2, 1, 8000, 16000, self._inbound_resample_state
+                pcm16k, self._inbound_resample_state = resample_pcm16(
+                    pcm8k, 8000, 16000, self._inbound_resample_state
                 )
                 await self.gemini_live_client.send_audio(pcm16k)
             except Exception as e:

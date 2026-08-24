@@ -266,6 +266,11 @@ class GeminiLiveStreamClient:
             output_audio_transcription=genai_types.AudioTranscriptionConfig(),
             realtime_input_config=genai_types.RealtimeInputConfig(
                 turn_coverage="TURN_INCLUDES_ONLY_ACTIVITY",
+                automatic_activity_detection=genai_types.AutomaticActivityDetection(
+                    disabled=False,
+                    prefix_padding_ms=500,
+                    silence_duration_ms=500,
+                ),
             ),
             tools=self.tools if self.tools else None,
         )

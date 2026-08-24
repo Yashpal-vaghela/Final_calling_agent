@@ -1,13 +1,24 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from backend.app.routes import smartflo_voice, contact_form, internal_callback
-from backend.app.routes.contact_form import ACTIVE_CALLER_CONTEXTS
+from fastapi.staticfiles import StaticFiles
+import os
+
+from backend.app.routes import smartflo_voice, contact_form, internal_callback, booking_form, cities
+from backend.app.services.caller_context import ACTIVE_CALLER_CONTEXTS
 
 app = FastAPI(title="USD Calling Agent")
+
+# Mount static directory
+static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+if not os.path.exists(static_dir):
+    os.makedirs(static_dir)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 app.include_router(smartflo_voice.router)
 app.include_router(contact_form.router)
 app.include_router(internal_callback.router)
+app.include_router(booking_form.router)
+app.include_router(cities.router)
 
 @app.get("/")
 def root():

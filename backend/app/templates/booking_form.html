@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultimate Smile Design — Outbound Consultation Form</title>
+  <title>Ultimate Smile Design — Booking Appointment</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -334,7 +334,7 @@
         Advance Dental Export
       </div>
       <h1 class="brand-title">Ultimate Smile <span>Design</span></h1>
-      <p class="brand-subtitle">Fill in the caller's consultation details before initiating the outbound voice session with Kiara.</p>
+      <p class="brand-subtitle">Fill in the appointment details before initiating the outbound booking session with Kiara.</p>
     </div>
 
     <div class="form-card">
@@ -342,13 +342,13 @@
         <div class="form-grid">
           
           <div class="form-group">
-            <label for="name">Full Name <span class="required-badge">*</span></label>
-            <input type="text" id="name" name="name" placeholder="e.g. Yashpal Vaghela" required autofocus>
+            <label for="first_name">First Name <span class="required-badge">*</span></label>
+            <input type="text" id="first_name" name="first_name" placeholder="e.g. Yashpal" required autofocus>
           </div>
 
           <div class="form-group">
-            <label for="email">Email Address <span class="required-badge">*</span></label>
-            <input type="email" id="email" name="email" placeholder="e.g. yashpal@example.com" required>
+            <label for="last_name">Last Name <span class="required-badge">*</span></label>
+            <input type="text" id="last_name" name="last_name" placeholder="e.g. Vaghela" required>
           </div>
 
           <div class="form-group">
@@ -360,19 +360,26 @@
           </div>
 
           <div class="form-group">
-            <label for="city">City <span class="required-badge">*</span></label>
+            <label for="email">Email Address <span class="required-badge">*</span></label>
+            <input type="email" id="email" name="email" placeholder="e.g. yashpal@example.com" required>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="city">Enter your city Name <span class="required-badge">*</span></label>
             <input type="text" id="city" name="city" list="cities-datalist" placeholder="e.g. Surat, Mumbai, Ahmedabad" autocomplete="off" required>
             <datalist id="cities-datalist"></datalist>
           </div>
 
           <div class="form-group full-width">
-            <label for="subject">Subject / Consultation Topic</label>
-            <input type="text" id="subject" name="subject" placeholder="e.g. Smile Transformation with Master Ceramists">
+            <label for="message">Enter your message</label>
+            <textarea id="message" name="message" placeholder="e.g. Looking for a consultation..."></textarea>
           </div>
 
           <div class="form-group full-width">
-            <label for="message">Message / Enquiry Notes</label>
-            <textarea id="message" name="message" placeholder="e.g. Interested in bespoke veneers and digital preview before an upcoming wedding..."></textarea>
+            <label for="doctor">Select Doctor <span class="required-badge">*</span></label>
+            <select id="doctor" name="doctor" style="background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--text-primary); font-family: inherit; font-size: 13.5px; outline: none; width: 100%; appearance: none;" required>
+              <option value="Dr. Viren K Savani">Dr. Viren K Savani</option>
+            </select>
           </div>
 
           <div class="form-group full-width">
@@ -417,15 +424,16 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
+      const first_name = document.getElementById('first_name').value.trim();
+      const last_name = document.getElementById('last_name').value.trim();
       const phone = phoneInput.value.trim();
+      const email = document.getElementById('email').value.trim();
       const city = document.getElementById('city').value.trim();
-      const subject = document.getElementById('subject').value.trim();
       const message = document.getElementById('message').value.trim();
+      const doctor = document.getElementById('doctor').value.trim();
 
-      if (!name || !email || !phone || !city) {
-        showStatus('error', 'Incomplete Form', 'Please fill in all required fields (Name, Email, Phone, City).');
+      if (!first_name || !last_name || !email || !phone || !city) {
+        showStatus('error', 'Incomplete Form', 'Please fill in all required fields (First Name, Last Name, Email, Phone, City).');
         return;
       }
 
@@ -441,18 +449,19 @@
       hideStatus();
 
       try {
-        const response = await fetch('/api/contact-form/submit', {
+        const response = await fetch('/api/booking-form/submit', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            name: name,
+            first_name: first_name,
+            last_name: last_name,
             email: email,
             phone: phone,
             city: city,
-            subject: subject,
-            message: message
+            message: message,
+            doctor: doctor
           })
         });
 
@@ -462,7 +471,7 @@
           showStatus(
             'success',
             'Outbound Call Triggered Successfully!',
-            `Smartflo is calling ${phone}. Kiara has been equipped with ${name}'s details and will conduct the consultation seamlessly.`
+            `Smartflo is calling ${phone}. Kiara has been equipped with ${first_name} ${last_name}'s details and will conduct the booking seamlessly.`
           );
           btnText.textContent = 'Call in Progress...';
         } else {

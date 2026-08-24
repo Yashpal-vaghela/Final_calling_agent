@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse, Response
 
 from backend.app.models.call import Call
 from backend.app.services.smartflo_service import smartflo_client
-from backend.app.routes.contact_form import lookup_caller_context, remove_caller_context, ACTIVE_CALLER_CONTEXTS
+from backend.app.services.caller_context import lookup_caller_context, remove_caller_context, ACTIVE_CALLER_CONTEXTS
 from agent.utils.call_logger import save_calls, load_calls
 from agent.pipeline import VoicePipelineOrchestrator
 

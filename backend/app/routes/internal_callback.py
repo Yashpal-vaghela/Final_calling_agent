@@ -33,7 +33,7 @@ async def trigger_callback(payload: TriggerCallbackRequest, request: Request, _ 
     Triggers an outbound follow-up call to a lead via Tata Smartflo Click-to-Call API.
     """
     # 1. Load lead from active in-memory context
-    from backend.app.routes.contact_form import lookup_caller_context
+    from backend.app.services.caller_context import lookup_caller_context
     lead = lookup_caller_context(payload.lead_id)
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found or expired")

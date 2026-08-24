@@ -32,6 +32,10 @@ def pcm16_to_mulaw(pcm_bytes: bytes) -> bytes:
     """
     return audioop.lin2ulaw(pcm_bytes, 2)
 
+import math
+import numpy as np
+from scipy.signal import resample_poly
+
 def resample_pcm16(
     pcm_bytes: bytes, 
     in_rate: int, 
@@ -39,19 +43,59 @@ def resample_pcm16(
     state: Optional[tuple] = None
 ) -> Tuple[bytes, Optional[tuple]]:
     """
-    Resamples 16-bit PCM audio.
+    Resamples 16-bit PCM audio using high-quality Polyphase FIR filtering.
+    Maintains streaming state across chunks to prevent boundary clicks.
     
     Args:
         pcm_bytes (bytes): 16-bit PCM audio.
-        in_rate (int): Original sample rate (e.g., 8000).
-        out_rate (int): Target sample rate (e.g., 16000).
-        state (tuple, optional): State from a previous call for continuous streaming.
+        in_rate (int): Original sample rate (e.g., 24000).
+        out_rate (int): Target sample rate (e.g., 8000).
+        state (tuple, optional): (zi,) State from previous call for continuous streaming.
         
     Returns:
         Tuple[bytes, tuple]: Resampled audio bytes and the new state for the next chunk.
     """
     if in_rate == out_rate:
         return pcm_bytes, state
+        
+    pcm_array = np.frombuffer(pcm_bytes, dtype=np.int16)
+    if len(pcm_array) == 0:
+        return b"", state
+        
+    gcd = math.gcd(in_rate, out_rate)
+    up = out_rate // gcd
+    down = in_rate // gcd
     
-    # audioop.ratecv(fragment, width, nchannels, inrate, outrate, state[, weightA[, weightB]])
-    return audioop.ratecv(pcm_bytes, 2, 1, in_rate, out_rate, state)
+    # Calculate the filter half-length to determine overlap needed for continuity
+    # resample_poly uses a kaiser window with half_len = 10 * max(up, down)
+    half_len = 10 * max(up, down)
+    overlap_samples = 2 * half_len + 1
+    
+    prev_overlap = state[0] if state is not None else np.array([], dtype=np.int16)
+    
+    # Concatenate previous overlap with current chunk
+    combined = np.concatenate([prev_overlap, pcm_array])
+    
+    # Resample the combined block
+    resampled = resample_poly(
+        combined, 
+        up, 
+        down, 
+        window=('kaiser', 5.0), 
+        padtype='constant'
+    )
+    
+    # Discard the output corresponding to the prepended overlap
+    if len(prev_overlap) > 0:
+        skip_out_samples = math.ceil(len(prev_overlap) * up / down)
+    else:
+        skip_out_samples = 0
+        
+    valid_resampled = resampled[skip_out_samples:]
+    
+    # Save the tail of the current array for the next overlap
+    next_overlap = combined[-overlap_samples:] if len(combined) > overlap_samples else combined
+    
+    # Clip and convert back to int16 bytes
+    resampled_int16 = np.clip(np.round(valid_resampled), -32768, 32767).astype(np.int16)
+    return resampled_int16.tobytes(), (next_overlap,)
