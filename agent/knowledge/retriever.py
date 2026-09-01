@@ -60,18 +60,18 @@ class KnowledgeRetriever(ABC):
 class JSONFaqRetriever(KnowledgeRetriever):
     """
     Concrete implementation of KnowledgeRetriever using lexical scoring and keyword match
-    against structured FAQ and domain knowledge data in data/knowledge/. Serves as Phase 1 retrieval engine before vector embedding RAG.
+    against structured FAQ and domain knowledge data in data/company_data/. Serves as Phase 1 retrieval engine before vector embedding RAG.
     """
     def __init__(self, data_path: Optional[str] = None):
         if data_path is None:
             root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-            data_path = os.path.join(root_dir, "data", "knowledge")
+            data_path = os.path.join(root_dir, "data", "Comapny_data_1")
         self.data_path = data_path
         self._knowledge_items: List[Dict[str, Any]] = []
         self.load_data()
 
     def load_data(self) -> None:
-        """Loads all JSON knowledge files from data/knowledge directory into memory."""
+        """Loads all JSON knowledge files from data/company_data directory into memory."""
         self._knowledge_items.clear()
         if not os.path.exists(self.data_path):
             print(f"[JSONFaqRetriever] Warning: data path not found at {self.data_path}")
@@ -90,13 +90,25 @@ class JSONFaqRetriever(KnowledgeRetriever):
                 with open(fpath, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 
-                # Check for "intents" list format (standard in data/knowledge/*.json)
-                if isinstance(data, dict) and "intents" in data and isinstance(data["intents"], list):
-                    for idx, item in enumerate(data["intents"]):
+                # Handle both legacy {"intents": [...]} and new dict-based schemas
+                if isinstance(data, dict):
+                    if "intents" in data and isinstance(data["intents"], list):
+                        items = data["intents"]
+                    else:
+                        items = list(data.values())
+
+                    for idx, item in enumerate(items):
+                        if not isinstance(item, dict):
+                            continue
+                            
                         intent_name = item.get("intent", f"{category}_{idx}")
-                        content = item.get("voice_response") or item.get("answer") or item.get("content") or ""
-                        if item.get("follow_up"):
-                            content = f"{content} {item.get('follow_up')}".strip()
+                        
+                        if "facts" in item:
+                            content = f"Topic: {item.get('topic')}\nFacts: {item.get('facts')}\nDetails: {item.get('details', '')}".strip()
+                        else:
+                            content = item.get("voice_response") or item.get("answer") or item.get("content") or ""
+                            if item.get("follow_up"):
+                                content = f"{content} {item.get('follow_up')}".strip()
                         
                         keywords = list(item.get("keywords", []))
                         user_questions = item.get("user_questions", [])
@@ -105,7 +117,7 @@ class JSONFaqRetriever(KnowledgeRetriever):
 
                         self._knowledge_items.append({
                             "id": intent_name,
-                            "topic": category,
+                            "topic": item.get("topic", category),
                             "intent": intent_name,
                             "keywords": [kw.lower() for kw in keywords if isinstance(kw, str) and kw.strip()],
                             "related_topics": [category],

@@ -25,13 +25,38 @@ from agent.tools.get_faq import get_faq
 from agent.tools.handoff import human_handoff
 
 
-def get_system_prompt() -> str:
-    """Loads the system prompt from project prompts directory with fallback."""
-    prompt_path = os.path.join(os.path.dirname(__file__), "..", "prompts", "system_prompt.md")
-    if os.path.exists(prompt_path):
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "You are Kiara, an elite concierge for Ultimate Smile Design."
+def build_system_prompt(opening_intent: str) -> str:
+    """Dynamically assembles the system prompt from the modular prompts directory."""
+    prompts_dir = os.path.join(os.path.dirname(__file__), "..", "prompts")
+    
+    # 1. Load Core Persona & Guardrails
+    persona_path = os.path.join(prompts_dir, "core", "persona.md")
+    guardrails_path = os.path.join(prompts_dir, "core", "guardrails.md")
+    
+    components = []
+    for path in [persona_path, guardrails_path]:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                components.append(f.read())
+                
+    # 2. Load Intent-Specific Prompt
+    intent_file_map = {
+        "outbound_booking_form": "outbound_booking.md",
+        "outbound_contact_form": "outbound_contact.md",
+        "inbound": "inbound.md"
+    }
+    
+    intent_filename = intent_file_map.get(opening_intent, "inbound.md")
+    intent_path = os.path.join(prompts_dir, "intents", intent_filename)
+    
+    if os.path.exists(intent_path):
+        with open(intent_path, "r", encoding="utf-8") as f:
+            components.append(f.read())
+            
+    if not components:
+        return "You are Kiara, an elite concierge for Ultimate Smile Design."
+        
+    return "\n\n---\n\n".join(components)
 
 
 class GeminiLiveStreamClient:
@@ -44,6 +69,7 @@ class GeminiLiveStreamClient:
         call_id: Optional[str] = None,
         preferred_language: str = "multi",
         initial_greeting: Optional[str] = None,
+        initial_prompt: Optional[str] = None,
         input_sample_rate: int = 16000,
         model_name: Optional[str] = None,
         voice_name: Optional[str] = None,
@@ -51,11 +77,15 @@ class GeminiLiveStreamClient:
         tool_mapping: Optional[Dict[str, Callable]] = None,
         system_instruction: Optional[str] = None,
         caller_context: Optional[Dict[str, Any]] = None,
+        opening_intent: Optional[str] = None,
     ):
         self.call_id = call_id or "live-session"
         self.preferred_language = preferred_language
         self.input_sample_rate = input_sample_rate
         self.caller_context = caller_context or {}
+        self.opening_intent = opening_intent or self.caller_context.get("opening_intent")
+        self.initial_greeting = initial_greeting
+        self.initial_prompt = initial_prompt
         
         # Load credentials and configuration from settings with fallback to environment
         self.api_key = getattr(settings, "GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY")
@@ -71,64 +101,37 @@ class GeminiLiveStreamClient:
         self.voice_name = (
             voice_name 
             or getattr(settings, "GEMINI_LIVE_VOICE", None) 
-            or os.environ.get("GEMINI_LIVE_VOICE", "Callirrhoe")
+            or os.environ.get("GEMINI_LIVE_VOICE", "Erinome")
         )
 
         # Build system instruction incorporating conversational context
         if system_instruction is not None:
             self.system_instruction = system_instruction
         else:
-            base_prompt = get_system_prompt()
-            lang_instruction = (
-                "DYNAMIC REAL-TIME MIRRORING: Dynamically mirror whatever language the caller speaks (English, Hindi, Gujarati, Marathi, French, Hinglish, Gujlish, etc.). "
-                "If the caller switches to another language mid-conversation, you MUST immediately switch to that exact language on that very turn. Never stay stuck in English.\n"
-                "DELIVERY INSTRUCTION: You MUST speak like an old-money, cultured, and wealthy Indian woman of unshakeable confidence and understated elegance. Speak with calm authority, serene poise, and natural grace. Use an elegant Indian female voice cadence across all languages. Absolutely DO NOT sound robotic, rushed, timid, or defensive."
-            )
+            base_prompt = build_system_prompt(self.opening_intent or "inbound")
             self.system_instruction = (
+                f"### SUPREME DIRECTIVE 1: REAL-TIME LANGUAGE MIRRORING (RULE #1)\n"
+                f"You MUST match the caller's spoken language on EVERY SINGLE TURN without exception, even on short 1-3 word phrases:\n"
+                f"- If the caller speaks Hindi / Hinglish (e.g. 'haan', 'bolo', 'acha', 'kitna lagega') -> Respond 100% in Hindi / Hinglish.\n"
+                f"- If the caller speaks Gujarati / Gujlish (e.g. 'ha', 'bolo ne', 'kem cho', 'su chhe', 'ketla thashe') -> Respond 100% in Gujarati / Gujlish.\n"
+                f"- If the caller speaks English -> Respond 100% in refined Indian-English.\n"
+                f"- MANDATORY KNOWLEDGE TRANSLATION: Your knowledge facts are written in English. You MUST deliver these facts in the EXACT SAME language the caller is currently speaking.\n\n"
+                f"### SUPREME DIRECTIVE 2: 100% FEMALE IDENTITY & GRAMMATICAL INFLECTIONS (STRICT)\n"
+                f"You are KIARA, a female consultant. In Hindi and Gujarati, you MUST ALWAYS use feminine verb forms and self-references:\n"
+                f"- In Hindi: ALWAYS say '-ती हूँ / -ti hoon' (e.g. 'बता सकती हूँ', 'करूँगी', 'देख रही हूँ', 'आपकी कंसल्टेंट'). NEVER say masculine '-ता हूँ', '-ऊँगा', '-रहा हूँ', or 'आपका कंसल्टेंट'.\n"
+                f"- In Gujarati: ALWAYS say 'હું તમારી એલીટ કન્સલ્ટન્ટ કિયારા છું' (tamari, never tamaro) and 'જણાવી શકું છું / કરી શકીશ'.\n"
+                f"- NEVER mirror masculine grammar from male callers.\n\n"
+                f"### SUPREME DIRECTIVE 3: AUDIO TRANSCRIPTION LANGUAGE LOCK (ANTI-HALLUCINATION)\n"
+                f"The caller is from India and will ONLY speak in English, Hindi, or Gujarati. You MUST transcribe their audio ONLY into English, Hindi (Devanagari script), or Gujarati script. NEVER transcribe or translate audio into any other language.\n\n"
                 f"{base_prompt}\n\n"
                 f"---\n\n"
                 f"## CURRENT SESSION (LIVE VOICE CALL)\n"
-                f"- preferred_language: {lang_instruction}\n"
-                f"- call_mode: REAL-TIME TELEPHONY AUDIO STREAM (Deliver concise 2-3 sentence responses with unshakeable confidence and old-money poise. Sentence 1: Direct Answer to caller's question, Sentence 2: Real-World Analogy / Example, Sentence 3: Poised Follow-up question. NEVER skip the analogy).\n"
+                f"DELIVERY INSTRUCTION: You MUST speak like an old-money, cultured, and wealthy Indian woman of unshakeable confidence and understated elegance. Break the 'perfect AI' cadence. Use natural conversational markers and slight pauses. Speak warmly, casually but elegantly.\n"
+                f"ARTICULATION & ACCENT: You MUST speak with a clear, refined, natural Indian accent at all times. Maintain crisp, sharp enunciation so every single word is clearly distinguishable. Do not mumble. Sound like a real, highly articulate Indian woman on a phone call. Absolutely DO NOT sound robotic or scripted.\n"
+                f"- call_mode: REAL-TIME TELEPHONY AUDIO STREAM (Deliver balanced 2-3 sentence responses. Sentence 1: Direct Answer in caller's active language, Sentence 2: Detail/Explanation, Sentence 3: Translated Real-World Analogy, Sentence 4: Poised Follow-up question. NEVER ask about budget or price range).\n"
             )
 
-        if self.caller_context:
-            context_lines = []
-            name = self.caller_context.get("name")
-            phone = self.caller_context.get("phone")
-            email = self.caller_context.get("email")
-            city = self.caller_context.get("city")
-            subject = self.caller_context.get("subject")
-            message = self.caller_context.get("message") or self.caller_context.get("notes")
-
-            if name:
-                context_lines.append(f"- Name: {name} (Known outbound caller — per Section 7, DO NOT ask for caller's name again)")
-            if phone:
-                context_lines.append(f"- Phone: {phone}")
-            if email:
-                context_lines.append(f"- Email: {email}")
-            if city:
-                context_lines.append(f"- City: {city}")
-            if subject:
-                context_lines.append(f"- Subject / Topic: {subject}")
-            if message:
-                context_lines.append(f"- Message / Enquiry Details: {message}")
-
-            if context_lines:
-                instruction_text = (
-                    "CRITICAL OUTBOUND CALLER CONTEXT & FLOW:\n"
-                    f"1. You are speaking with {name or 'the customer'}. Address them respectfully by their name. NEVER ask for their name, phone, email, or city — all of these are already captured above.\n"
-                    f"2. YOUR FIRST PRIORITY: When answering or opening the conversation, you MUST directly answer the question/enquiry from their submitted message ('{message}') and subject ('{subject}') first using our knowledge base and an intuitive real-world analogy.\n"
-                    "3. IMMEDIATELY AFTER answering their enquiry, ask: 'Do you have any other questions or any additional details you’d like to know?'\n"
-                    "4. If Subject and Message are empty, follow standard conversation behavior."
-                )
-                self.system_instruction += (
-                    f"\n\n## CALLER INFORMATION (FROM SUBMITTED CONTACT FORM)\n"
-                    + "\n".join(context_lines)
-                    + f"\n({instruction_text})\n"
-                )
-
-        # Initialize native tool schemas and execution dispatch mapping
+        # Input queues and state flags
         if tools is not None:
             self.tools = tools
         else:
@@ -150,7 +153,7 @@ class GeminiLiveStreamClient:
         """Assembles native tool schemas matching project enterprise tools."""
         capture_lead_tool = genai_types.FunctionDeclaration(
             name="capture_lead",
-            description="Save caller contact details for a human callback or consultation booking.",
+            description="DO NOT USE THIS FOR BOOKING APPOINTMENTS. ONLY use this if a caller spontaneously insists on a callback. NEVER ask the caller for their name or phone number proactively.",
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
                 properties={
@@ -167,7 +170,7 @@ class GeminiLiveStreamClient:
 
         check_city_tool = genai_types.FunctionDeclaration(
             name="check_city_coverage",
-            description="Check if Ultimate Smile Design services are available in a specific Indian city.",
+            description="Check if Ultimate Smile Design services are available in a specific Indian city. ONLY call this if the user explicitly asks about a city or asks if you are available in their location.",
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
                 properties={
@@ -192,7 +195,7 @@ class GeminiLiveStreamClient:
 
         handoff_tool = genai_types.FunctionDeclaration(
             name="human_handoff",
-            description="Escalate the call to a human patient care specialist when requested or necessary.",
+            description="DO NOT USE THIS FOR BOOKING APPOINTMENTS. Do not proactively offer to share details with the team.",
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
                 properties={
@@ -204,7 +207,7 @@ class GeminiLiveStreamClient:
         )
 
         return genai_types.Tool(
-            function_declarations=[capture_lead_tool, check_city_tool, get_faq_tool, handoff_tool]
+            function_declarations=[check_city_tool, get_faq_tool]
         )
 
     def _build_default_tool_mapping(self) -> Dict[str, Callable]:
@@ -282,6 +285,47 @@ class GeminiLiveStreamClient:
             async with self.client.aio.live.connect(model=self.model_name, config=config) as session:
                 print("[Gemini Live Stream] Session established successfully.")
 
+                turns = []
+                if self.caller_context:
+                    name = self.caller_context.get("name", "")
+                    city = self.caller_context.get("city", "")
+                    phone = self.caller_context.get("phone", "")
+                    subject = self.caller_context.get("subject", "")
+                    message = self.caller_context.get("message") or self.caller_context.get("notes") or ""
+
+                    context_msg = (
+                        "<caller_context>\n"
+                        f"Name: {name}\n"
+                        f"City: {city}\n"
+                        f"Phone: {phone}\n"
+                        f"Inquiry Subject: {subject}\n"
+                        "<caller_message>\n"
+                        f"{message}\n"
+                        "</caller_message>\n"
+                        "</caller_context>"
+                    )
+                    turns.append(
+                        genai_types.Content(
+                            parts=[genai_types.Part.from_text(text=context_msg)],
+                            role="user",
+                        )
+                    )
+
+                if getattr(self, "initial_prompt", None):
+                    turns.append(
+                        genai_types.Content(
+                            parts=[genai_types.Part.from_text(text=self.initial_prompt)],
+                            role="user",
+                        )
+                    )
+
+                if turns:
+                    turn_complete = True if getattr(self, "initial_prompt", None) else (False if self.initial_greeting else True)
+                    await session.send_client_content(
+                        turns=turns,
+                        turn_complete=turn_complete,
+                    )
+
                 async def send_audio_loop():
                     try:
                         while True:
@@ -318,6 +362,7 @@ class GeminiLiveStreamClient:
                             async for response in session.receive():
                                 if getattr(response, "go_away", None):
                                     print(f"[Gemini Live Stream Warning] Received GoAway notice: {response.go_away}")
+                                    await event_queue.put({"type": "go_away", "details": str(response.go_away)})
                                 
                                 server_content = getattr(response, "server_content", None)
                                 tool_call = getattr(response, "tool_call", None)

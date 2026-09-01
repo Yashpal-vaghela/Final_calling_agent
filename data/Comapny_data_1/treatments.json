@@ -1,0 +1,87 @@
+{
+  "smile_design_overview": {
+    "intent": "smile_design_overview",
+    "topic": "What is Smile Design and How It Works",
+    "keywords": [
+      "What is smile design",
+      "Smile design kya hota hai",
+      "Tell me about smile designing",
+      "How does smile design work",
+      "Smile design treatment explain karo",
+      "What does smile design involve"
+    ],
+    "facts": "Smile design is a personalised cosmetic dental treatment that improves the appearance and function of your smile. It combines science, aesthetics, and clinical expertise to create a smile that looks healthy and natural. Smile design improves more than tooth colour or shape — it evaluates how teeth interact with lips, facial proportions, and natural expressions. Depending on individual needs, it may involve veneers, crowns, teeth whitening, orthodontics, dental implants, or gum contouring, all planned together as one coordinated treatment.",
+    "details": "The process begins with a detailed evaluation of oral health, tooth shape, size, colour, alignment, bite, and gum health. Digital technology including photographs, scans, and smile simulations allows both dentist and patient to visualise the expected outcome before treatment begins. The best results come from understanding how teeth interact with the lips, facial proportions, and natural expressions — a smile should look attractive during natural expressions, not only during treatment planning."
+  },
+  "smile_correction": {
+    "intent": "smile_correction",
+    "topic": "Smile Correction Treatments and Benefits",
+    "keywords": [
+      "Smile correction kaise hota hai",
+      "How to fix my smile",
+      "Can crooked teeth be fixed",
+      "Mere daant theek ho sakte hain kya",
+      "Smile correction options",
+      "How to correct dental flaws",
+      "Fix stained teeth"
+    ],
+    "facts": "Smile correction — also called a smile makeover or smile designing — is a personalised cosmetic dental treatment plan to enhance the appearance of teeth and smile. Unlike a single procedure, a smile makeover is custom-tailored and typically combines several treatments to address multiple issues at once. It can fix tooth discolouration, crooked or misaligned teeth, gaps and spacing issues, chipped or worn teeth, gummy smiles, missing teeth, bite problems, and uneven tooth sizes.",
+    "details": "Treatments commonly involved include professional teeth whitening for surface stains, orthodontic treatments with braces or clear aligners for alignment, dental veneers for chips and discolouration, cosmetic bonding for minor repairs, gum contouring for gummy smiles, dental crowns for damaged teeth, and dental implants for missing teeth. The timeline varies — simple procedures can be completed in weeks, while complex cases involving orthodontics or implants may take several months. Most procedures are minimally invasive and performed with local anaesthesia when necessary."
+  },
+  "smile_makeover": {
+    "intent": "smile_makeover",
+    "topic": "Smile Makeover Process and What to Expect",
+    "keywords": [
+      "Smile makeover kya hai",
+      "What is a smile makeover",
+      "Smile makeover process batao",
+      "How long does smile makeover take",
+      "Smile makeover steps",
+      "Full smile transformation"
+    ],
+    "facts": "A smile makeover is a fully customised treatment plan that improves the beauty, health, and function of your smile. It is not just one procedure — the dentist combines several cosmetic and restorative treatments to match individual goals and deliver a balanced, natural-looking result. A smile makeover can solve chipped, cracked, or worn teeth, stained or discoloured teeth, crooked or crowded teeth, gaps between teeth, uneven gum lines, missing teeth, and bite problems.",
+    "details": "The process follows clear steps: Step 1 is consultation and smile analysis with photos, X-rays, and scans. Step 2 is digital smile design to create a preview of the future smile. Step 3 is treatment planning where dentist and patient choose the right treatments and sequence. Step 4 is step-by-step treatment — typically whitening first, then orthodontics if needed, then restorations like veneers or crowns, and finally gum contouring. Step 5 is recovery and final adjustments. Simple cases may take 2 to 6 weeks, while complex cases with orthodontics or implants may take several months."
+  },
+  "teeth_whitening_vs_smile_design": {
+    "intent": "teeth_whitening_vs_smile_design",
+    "topic": "When You Need Smile Design Instead of Just Whitening",
+    "keywords": [
+      "Whitening ya smile design",
+      "Teeth whitening enough hai kya",
+      "Should I get whitening or veneers",
+      "Bleaching se kaam ho jayega",
+      "Whitening vs smile design",
+      "When is whitening not enough"
+    ],
+    "facts": "Teeth whitening improves colour but cannot correct shape, spacing, alignment, or gum-related concerns. Smile designing analyses the relationship between teeth, gums, lips, and facial features. If whitening has not delivered the expected result, colour may not be the primary issue — many aesthetic concerns require structural or cosmetic treatment that whitening alone cannot solve.",
+    "details": "Signs that smile designing is needed instead of just whitening include: chipped, cracked, or worn teeth that need structural repair; gaps between teeth that remain visible regardless of shade; crooked or misaligned teeth that bleaching cannot correct; uneven tooth shape or size that affects smile harmony; uneven gum lines or gummy smiles; deep intrinsic stains like tetracycline staining that do not respond to whitening; and multiple cosmetic concerns occurring together. Treatment options for these conditions include porcelain veneers, composite bonding, clear aligners, gum contouring, and dental crowns."
+  },
+  "ultimate_smile_design_vs_normal": {
+    "intent": "ultimate_smile_design_vs_normal",
+    "topic": "Ultimate Smile Design vs Normal Smile Design",
+    "keywords": [
+      "Ultimate Smile Design kya hai",
+      "Normal smile design mein kya fark hai",
+      "USD kaise different hai",
+      "What makes Ultimate Smile Design special",
+      "Regular vs Ultimate Smile Design",
+      "Why choose Ultimate Smile Design"
+    ],
+    "facts": "Normal smile design typically focuses on correcting a single cosmetic concern at each stage — improving specific aesthetic concerns through treatments like whitening, veneers, or crowns. Planning is generally limited to the dentition and oral soft tissues, with correlation to facial features usually missing. Ultimate Smile Design follows a different, comprehensive approach — it is a premium smile planning process that integrates facial aesthetics, digital scans, and dynamic lip movement to deliver a predictable, natural-looking smile.",
+    "details": "Ultimate Smile Design begins with a personalised design process where every decision is based on the desired final smile, not just the condition of the teeth. It considers facial proportions, smile line, lip movement, and natural expressions. The approach uses AI, digital scans, and smile simulation to create a digital preview before treatment begins. Every smile is handcrafted by experts and planned as a coordinated smile makeover rather than individual procedures. The treatment is exclusively offered by authorised smile designers who follow the complete Ultimate Smile Design philosophy. Treatments start at ₹25,000 per unit, with the total investment depending on the customised plan, number of units, materials, and case complexity."
+  },
+  "smile_design_benefits": {
+    "intent": "smile_design_benefits",
+    "topic": "Benefits of Smile Design",
+    "keywords": [
+      "Smile design ke fayde",
+      "Benefits of smile design",
+      "Why should I get smile design",
+      "Smile design se kya hota hai",
+      "Is smile design worth it",
+      "Smile design karwana chahiye kya"
+    ],
+    "facts": "Smile design offers benefits that go far beyond just looks. A well-designed smile can boost confidence, improve the function of teeth, and support better oral health. A beautiful smile is often the first thing noticed in social interactions and plays a key role in making first impressions. A healthy smile can boost self-confidence, enhance mood, and impact overall well-being.",
+    "details": "Key benefits include: enhanced appearance with balance and symmetry in teeth and gums; boosted self-confidence and quality of life — people with attractive smiles tend to smile more often and feel less self-conscious; better oral function through straightening misaligned teeth, restoring worn or missing teeth, and correcting bite for improved chewing and speech; improved oral health because well-aligned teeth are easier to clean, lowering the risk of cavities and gum disease; and personalised, predictable results through digital imaging and 3D planning that lets patients preview the outcome before treatment begins."
+  }
+}

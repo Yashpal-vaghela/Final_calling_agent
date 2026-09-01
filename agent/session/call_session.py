@@ -24,7 +24,7 @@ class CallSession:
         # Layer 3: Python-managed conversation memory & mutable session state
         self.preferred_language: str = preferred_language  # mutable preferred language (en, hi, gu, multi)
         self.last_discussed_topic: Optional[str] = None
-        self.booking_stage: str = "greeting"  # e.g., greeting, discovery, consultation_proposed, lead_captured, handoff
+        self.booking_stage: str = "booking_confirmed" if opening_intent == "outbound_booking_form" else "greeting"  # e.g., greeting, discovery, consultation_proposed, lead_captured, handoff, booking_confirmed
         self.collected_user_info: dict[str, str] = {
             "name": "",
             "phone": "",
@@ -54,19 +54,49 @@ class CallSession:
 
     def update_language_if_requested(self, text: str) -> bool:
         """
-        Inspects user utterance in Python for language selection or switch requests.
+        Inspects user utterance in Python for language selection, script detection,
+        or dynamic code-switch triggers (including short 1-3 word phrases).
         Updates preferred language immediately on the fly.
         """
+        if not text:
+            return False
         text_lower = text.lower().strip()
-        if any(token in text_lower for token in ["gujarati", "gujlish", "gujarati ma", "kem cho"]):
+        
+        # 1. Script-based Unicode detection
+        if re.search(r"[\u0A80-\u0AFF]", text):  # Gujarati script
             self.set_preferred_language("gu")
             return True
-        elif any(token in text_lower for token in ["hindi", "hinglish", "hindi mein", "hindi me", "hindi mein baat", "kaise ho", "namaste"]):
+        if re.search(r"[\u0900-\u097F]", text):  # Devanagari (Hindi) script
             self.set_preferred_language("hi")
             return True
-        elif any(token in text_lower for token in ["english", "in english", "continue in english", "speak in english"]):
+
+        # 2. Conversational Gujarati triggers (including 1-3 word micro-utterances)
+        gu_tokens = [
+            "gujarati", "gujlish", "gujarati ma", "kem cho", "su chhe", "shu chhe",
+            "ketla", "thashe", "nathi", "tamare", "tame", "karo", "bolo ne", "saru",
+            "kaho", "barabar", "aavse", "chhe", "maare", "aapo ne", "saheb", "tamari"
+        ]
+        if any(token in text_lower for token in gu_tokens):
+            self.set_preferred_language("gu")
+            return True
+
+        # 3. Conversational Hindi triggers (including 1-3 word micro-utterances)
+        hi_tokens = [
+            "hindi", "hinglish", "hindi mein", "hindi me", "hindi mein baat",
+            "kaise ho", "namaste", "kaise", "kya", "kitna", "batao", "bataiye",
+            "suno", "haan", "haanji", "theek", "acha", "boliye", "kariye",
+            "hoga", "chahiye", "kya hai", "sahi hai", "mujhe", "aapko"
+        ]
+        if any(token in text_lower for token in hi_tokens):
+            self.set_preferred_language("hi")
+            return True
+
+        # 4. Explicit English selection triggers
+        en_tokens = ["english", "in english", "continue in english", "speak in english"]
+        if any(token in text_lower for token in en_tokens):
             self.set_preferred_language("en")
             return True
+
         return False
 
     def update_topic(self, topic: str) -> None:
@@ -99,7 +129,7 @@ class CallSession:
         lang_label = {"en": "English", "hi": "Hindi", "gu": "Gujarati", "multi": "Multilingual/Code-mixed"}.get(self.preferred_language, "English")
         return (
             f"[PYTHON SESSION MEMORY & STATE]\n"
-            f"- Preferred Language: {lang_label} ({self.preferred_language}) - respond in this language immediately.\n"
+            f"- Preferred Language: {lang_label} ({self.preferred_language}). (NOTE: Always prioritize ZERO LAG SWITCHING: if the user speaks a different language, match their language instantly.)\n"
             f"- Active Topic in Discussion: {self.last_discussed_topic or 'General Inquiry'}\n"
             f"- Current Booking Stage: {self.booking_stage}\n"
             f"- Collected User Info: {info_str}\n"
@@ -113,9 +143,26 @@ class CallSession:
             self.state = new_state
 
     def add_transcript(self, text: str, role: str = "user") -> None:
-        """Appends a completed utterance to the permanent conversation history."""
-        self.conversation_history.append({
-            "role": role,
-            "content": text.strip()
-        })
+        """Appends or merges streaming utterances into clean conversation turns."""
+        clean_text = text.strip()
+        if not clean_text:
+            return
+
+        # If previous utterance was from the same role, merge them seamlessly
+        if self.conversation_history and self.conversation_history[-1].get("role") == role:
+            prev = self.conversation_history[-1]
+            prev_content = prev.get("content") or prev.get("text") or ""
+            if prev_content and not prev_content.endswith(" "):
+                merged_content = f"{prev_content} {clean_text}"
+            else:
+                merged_content = f"{prev_content}{clean_text}"
+            prev["content"] = merged_content
+            prev["text"] = merged_content
+        else:
+            self.conversation_history.append({
+                "role": role,
+                "content": clean_text,
+                "text": clean_text
+            })
+
 

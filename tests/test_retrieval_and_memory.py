@@ -70,18 +70,25 @@ class TestThreeLayerArchitecture(unittest.TestCase):
         self.assertIn("Mumbai", context_prompt)
 
     def test_system_prompt_size_reduction(self):
-        prompt_path = os.path.join(ROOT, "agent", "prompts", "system_prompt.md")
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            prompt_text = f.read()
+        prompts = []
+        for p in [
+            os.path.join(ROOT, "agent", "prompts", "core", "persona.md"),
+            os.path.join(ROOT, "agent", "prompts", "core", "guardrails.md"),
+            os.path.join(ROOT, "agent", "prompts", "intents", "inbound.md")
+        ]:
+            if os.path.exists(p):
+                with open(p, "r", encoding="utf-8") as f:
+                    prompts.append(f.read())
+        prompt_text = "\n\n".join(prompts)
         
         # Check that prompt size is significantly reduced compared to old ~52KB
         file_size_kb = len(prompt_text.encode('utf-8')) / 1024.0
         self.assertLess(file_size_kb, 35.0, f"System prompt size {file_size_kb:.2f} KB is too large! Should be well under 35 KB after stripping static facts.")
         
         # Verify core behavioral sections exist
-        self.assertIn("IDENTITY & PERSONA", prompt_text)
-        self.assertIn("LANGUAGE SYSTEM", prompt_text)
-        self.assertIn("CRITICAL OPERATIONAL RULES", prompt_text)
+        self.assertIn("REAL-TIME LANGUAGE MIRRORING", prompt_text)
+        self.assertIn("Kiara", prompt_text)
+        self.assertIn("Haresh Savani", prompt_text)
         
         # Verify static factual bulk table is gone
         self.assertNotIn("Plot No. 1 to 8, Marutidham Industrial Estate", prompt_text)

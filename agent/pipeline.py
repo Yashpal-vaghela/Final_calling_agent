@@ -10,6 +10,7 @@ import base64
 import inspect
 import audioop
 import time
+import re
 from typing import Optional
 
 from agent.streaming.gemini_live_stream import GeminiLiveStreamClient
@@ -68,9 +69,14 @@ class VoicePipelineOrchestrator:
         if self.lead_name and self.lead_name.lower() not in ("there", "none", ""):
             city_str = f" in {self.lead_city}" if self.lead_city else ""
             if self.opening_intent == "outbound_booking_form":
+                first_name = self.caller_context.get("first_name") or self.lead_name.split()[0]
+                clean_first_name = re.sub(r"[\x00-\x1F<>\"\\{}]", "", first_name).strip()[:50]
+                if not clean_first_name:
+                    clean_first_name = "the customer"
+                doctor = self.caller_context.get("doctor", "your selected doctor")
                 self.greeting = (
-                    f"Hi {self.lead_name}, this is Kiara from Ultimate Smile Design, "
-                    f"following up on your{city_str} appointment booking request. How can I help you today?"
+                    f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. I'm calling to confirm that we've received your appointment booking request with {doctor}{city_str}. "
+                    "Your consultation has been scheduled, and our team will contact you shortly to confirm the details. Do you have any other questions I can help you with?"
                 )
             elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 self.greeting = (
@@ -85,9 +91,10 @@ class VoicePipelineOrchestrator:
         else:
             if self.opening_intent == "outbound_booking_form":
                 city_str = f" {self.lead_city}" if self.lead_city else ""
+                doctor = self.caller_context.get("doctor", "your selected doctor") if self.caller_context else "your selected doctor"
                 self.greeting = (
-                    f"Hello! This is Kiara from Ultimate Smile Design, "
-                    f"following up on your{city_str} appointment booking request. May I know your name, please?"
+                    f"Hello! This is Kiara from Ultimate Smile Design. I'm calling to confirm that we've received your appointment booking request with {doctor}{city_str}. "
+                    "Your consultation has been scheduled, and our team will contact you shortly to confirm the details. Do you have any other questions I can help you with?"
                 )
             elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 city_str = f" {self.lead_city}" if self.lead_city else ""
@@ -115,63 +122,14 @@ class VoicePipelineOrchestrator:
             )
         print(f"[Orchestrator] Pipeline Mode: LIVE (using GeminiLiveStreamClient for CallSid: {call_id})")
         
-        from agent.tools.check_city_coverage import check_city_coverage
-        from agent.tools.capture_lead import capture_lead
-        from agent.tools.get_faq import get_faq
-        from agent.tools.handoff import human_handoff
-
-        def live_capture_lead(**kwargs):
-            kwargs.setdefault("call_id", self.call_id)
-            kwargs.setdefault("preferred_language", self.session.preferred_language)
-            res = capture_lead(**kwargs)
-            self.session.update_user_info(
-                name=kwargs.get("name"),
-                phone=kwargs.get("phone"),
-                city=kwargs.get("city"),
-                intent=kwargs.get("intent"),
-                notes=kwargs.get("notes")
-            )
-            return res
-
-        def live_check_city(**kwargs):
-            res = check_city_coverage(**kwargs)
-            if kwargs.get("city"):
-                self.session.update_user_info(city=kwargs.get("city"))
-            return res
-
-        def live_get_faq(**kwargs):
-            kwargs.setdefault("language", self.session.preferred_language)
-            res = get_faq(**kwargs)
-            if kwargs.get("topic"):
-                self.session.update_topic(kwargs.get("topic"))
-            return res
-
-        def live_handoff(**kwargs):
-            kwargs.setdefault("call_id", self.call_id)
-            res = human_handoff(**kwargs)
-            self.session.booking_stage = "handoff"
-            return res
-
-        live_tool_mapping = {
-            "capture_lead": live_capture_lead,
-            "check_city_coverage": live_check_city,
-            "get_faq": live_get_faq,
-            "human_handoff": live_handoff,
-        }
-
-        self.gemini_live_client = GeminiLiveStreamClient(
-            call_id=call_id,
-            preferred_language="multi",
-            initial_greeting=self.greeting,
-            tool_mapping=live_tool_mapping,
-            caller_context=self.caller_context
-        )
+        self.gemini_live_client = None
         self.tts_provider_name = "Gemini Live"
         self.mulaw_frame_size = 160
-        self.prebuffer_threshold = 3200  # 400ms jitter buffer for ultra-low latency & smooth speech
+        self.prebuffer_threshold = 800  # 100ms jitter buffer (absorbs internet streaming jitter)
         self.output_buffer = bytearray()
         self._send_audio_task: Optional[asyncio.Task] = None
         self._outbound_chunk_counter: int = 1
+        self._turn_start_time: Optional[float] = None
 
         # Persistent resampler states per stream stage
         self._inbound_resample_state: Optional[tuple] = None
@@ -179,6 +137,7 @@ class VoicePipelineOrchestrator:
         
         self._is_running: bool = False
         self._stopped: bool = False
+        self._assistant_turn_complete: bool = False
         self._waiting_for_user_since: Optional[float] = None
         self._silence_state: str = "active"
         self._silence_monitor_task: Optional[asyncio.Task] = None
@@ -198,11 +157,46 @@ class VoicePipelineOrchestrator:
                 
                 # Stage 1: User silent for 15 seconds after assistant finishes speaking
                 if state == "stage_1_waiting" and elapsed >= 15:
-                    print(f"[Orchestrator] User silent for {elapsed:.1f}s. Sending silence check: 'Hello, are you still there?'")
                     self._silence_state = "stage_1_prompting"
                     self._waiting_for_user_since = None
+                    
+                    # Dynamically determine the caller's active spoken language
+                    active_lang = "en"
+                    if getattr(self, "session", None):
+                        # 1. First prioritize recent user turns in conversation history
+                        history = getattr(self.session, "conversation_history", [])
+                        user_turns = [t for t in history if t.get("role") == "user"]
+                        detected_from_history = None
+                        if user_turns:
+                            last_text = (user_turns[-1].get("content") or user_turns[-1].get("text") or "").strip()
+                            if re.search(r"[\u0A80-\u0AFF]", last_text) or any(w in last_text.lower() for w in [
+                                "kem cho", "su chhe", "shu chhe", "ketla", "thashe", "nathi", "tamare", "tame",
+                                "karo", "bolo ne", "saru", "kaho", "barabar", "aavse", "chhe", "gujarati", "gujlish"
+                            ]):
+                                detected_from_history = "gu"
+                            elif re.search(r"[\u0900-\u097F]", last_text) or any(w in last_text.lower() for w in [
+                                "namaste", "kaise", "kya", "kitna", "batao", "bataiye", "hindi", "suno", "haan",
+                                "haanji", "theek", "acha", "boliye", "kariye", "hoga", "chahiye"
+                            ]):
+                                detected_from_history = "hi"
+
+                        if detected_from_history:
+                            active_lang = detected_from_history
+                        else:
+                            pref = getattr(self.session, "preferred_language", "en")
+                            if pref in ("hi", "gu", "en"):
+                                active_lang = pref
+
+                    if active_lang == "hi":
+                        silence_text = "The user has been silent for 15 seconds. In your refined female voice, politely ask in natural Hindi: 'नमस्ते, क्या आप अभी भी कॉल पर हैं?' and wait for their reply."
+                    elif active_lang == "gu":
+                        silence_text = "The user has been silent for 15 seconds. In your refined female voice, politely ask in natural Gujarati: 'નમસ્તે, શું તમે હજુ લાઈન પર છો?' and wait for their reply."
+                    else:
+                        silence_text = "The user has been silent for 15 seconds. In your refined female voice, politely ask in English: 'Hello, are you still there?' and wait for their reply."
+                    
+                    print(f"[Orchestrator] User silent for {elapsed:.1f}s. Sending language-aware ({active_lang}) silence check.")
                     if getattr(self, "gemini_live_client", None):
-                        await self.gemini_live_client.send_text("The user has been silent. Say exactly: 'Hello, are you still there?' and wait for their reply.")
+                        await self.gemini_live_client.send_text(silence_text)
 
                 # Stage 2: User silent for 25 seconds AFTER assistant finishes asking 'Hello, are you still there?'
                 elif state == "stage_2_waiting" and elapsed >= 25:
@@ -226,34 +220,26 @@ class VoicePipelineOrchestrator:
 
     async def _send_buffered_live_audio(self) -> None:
         """Send buffered audio to WebSocket in Smartflo-compliant chunk sizes (multiples of 160 bytes)."""
-        # We process in larger chunks (e.g., 1600 bytes = 200ms) to avoid precise OS-level thread sleeping dependencies
-        CHUNK_MULTIPLIER = 10
+        CHUNK_MULTIPLIER = 2  # 320 bytes (40ms) - reduces WS frame overhead and matches carrier buffers
         target_chunk_size = getattr(self, "mulaw_frame_size", 160) * CHUNK_MULTIPLIER
         FRAME_DURATION = 0.02 * CHUNK_MULTIPLIER
         
         try:
             next_send_at = time.monotonic()
+            starved_time = None
+
             while self._is_running and not self._stopped:
-                # Calculate time-based owed chunks to compensate for sleep inaccuracies
                 now = time.monotonic()
                 
-                # If we're catching up, or buffer reached threshold
-                if now >= next_send_at and len(self.output_buffer) >= target_chunk_size:
-                    frames_owed = max(1, int((now - next_send_at) / FRAME_DURATION) + 1)
-                    
-                    # Extract up to frames_owed
-                    bytes_to_extract = target_chunk_size * frames_owed
-                    
-                    # Ensure we don't extract more than we have
-                    if bytes_to_extract > len(self.output_buffer):
-                        # Floor to nearest multiple of target_chunk_size
-                        available_frames = len(self.output_buffer) // target_chunk_size
-                        bytes_to_extract = available_frames * target_chunk_size
-                        frames_owed = available_frames
+                if len(self.output_buffer) >= target_chunk_size:
+                    if starved_time is not None:
+                        # Buffer was starved, reset timing to prevent bursting chunks
+                        next_send_at = now
+                        starved_time = None
 
-                    if bytes_to_extract > 0:
-                        chunk_data = bytes(self.output_buffer[:bytes_to_extract])
-                        del self.output_buffer[:bytes_to_extract]
+                    if now >= next_send_at:
+                        chunk_data = bytes(self.output_buffer[:target_chunk_size])
+                        del self.output_buffer[:target_chunk_size]
                         
                         payload = base64.b64encode(chunk_data).decode("utf-8")
                         media_message = {
@@ -274,18 +260,26 @@ class VoicePipelineOrchestrator:
                         else:
                             break
                         
-                        next_send_at += frames_owed * FRAME_DURATION
+                        next_send_at += FRAME_DURATION
+                        sleep_for = next_send_at - time.monotonic()
+                        if sleep_for > 0:
+                            await asyncio.sleep(sleep_for)
+                        else:
+                            next_send_at = time.monotonic()
+                            await asyncio.sleep(0.001)
+                    else:
+                        sleep_for = max(0.001, next_send_at - now)
+                        await asyncio.sleep(sleep_for)
+                else:
+                    # Buffer has less than target_chunk_size
+                    if starved_time is None:
+                        starved_time = now
+                    
+                    # Check if turn is complete based on Gemini's explicit signal or a long timeout (fallback)
+                    is_turn_complete = getattr(self, "_assistant_turn_complete", False)
+                    is_timeout = (now - starved_time) > 2.0
 
-                # Calculate sleep time
-                sleep_for = max(0.005, next_send_at - time.monotonic())
-                
-                # If we don't have a full chunk, wait for more data OR drain if it's the end of a turn
-                if len(self.output_buffer) < target_chunk_size:
-                    # Brief wait to see if more data arrives
-                    await asyncio.sleep(0.02)
-                    # If it's still small, we might be at the end of the turn
-                    if len(self.output_buffer) < target_chunk_size and (self._send_audio_task is not None):
-                        # Drain remaining buffer padded to nearest 160 multiple
+                    if is_turn_complete or is_timeout:
                         if len(self.output_buffer) > 0:
                             trailing = bytes(self.output_buffer)
                             self.output_buffer.clear()
@@ -305,14 +299,15 @@ class VoicePipelineOrchestrator:
                                 },
                             }
                             self._outbound_chunk_counter += 1
-                            if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
+                            if self.websocket and getattr(self.websocket, "client_state", None) != "DISCONNECTED":
                                 try:
                                     await self.websocket.send_text(json.dumps(media_message))
                                 except Exception:
                                     pass
-                        break # Done with this burst of speech
-                else:
-                    await asyncio.sleep(sleep_for)
+                        break
+                    
+                    # Sleep slightly and check again
+                    await asyncio.sleep(0.01)
             
             # When buffer is fully drained and assistant is done speaking
             if len(self.output_buffer) == 0 and self._is_running and not self._stopped:
@@ -350,13 +345,16 @@ class VoicePipelineOrchestrator:
             )
             mulaw_data = audioop.lin2ulaw(resampled_8k, 2)
             self.output_buffer.extend(mulaw_data)
+            if self.session.state != "speaking":
+                self._turn_start_time = time.time()
             self.session.transition_state("speaking")
+            self._assistant_turn_complete = False
             if getattr(self, "_silence_state", "") != "stage_1_prompting":
                 self._waiting_for_user_since = None
             
             # Kick off playback task once jitter buffer threshold is satisfied or if sender task is active
             if self._send_audio_task is None or self._send_audio_task.done():
-                if len(self.output_buffer) >= getattr(self, "prebuffer_threshold", 480):
+                if len(self.output_buffer) >= getattr(self, "prebuffer_threshold", 800):
                     self._send_audio_task = asyncio.create_task(self._send_buffered_live_audio())
         except Exception as e:
             print(f"[Orchestrator Error] Error sending live audio to WebSocket: {e}")
@@ -365,11 +363,18 @@ class VoicePipelineOrchestrator:
         """Callback invoked when Gemini Live detects caller interruption (barge-in)."""
         if self._stopped:
             return
+        # Early-turn echo guard: Ignore interruptions within first 1.2s of assistant speaking
+        if self._turn_start_time and (time.time() - self._turn_start_time < 1.2):
+            print(f"[Orchestrator] Ignoring early-turn echo interruption ({time.time() - self._turn_start_time:.2f}s < 1.2s)")
+            return
+
         print("[Orchestrator] Gemini Live server interruption received! Clearing output buffer and media stream.")
         if getattr(self, "_send_audio_task", None) and not self._send_audio_task.done():
             self._send_audio_task.cancel()
         self.output_buffer.clear()
         self._outbound_resample_state = None
+        self._assistant_turn_complete = False
+        self._turn_start_time = None
         self.session.transition_state("listening")
         self._waiting_for_user_since = None
         self._silence_state = "active"
@@ -396,7 +401,14 @@ class VoicePipelineOrchestrator:
             if text:
                 print(f"[Live STT Transcript] User: '{text}'")
                 self.session.add_transcript(text, role="user")
-                self.session.update_language_if_requested(text)
+                switched = self.session.update_language_if_requested(text)
+                if switched and getattr(self, "gemini_live_client", None):
+                    lang_name = {"hi": "Hindi / Hinglish", "gu": "Gujarati / Gujlish", "en": "English"}.get(self.session.preferred_language, "English")
+                    print(f"[Orchestrator] Language switch detected -> Steering live session to {lang_name}")
+                    try:
+                        await self.gemini_live_client.send_text(f"[SYSTEM INSTRUCTION: Caller switched language to {lang_name}. Respond 100% in {lang_name} using feminine grammatical inflections starting on this turn.]")
+                    except Exception as e:
+                        print(f"[Orchestrator Warning] Failed to send language switch directive: {e}")
         elif event_type == "gemini":
             text = event.get("text", "").strip()
             if text:
@@ -404,8 +416,217 @@ class VoicePipelineOrchestrator:
                 self.session.add_transcript(text, role="assistant")
         elif event_type == "turn_complete":
             print("[Orchestrator] Live turn complete; output buffer draining to caller.")
+            self._assistant_turn_complete = True
+            self._turn_start_time = None
         elif event_type == "error":
             print(f"[Orchestrator Error] Gemini Live event error: {event.get('error')}")
+            if hasattr(self, "_gemini_reconnect_event") and ("1008" in str(event.get('error')) or "GoAway" in str(event.get('error')) or "Connection aborted" in str(event.get('error'))):
+                self._gemini_reconnect_event.set()
+        elif event_type == "go_away":
+            print(f"[Orchestrator] Received go_away event. Triggering seamless reconnect.")
+            if hasattr(self, "_gemini_reconnect_event"):
+                self._gemini_reconnect_event.set()
+    def _build_live_tool_mapping(self):
+        from agent.tools.check_city_coverage import check_city_coverage
+        from agent.tools.capture_lead import capture_lead
+        from agent.tools.get_faq import get_faq
+        from agent.tools.handoff import human_handoff
+
+        def live_capture_lead(**kwargs):
+            kwargs.setdefault("call_id", self.call_id)
+            kwargs.setdefault("preferred_language", self.session.preferred_language)
+            res = capture_lead(**kwargs)
+            self.session.update_user_info(
+                name=kwargs.get("name"),
+                phone=kwargs.get("phone"),
+                city=kwargs.get("city"),
+                intent=kwargs.get("intent"),
+                notes=kwargs.get("notes")
+            )
+            return res
+
+        def live_check_city(**kwargs):
+            res = check_city_coverage(**kwargs)
+            if kwargs.get("city"):
+                self.session.update_user_info(city=kwargs.get("city"))
+            return res
+
+        def live_get_faq(**kwargs):
+            kwargs.setdefault("language", self.session.preferred_language)
+            res = get_faq(**kwargs)
+            if kwargs.get("topic"):
+                self.session.update_topic(kwargs.get("topic"))
+            return res
+
+        def live_handoff(**kwargs):
+            kwargs.setdefault("call_id", self.call_id)
+            res = human_handoff(**kwargs)
+            self.session.booking_stage = "handoff"
+            return res
+
+        return {
+            "capture_lead": live_capture_lead,
+            "check_city_coverage": live_check_city,
+            "get_faq": live_get_faq,
+            "human_handoff": live_handoff,
+        }
+
+
+
+    def _build_initial_prompt(self) -> str:
+        msg = (self.lead_message or "").strip()
+        subj = (self.lead_subject or "").strip()
+        known_name = self.lead_name if (self.lead_name and self.lead_name.lower() != "there") else ""
+
+        city_display = self.lead_city or "their city"
+        location_rule = (
+            f"CRITICAL LOCATION & PARTNER RULE: The caller's consultation will be arranged with our Authorized USD Smile Designer in {city_display}. "
+            f"If they ask where the meeting or consultation will take place, confidently confirm it will be with our local Authorized Smile Designer in {city_display}. "
+            f"NEVER invent, guess, or suggest other cities (like Hyderabad, Delhi, or Mumbai) if the user explicitly selected {city_display}."
+        )
+        crucial_instruction = (
+            f"CRITICAL: You already know the caller's Name and City ({city_display}) from the form they just submitted. "
+            "DO NOT ask them for their name or city. Acknowledge the details they provided naturally, "
+            f"and move directly to the consultation guidance. {location_rule}"
+        )
+        if self.opening_intent == "outbound_booking_form":
+            doctor = self.caller_context.get("doctor") if self.caller_context else None
+            if doctor:
+                crucial_instruction = (
+                    f"CRITICAL: You already know the caller's First Name, Last Name, City ({city_display}), and selected Doctor ({doctor}) from the form they just submitted. "
+                    f"DO NOT ask them for their name, city, or doctor. You MUST open by confirming the appointment with {doctor} in {city_display} and asking if they have any other questions. {location_rule}"
+                )
+
+        if msg:
+            subj_str = f" regarding {subj}" if subj else ""
+            if self.opening_intent == "outbound_booking_form":
+                first_name = self.caller_context.get("first_name") or known_name.split()[0] if known_name else "the customer"
+                clean_first_name = re.sub(r"[\x00-\x1F<>\"\\{}]", "", first_name).strip()[:50]
+                if not clean_first_name:
+                    clean_first_name = "the customer"
+                doctor = self.caller_context.get("doctor", "your selected doctor")
+                greet_phrase = f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. I'm calling to confirm that we've received your appointment booking request with {doctor} in {city_display}. Your consultation has been scheduled, and our team will contact you shortly to confirm the details."
+                
+                initial_prompt = (
+                    f"The outbound call has connected to {clean_first_name}. "
+                    f"Speak now: State exactly '{greet_phrase}', then answer the question from their message in about 2-3 natural sentences using our knowledge base, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                    f"{crucial_instruction}"
+                )
+            else:
+                enquiry_type = "consultation enquiry"
+                if known_name:
+                    greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}."
+                else:
+                    greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}."
+                
+                initial_prompt = (
+                    f"The outbound call has connected to {known_name or 'the customer'}. "
+                    f"Speak now: Greet the customer ('{greet_phrase}'), then answer the question from their message in about 2-3 natural sentences using our knowledge base and an intuitive real-world analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                    f"{crucial_instruction}"
+                )
+            return initial_prompt
+        elif subj:
+            if self.opening_intent == "outbound_booking_form":
+                enquiry_type = "appointment booking request"
+            else:
+                enquiry_type = "consultation enquiry"
+            if known_name:
+                greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}."
+            else:
+                greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}."
+            
+            initial_prompt = (
+                f"The outbound call has connected to {known_name or 'the customer'}. "
+                f"Speak now: Greet the customer ('{greet_phrase}'), then address their topic from the caller context clearly in 2-3 sentences based on our knowledge base and an intuitive analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                f"{crucial_instruction}"
+            )
+            return initial_prompt
+        else:
+            if known_name:
+                initial_prompt = (
+                    f"The outbound call has connected to {known_name}. "
+                    f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply. "
+                    f"{crucial_instruction}"
+                )
+            else:
+                initial_prompt = (
+                    f"The call has just connected. "
+                    f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply."
+                )
+            return initial_prompt
+
+    async def _manage_gemini_connection(self) -> None:
+        is_reconnect = False
+        while self._is_running and not self._stopped:
+            try:
+                self.gemini_live_client = GeminiLiveStreamClient(
+                    call_id=self.call_id,
+                    preferred_language="multi",
+                    initial_greeting=None if is_reconnect else self.greeting,
+                    initial_prompt=None if is_reconnect else self._build_initial_prompt(),
+                    tool_mapping=self._build_live_tool_mapping(),
+                    caller_context=self.caller_context,
+                    opening_intent=self.opening_intent
+                )
+                
+                self._gemini_reconnect_event.clear()
+                
+                await self.gemini_live_client.connect(
+                    audio_output_callback=self._on_live_audio_output,
+                    audio_interrupt_callback=self._on_live_interruption,
+                    event_callback=self._on_live_event,
+                )
+
+                client = self.gemini_live_client
+                if is_reconnect:
+                    full_history = self.session.conversation_history if self.session.conversation_history else []
+                    
+                    history_lines = []
+                    for t in full_history:
+                        role = "USER" if t.get('role') == "user" else "KIARA (YOU)"
+                        text = (t.get('content') or t.get('text') or '').strip()
+                        if text:
+                            history_lines.append(f"{role}: {text}")
+                    
+                    history_text = "\n".join(history_lines) if history_lines else "No previous turns recorded."
+                    session_memory = self.session.get_session_context_prompt()
+                    caller_name = self.lead_name or "the caller"
+                    reconnect_prompt = (
+                        f"You are continuing an ongoing phone call as Kiara with {caller_name}. "
+                        "Maintain your exact calm, warm, refined, and confident tone and natural speaking pitch at all times. "
+                        "Do NOT say hello again or greet the caller. Retain full context of the ongoing discussion.\n\n"
+                        f"{session_memory}\n\n"
+                        f"--- RECENT CONVERSATION CONTEXT ---\n"
+                        f"{history_text}\n"
+                        f"--- END CONTEXT ---\n\n"
+                        "Stay in character and wait for the caller to speak, or smoothly continue where you left off."
+                    )
+                    if client:
+                        await client.send_text(reconnect_prompt)
+                
+                try:
+                    await asyncio.wait_for(self._gemini_reconnect_event.wait(), timeout=540.0)
+                    print("[Orchestrator] Gemini reconnection event triggered (go_away or error).")
+                except asyncio.TimeoutError:
+                    print("[Orchestrator] 9-minute proactive reconnect triggered.")
+                
+                if self._is_running and not self._stopped:
+                    old_client = self.gemini_live_client
+                    self.gemini_live_client = None
+                    if old_client:
+                        await old_client.finish()
+                    is_reconnect = True
+                    print("[Orchestrator] Spawning new Gemini Live session for seamless continuation...")
+                    
+            except Exception as e:
+                print(f"[Orchestrator] Failed to manage Gemini Live connection: {e}")
+                if not is_reconnect:
+                    await self.stop()
+                    try:
+                        await self.websocket.close()
+                    except Exception:
+                        pass
+                break
 
     async def start(self) -> None:
         """Starts the voice pipeline connections and initiates the opening greeting."""
@@ -413,92 +634,14 @@ class VoicePipelineOrchestrator:
         self._waiting_for_user_since = None
         self._silence_state = "active"
         self._silence_monitor_task = asyncio.create_task(self._silence_monitor())
+        self._gemini_reconnect_event = asyncio.Event()
+        
         print(f"[Orchestrator] Starting voice pipeline for CallSid: {self.call_id}, StreamSid: {self.stream_sid}")
         
         self.session.add_transcript(self.greeting, role="assistant")
         self.session.transition_state("listening")
-        try:
-            if self.gemini_live_client:
-                await self.gemini_live_client.connect(
-                    audio_output_callback=self._on_live_audio_output,
-                    audio_interrupt_callback=self._on_live_interruption,
-                    event_callback=self._on_live_event,
-                )
-
-                # If message and/or subject are provided, answer the question from the message first
-                msg = (self.lead_message or "").strip()
-                subj = (self.lead_subject or "").strip()
-                known_name = self.lead_name if (self.lead_name and self.lead_name.lower() != "there") else ""
-
-                city_display = self.lead_city or "their city"
-                location_rule = (
-                    f"CRITICAL LOCATION & PARTNER RULE: The caller's consultation will be arranged with our Authorized USD Smile Designer in {city_display}. "
-                    f"If they ask where the meeting or consultation will take place, confidently confirm it will be with our local Authorized Smile Designer in {city_display}. "
-                    f"NEVER invent, guess, or suggest other cities (like Hyderabad, Delhi, or Mumbai) if the user explicitly selected {city_display}."
-                )
-                crucial_instruction = (
-                    f"CRITICAL: You already know the caller's Name and City ({city_display}) from the form they just submitted. "
-                    "DO NOT ask them for their name or city. Acknowledge the details they provided naturally, "
-                    f"and move directly to the consultation guidance. {location_rule}"
-                )
-                if self.opening_intent == "outbound_booking_form":
-                    doctor = self.caller_context.get("doctor") if self.caller_context else None
-                    if doctor:
-                        crucial_instruction = (
-                            f"CRITICAL: You already know the caller's First Name, Last Name, City ({city_display}), and selected Doctor ({doctor}) from the form they just submitted. "
-                            f"DO NOT ask them for their name or city. Acknowledge the details they provided naturally (e.g., 'I see you're looking to book an appointment with {doctor} in {city_display}...'), "
-                            f"and move directly to the booking guidance. {location_rule}"
-                        )
-
-                if msg:
-                    subj_str = f" regarding {subj}" if subj else ""
-                    enquiry_type = "appointment booking request" if self.opening_intent == "outbound_booking_form" else "consultation enquiry"
-                    if known_name:
-                        greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}."
-                    else:
-                        greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}."
-                    
-                    initial_prompt = (
-                        f"The outbound call has connected to {known_name or 'the customer'}. "
-                        f"The customer submitted a {enquiry_type} with message: '{msg}' and subject: '{subj}'. "
-                        f"Speak now: Greet the customer ('{greet_phrase}'), then directly and thoroughly answer the question from their message ('{msg}') using our knowledge base and an intuitive real-world analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
-                        f"{crucial_instruction}"
-                    )
-                    await self.gemini_live_client.send_text(initial_prompt)
-                elif subj:
-                    enquiry_type = "appointment booking request" if self.opening_intent == "outbound_booking_form" else "consultation enquiry"
-                    if known_name:
-                        greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}."
-                    else:
-                        greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}."
-                    
-                    initial_prompt = (
-                        f"The outbound call has connected to {known_name or 'the customer'}. "
-                        f"The customer submitted a {enquiry_type} on the topic: '{subj}'. "
-                        f"Speak now: Greet the customer ('{greet_phrase}'), then address their topic clearly in 2-3 sentences based on our knowledge base and an intuitive analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
-                        f"{crucial_instruction}"
-                    )
-                    await self.gemini_live_client.send_text(initial_prompt)
-                else:
-                    if known_name:
-                        initial_prompt = (
-                            f"The outbound call has connected to {known_name}. "
-                            f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply. "
-                            f"{crucial_instruction}"
-                        )
-                    else:
-                        initial_prompt = (
-                            f"The call has just connected. "
-                            f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply."
-                        )
-                    await self.gemini_live_client.send_text(initial_prompt)
-        except Exception as e:
-            print(f"[Orchestrator] Failed to open Gemini Live connection: {e}")
-            await self.stop()
-            try:
-                await self.websocket.close()
-            except Exception:
-                pass
+        
+        self._manage_gemini_connection_task = asyncio.create_task(self._manage_gemini_connection())
 
     async def handle_media_payload(self, ulaw_base64: str) -> None:
         """
@@ -512,6 +655,12 @@ class VoicePipelineOrchestrator:
         if self.gemini_live_client and not getattr(self.gemini_live_client, "_closed", False):
             try:
                 pcm8k = audioop.ulaw2lin(audio_bytes, 2)
+                
+                # RMS Digital Noise Gate: Suppress ambient line noise, breathing, and mobile AEC artifacts
+                rms = audioop.rms(pcm8k, 2)
+                if rms < 400:
+                    pcm8k = b"\x00" * len(pcm8k)
+
                 pcm16k, self._inbound_resample_state = resample_pcm16(
                     pcm8k, 8000, 16000, self._inbound_resample_state
                 )
@@ -525,6 +674,8 @@ class VoicePipelineOrchestrator:
             return
         self._stopped = True
         self._is_running = False
+        if hasattr(self, "_gemini_reconnect_event"):
+            self._gemini_reconnect_event.set()
         self._inbound_resample_state = None
         self._outbound_resample_state = None
         self._outbound_chunk_counter = 1

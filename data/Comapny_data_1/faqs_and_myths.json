@@ -1,0 +1,146 @@
+{
+  "smile_design_safety": {
+    "intent": "smile_design_safety",
+    "topic": "Is Smile Design Safe? Myths vs Facts",
+    "keywords": [
+      "Smile design safe hai kya",
+      "Kya smile design nuksan karta hai",
+      "Is smile makeover harmful",
+      "Smile design se daant kharab hote hain kya",
+      "Veneers se enamel damage hota hai kya",
+      "Cosmetic dentistry safe or not"
+    ],
+    "facts": "Smile design is safe when performed by a qualified dentist using evidence-based planning and modern materials. Advances in minimally invasive techniques, biocompatible dental materials, and digital treatment planning allow smile makeovers to enhance aesthetics while preserving natural tooth structure and long-term oral health. Modern techniques make procedures comfortable and quick. Dentist-led planning and safety protocols make them clinically safe.",
+    "details": "Common myths debunked: Myth 1 — Cosmetic dentistry is painful. Fact: local anaesthesia and conscious sedation ensure procedures are mostly pain-free, and laser dentistry reduces tissue trauma. Myth 2 — Smile makeovers are unsafe. Fact: personalised planning reduces risk factors and scientific protocols guide material selection. Myth 3 — Cosmetic dentistry is only for looks. Fact: it also corrects bite imbalances, restores enamel damage, improves chewing and speech. Myth 4 — Veneers look artificial. Fact: modern veneers use precise shade matching and ceramic materials that mimic enamel translucency. Myth 5 — Veneers remove most enamel. Fact: modern techniques preserve maximum natural enamel, and no-prep veneers preserve all enamel. Myth 6 — Results don't last. Fact: with proper care, veneers and crowns often last 10 to 15 years or more."
+  },
+  "smile_makeover_candidate": {
+    "intent": "smile_makeover_candidate",
+    "topic": "Am I a Good Candidate for a Smile Makeover?",
+    "keywords": [
+      "Main smile makeover ka candidate hoon kya",
+      "Am I eligible for smile design",
+      "Kaun log smile design karwa sakte hain",
+      "Who can get smile makeover",
+      "Kya main smile design karwa sakta hoon",
+      "Smile design ke liye kya chahiye"
+    ],
+    "facts": "A person may be a good candidate for a smile makeover if they have discoloured, chipped, or uneven teeth; gaps, crowding, or mild misalignment; missing teeth that affect bite or appearance; uneven gum lines or a gummy smile; or worn teeth due to grinding or aging. The dentist will first evaluate oral health to ensure the mouth is healthy enough for cosmetic treatment.",
+    "details": "Oral health requirements before starting treatment include: healthy gums with no active gum disease, no untreated cavities or infections, enough bone support for procedures like implants, and stable bite to avoid future issues. Lifestyle habits that can affect results include teeth grinding which can damage veneers, smoking which stains teeth and slows healing, diet habits that cause staining like coffee and wine, and oral hygiene routine. A smile makeover can make a dramatic change but cannot fix every problem overnight — the dentist will explain what is possible and how long results will last."
+  },
+  "smile_design_pain": {
+    "intent": "smile_design_pain",
+    "topic": "Is Smile Design Painful?",
+    "keywords": [
+      "Smile design mein dard hota hai kya",
+      "Is smile makeover painful",
+      "Veneers lagane mein pain hota hai",
+      "Smile treatment dard bhara hai kya",
+      "Does dental veneer hurt",
+      "Pain during smile design"
+    ],
+    "facts": "Most smile makeover procedures are minimally invasive and performed with local anaesthesia when necessary. Treatments like teeth whitening or orthodontics may cause mild, short-term sensitivity or soreness, but this is temporary and easily managed. Dentists prioritise patient comfort with numbing gels, sedation options, and a calm, step-by-step approach. Smile correction is not painful — just temporary discomfort for lasting results.",
+    "details": "Possible discomforts include: mild pain or sensitivity during and after whitening, veneer preparation, or crown work; temporary gum soreness after gum contouring; and jaw tenderness if orthodontics or bite adjustments are part of the plan. Most discomfort lasts only a few days and improves with over-the-counter pain relief or dentist-prescribed medication. Open communication with the dentist helps ensure a relaxed experience throughout treatment."
+  },
+  "smile_makeover_duration": {
+    "intent": "smile_makeover_duration",
+    "topic": "How Long Does a Smile Makeover Take?",
+    "keywords": [
+      "Smile makeover mein kitna time lagta hai",
+      "How long does smile design take",
+      "Kitne din lagte hain smile design mein",
+      "Smile makeover duration",
+      "Treatment kitne weeks chalega",
+      "Smile design kab tak chalega"
+    ],
+    "facts": "The duration of a smile makeover depends on the treatments involved. Simple cosmetic procedures like whitening, bonding, or contouring can be completed in just a few visits over a few weeks. More complex treatments such as orthodontics or dental implants may take several months to a year. Many smile makeovers are completed in phases, ensuring each step heals and aligns perfectly.",
+    "details": "Typical timelines: simple cases may finish in 2 to 6 weeks. Minor aligner cases may take 3 to 6 months. Moderate cases take 6 to 12 months. Complex cases with orthodontics or implants may take 12 to 18 months. Implants usually require 3 to 4 months of healing, and veneers or crowns take about 1 to 2 weeks for fabrication. During consultation, the dentist creates a personalised treatment plan and timeline. While some results are immediate, others take time — but the end result is a confident, lasting smile."
+  },
+  "smile_makeover_longevity": {
+    "intent": "smile_makeover_longevity",
+    "topic": "How Long Do Smile Makeover Results Last?",
+    "keywords": [
+      "Smile makeover kitne time tak rehta hai",
+      "How long do veneers last",
+      "Veneers ki life kitni hoti hai",
+      "Smile design results permanent hain kya",
+      "Do veneers need replacement",
+      "Smile makeover ki guarantee kitni hai"
+    ],
+    "facts": "With proper care, smile makeover results can last for many years. Veneers typically last 10 to 15 years. Crowns also last 10 to 15 years. Dental implants can last 20 years or more with proper maintenance. Teeth whitening results last about 6 to 12 months and may need touch-ups. Longevity depends on good oral hygiene, regular dental visits, material quality, and habits such as avoiding smoking or teeth grinding.",
+    "details": "To maintain long-lasting results: brush and floss daily, avoid smoking and limit coffee and red wine to prevent stains, wear a night guard if you grind teeth during sleep, and visit the dentist every 6 months for check-ups and cleanings. Long-term clinical studies show that veneers can have high survival rates, but failures can occur. Factors affecting longevity include material and restoration design, amount and quality of remaining enamel, bonding technique, bite and occlusal forces, bruxism habits, oral hygiene, laboratory quality, and clinical technique. Consistent care keeps the smile bright, healthy, and functional for years."
+  },
+  "choosing_right_dentist": {
+    "intent": "choosing_right_dentist",
+    "topic": "How to Choose the Right Smile Design Dentist",
+    "keywords": [
+      "Accha dentist kaise chunein",
+      "How to find best smile design dentist",
+      "Kaunsa dentist smile design karta hai",
+      "Smile design ke liye kahan jaayein",
+      "Best dentist for smile makeover",
+      "Dentist choose kaise karein"
+    ],
+    "facts": "The dentist plays the biggest role in smile makeover results. Look for a dentist with advanced cosmetic training and proven expertise, a before-and-after gallery showing real patient results, modern technology including digital smile design and 3D scanning, transparent pricing with a detailed written treatment plan, and honest patient reviews on trusted platforms.",
+    "details": "Questions to ask before beginning: what treatments are needed for the desired smile, how long will the full process take, what materials are used for veneers or crowns, are there any risks or side effects, how does the dentist handle after-care and adjustments. Choose a dentist who listens, explains every step clearly, and supports through the entire journey. Ultimate Smile Design has a network of authorised smile designers across India — visit ultimatesmiledesign.com to find the nearest authorised smile design clinic."
+  },
+  "smile_design_cost_india": {
+    "intent": "smile_design_cost_india",
+    "topic": "Cost of Smile Design in India",
+    "keywords": [
+      "Smile design ka kitna kharcha aata hai",
+      "Smile design cost in India",
+      "Kitne paise lagte hain smile design mein",
+      "Smile makeover price kya hai",
+      "Veneers ka rate kya hai",
+      "Smile design mehenga hai kya"
+    ],
+    "facts": "Treatments through Ultimate Smile Design start at ₹25,000 per unit, with the total investment depending on the customised treatment plan, number of units, materials, and clinical complexity. The cost varies based on the specific procedures included — whether veneers, crowns, whitening, aligners, implants, or gum contouring — and the complexity of the individual case.",
+    "details": "The total investment depends on several factors: the type of treatment selected, number of teeth being treated, materials chosen, complexity of the smile design, need for preliminary dental treatment, digital planning requirements, and the expertise of the dentist. Always ask for a complete treatment quotation rather than comparing only the advertised price per tooth. A written breakdown should show the treatment costs, included services, and any additional charges. For specific pricing details, visit ultimatesmiledesign.com or consult with an authorised smile designer."
+  },
+  "consultation_checkup_fees": {
+    "intent": "consultation_checkup_fees",
+    "topic": "Consultation and Initial Checkup Fees",
+    "keywords": [
+      "Consultation fee kitni hai",
+      "Checkup charge kitna hai",
+      "Pehle checkup ke kitne paise lagte hain",
+      "Consultation mate pan atla badha paisa aapva padse",
+      "Checkup fee",
+      "Consultation charges",
+      "Is consultation free or charged",
+      "Consultation fees in India",
+      "Pehla checkup no kharch",
+      "Shu pehla checkup mate atla badha paisa aapva padse"
+    ],
+    "facts": "Consultation and initial checkup fees are not fixed. They depend on the specific dentist that you choose to book through our website ultimatesmiledesign.com.",
+    "details": "The ₹25,000 per unit starting price is for the dental treatment itself, not for the initial consultation. Consultation and checkup fees vary by dentist. We recommend visiting ultimatesmiledesign.com to select your preferred authorised smile designer."
+  },
+  "how_to_join_ultimate_smile_design": {
+    "intent": "how_to_join_ultimate_smile_design",
+    "topic": "How to Join Ultimate Smile Design as a Partner Dentist or Team Member",
+    "keywords": [
+      "I want to join you",
+      "How can I join",
+      "What do I have to do to join your team",
+      "What I have to do to join Ultimate Smile Design",
+      "How can I join the Ultimate Smile Design",
+      "How can a dentist join Ultimate Smile Design",
+      "How to join your network",
+      "How to become a partner dentist",
+      "Join as an authorized smile designer",
+      "Dentist registration for Ultimate Smile Design",
+      "I am a dentist and want to collaborate",
+      "How can I work with Ultimate Smile Design",
+      "Hum aapke sath kaise jud sakte hain",
+      "Aapki team ko join kaise karein",
+      "Aapke sath judne ke liye kya karna padega",
+      "Ultimate Smile Design join karne ke liye kya karna hoga",
+      "Dentist kaise join karein",
+      "Tamari team ma join thava mate shu karvu pade",
+      "Ultimate Smile Design ma partner dentist kevi rite thavu",
+      "Aapna network sathe kevi rite jodavu"
+    ],
+    "facts": "To join our team or become a partner dentist with Ultimate Smile Design, visit our official website at ultimatesmiledesign.com, navigate to the 'For Dentist' section, fill out the form, and submit it. Our clinical onboarding team will review your application and contact you directly.",
+    "details": "Dentists, clinics, and professionals looking to join or partner with Ultimate Smile Design can easily apply online. Visit ultimatesmiledesign.com, go to the 'For Dentist' section, complete the registration form with your clinic details, credentials, and location, and submit it. Our team will review the application and guide you through the certification and onboarding process."
+  }
+}

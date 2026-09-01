@@ -1,0 +1,74 @@
+{
+  "digital_smile_design": {
+    "intent": "digital_smile_design",
+    "topic": "Digital Smile Design — How It Works and Why It Matters",
+    "keywords": [
+      "Digital Smile Design kya hai",
+      "What is DSD",
+      "How does digital smile design work",
+      "Digital smile planning kaise hoti hai",
+      "Can I see my smile before treatment",
+      "Smile preview kaise milta hai",
+      "architectural smile planning",
+      "foster and partners smile"
+    ],
+    "facts": "Digital Smile Design (DSD) is an advanced digital methodology used to plan smile design treatments before physical work begins. Much like how Foster + Partners creates precise architectural blueprints or Kelly Hoppen visualizes bespoke interior spaces, DSD combines 3D facial scans, smile simulations, and CAD/CAM modeling to let patients preview their signature smile with absolute predictability.",
+    "details": "The DSD process follows key stages: consultation to discuss concerns and goals; smile assessment evaluating teeth, gums, lips, and facial features; digital records including photographs, videos, and 3D dental scans; digital smile design analysis to create a proposed design; smile preview through digital simulation; design discussion for patient feedback and adjustments; physical mock-up to preview the proposed smile in the mouth; treatment planning to confirm the final design; dental treatment execution; and final result verification. Technologies used include digital photographs, smile videos, intraoral scanners for 3D models, facial scanning, smile simulation software, 3D technology, digital mock-ups, and computer-aided design (CAD) software."
+  },
+  "ai_smile_preview": {
+    "intent": "ai_smile_preview",
+    "topic": "AI Smile Design Preview from a Selfie",
+    "keywords": [
+      "AI smile design kya hai",
+      "Selfie se smile preview",
+      "Can AI show my new smile",
+      "AI smile tool kaise kaam karta hai",
+      "Upload photo see new smile",
+      "Virtual smile try on"
+    ],
+    "facts": "AI smile design preview uses a selfie to generate a digital simulation of smile improvements before treatment. It uses artificial intelligence and facial analysis to create a digital before-and-after simulation from a single photograph. The simulation shows potential smile improvements including teeth whitening results, dental veneer outcomes, bonding, clear aligners, smile symmetry, and spacing corrections. Patient satisfaction with AI-assisted smile design can reach up to 95 percent.",
+    "details": "The process works in steps: first, upload a selfie with clearly visible teeth and good lighting. Second, the AI analyses facial and dental features including tooth size, proportions, lip position, smile line, symmetry, and spacing patterns. Third, the platform creates a digital smile simulation within seconds, adjusting tooth shape, shade, and alignment digitally. Fourth, the preview is reviewed with a dental professional to identify suitable treatment options. Important limitations: AI previews are planning and communication tools, not guarantees of final results. A selfie cannot capture bite relationships, tooth health, gum condition, jaw position, or underlying dental issues. The preview should always be validated through a professional dental consultation."
+  },
+  "ultimate_smile_ai": {
+    "intent": "ultimate_smile_ai",
+    "topic": "Ultimate Smile AI — Virtual Smile Try-On Tool",
+    "keywords": [
+      "Ultimate Smile AI kya hai",
+      "Virtual smile try on kaise karein",
+      "USD AI tool",
+      "Smile preview tool",
+      "AI se smile dekho",
+      "How to use Ultimate Smile AI"
+    ],
+    "facts": "Ultimate Smile AI is an AI-powered smile simulation tool developed by Ultimate Smile Design that helps people preview their future smile before starting cosmetic dental treatment. Patients can capture a selfie and instantly see a personalised virtual smile makeover based on facial features, smile symmetry, tooth proportions, and overall facial harmony. Unlike generic smile filters that apply artificial white teeth for entertainment, Ultimate Smile AI is built using real smile design principles, facial analysis, and cosmetic dentistry planning.",
+    "details": "To use Ultimate Smile AI: visit the Ultimate Smile Design website and click 'Design My Smile Now', allow camera permissions, position your face inside the try-on frame with full teeth clearly visible, click 'Capture Now' when the smile is detected, review the captured image and continue, fill in required details, and wait a few seconds for the AI simulation. The output shows a side-by-side before-and-after comparison. Tips for best results: use natural lighting, keep camera at face level, avoid filters or tilted angles, and ensure teeth are clearly visible while smiling. The tool can demonstrate teeth whitening, veneers and laminates, composite bonding, clear aligners, and comprehensive smile makeover treatments."
+  },
+  "smile_design_process_steps": {
+    "intent": "smile_design_process_steps",
+    "topic": "Step-by-Step Smile Design Process",
+    "keywords": [
+      "Smile design ka process kya hai",
+      "Steps of smile design",
+      "Smile design kaise hota hai step by step",
+      "Treatment process batao",
+      "Kitne visits lagte hain",
+      "Smile design mein kya kya hota hai"
+    ],
+    "facts": "The Ultimate Smile Design process starts with a consultation and assessment using photos, scans, and X-rays. Then digital planning and preview let the patient test-drive their new smile. Treatments follow the plan using aligners, veneers, or crowns crafted to haute horology standards. Finally, permanent restorations are placed with follow-up visits for maintenance.",
+    "details": "Detailed steps: 1. Consultation — discuss smile concerns, goals, and treatment expectations. 2. Smile assessment — dentist evaluates teeth, gums, lips, and facial features. 3. Digital records — photographs, videos, and 3D dental scans are collected. 4. Digital smile design — records are analysed to create a proposed smile design. 5. Smile preview — patient views proposed changes through digital simulation. 6. Design discussion — patient shares preferences and possible adjustments. 7. Mock-up — a physical mock-up may be used to preview the proposed smile in the mouth. 8. Treatment planning — final design and appropriate treatment are confirmed. 9. Dental treatment — planned procedures such as veneers or crowns begin. 10. Final result — treatment is completed and restorations are checked for appearance and function. Timeline varies: minor cases may take 3 to 6 months, moderate cases 6 to 12 months, and complex cases 12 to 18 months."
+  },
+  "facial_harmony_in_smile_design": {
+    "intent": "facial_harmony_in_smile_design",
+    "topic": "Facial Harmony and Why It Matters in Smile Design",
+    "keywords": [
+      "Facial harmony kya hai",
+      "Smile face ke saath match hona chahiye",
+      "How does smile design consider face shape",
+      "Face shape ke hisaab se smile",
+      "Golden ratio in smile design",
+      "Smile proportions"
+    ],
+    "facts": "Facial harmony refers to the visual balance between dental features and the rest of the face. It evaluates how teeth interact with surrounding structures such as the lips, nose, chin, jawline, and cheeks. Rather than aiming for perfect symmetry, facial harmony focuses on proportion, flow, and natural transitions. In aesthetic dentistry, minor asymmetries are often preserved as they contribute to realism — overcorrecting can result in smiles that appear artificial or disconnected from the face.",
+    "details": "Key principles include: symmetry and proportion — using guidelines like the golden ratio (approximately 1.618) for width relationships between upper front teeth, while slight balanced asymmetry often looks more natural; smile line and tooth display — the curve of upper teeth should follow the curve of the upper lip, with appropriate gum display; gum and lip balance — even, symmetrical gum lines matching lip shape, with lip dynamics considered for proper support. Different face shapes require different approaches: oval faces allow greater flexibility; round faces benefit from slightly longer or more angular teeth; square faces suit softer, rounded tooth edges; long faces need wider tooth proportions; and heart-shaped faces benefit from fuller anterior teeth."
+  }
+}

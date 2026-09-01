@@ -1,0 +1,116 @@
+{
+  "dental_veneers_overview": {
+    "intent": "dental_veneers_overview",
+    "topic": "What Are Dental Veneers and How Do They Work",
+    "keywords": [
+      "Dental veneers kya hote hain",
+      "What are veneers",
+      "Veneers kaise kaam karte hain",
+      "Veneers lagane ka process",
+      "Daant pe veneers kaise lagte hain",
+      "Tell me about dental veneers"
+    ],
+    "facts": "Dental veneers are thin, custom-made restorations bonded to the front surface of teeth to improve the appearance of the smile. They may be used for concerns such as persistent discolouration, small chips, uneven tooth shape, and selected small gaps. Veneers do not move teeth into a new position like orthodontic treatment does, and they do not replace the structural function of a full-coverage crown. A tooth with extensive decay, major structural damage, or underlying dental problems may need restorative treatment before or instead of a veneer.",
+    "details": "Veneers may be considered when the main concern involves the colour of teeth, shape and proportions, length of teeth, appearance of small chips or worn edges, appearance of selected small gaps, or overall consistency of the front teeth. The main veneer options include E.max, porcelain, and composite resin. E.max veneers generally offer good stain resistance and a natural appearance, while composite can usually be placed more quickly and is easier to repair. Active gum disease and untreated decay should be addressed before elective cosmetic treatment. Patients who regularly grind or clench their teeth may have a higher risk of veneer complications."
+  },
+  "emax_veneers": {
+    "intent": "emax_veneers",
+    "topic": "E.max Veneers \u2014 Benefits, Process, and Role in Smile Design",
+    "keywords": [
+      "E.max veneers kya hain",
+      "Lithium disilicate veneers",
+      "E.max veneers ke fayde",
+      "Best veneers kaun si hain",
+      "E.max vs porcelain veneers",
+      "E.max veneers kitne time tak chalte hain"
+    ],
+    "facts": "E.max veneers are fabricated from lithium disilicate glass-ceramic, known for its natural translucency and reliable strength. They closely mimic natural enamel while maintaining predictable performance. E.max veneers offer enamel-like translucency with high optical clarity, reliable resin bond strength, colour stability with minimal long-term staining, minimally invasive design preserving natural tooth structure, and biocompatibility as metal-free ceramic that prevents plaque accumulation.",
+    "details": "E.max veneers are best suited for anterior regions where superior light transmission matters, cases where margins are in enamel for superior bond strength, and ultra-thin restorations where translucency is critical. The process follows a digitally guided workflow: digital assessment with facial photographs and smile analysis, intraoral scanning for high-resolution 3D models, guided tooth preparation with minimal enamel reduction, CAD/CAM veneer milling for uniform thickness and precise edges, and adhesive cementation using advanced resin protocols. E.max veneers on front teeth typically last 10 to 15 years, with clinical studies showing survival rates of around 90 to 95 percent. E.max is generally more aesthetic than zirconia for front teeth because it allows light to pass through and reflect like natural enamel."
+  },
+  "ultra_thin_veneers": {
+    "intent": "ultra_thin_veneers",
+    "topic": "Ultra-Thin Veneers \u2014 No-Drill Smile Makeover",
+    "keywords": [
+      "Ultra thin veneers kya hain",
+      "No drill veneers",
+      "Bina drilling ke veneers",
+      "Pain free veneers",
+      "Contact lens thin veneers",
+      "No prep veneers kaise kaam karte hain",
+      "watchmaker precision veneers",
+      "patek philippe precision"
+    ],
+    "facts": "Crafted with haute horology standards, these ultra-thin veneers measure a mere 0.3mm\u2014demanding the micro-precision of a Rolex or Patek Philippe master watchmaker. This 'contact lens' thin luxury preservation allows for a completely drill-free transformation, safeguarding your natural biological assets while providing an instant, pain-free upgrade to your personal brand.",
+    "details": "Best candidates include those with mild discolouration resistant to whitening, small chips or uneven tooth edges, slight spacing or gaps between front teeth, minor alignment or shape irregularities, and a desire for a natural long-lasting smile without drilling. Not suitable for severely crowded or misaligned teeth, patients with active gum disease or decay, teeth with large restorations or very thin enamel, or habitual teeth grinders without a nightguard. The process is completed in 2 to 3 visits: consultation and digital smile design, impressions and fabrication using CAD/CAM systems, and try-in with bonding using advanced adhesive technology. Benefits include preserved natural enamel, pain-free procedure usually without anaesthesia, natural translucency, instant results, and reversibility in some cases."
+  },
+  "veneers_vs_crowns": {
+    "intent": "veneers_vs_crowns",
+    "topic": "Veneers vs Crowns \u2014 What Is the Difference",
+    "keywords": [
+      "Veneers aur crowns mein kya fark hai",
+      "Veneers vs crowns",
+      "Crown ya veneer kaunsa better hai",
+      "When to choose veneer over crown",
+      "Veneer ya crown lagwana chahiye",
+      "Crown vs veneer comparison"
+    ],
+    "facts": "Veneers and crowns serve different purposes. A veneer covers mainly the facial surface of a tooth and is primarily for aesthetic modification. A crown covers the entire clinical crown and is for structural restoration and protection. A veneer is generally preferable when a structurally sound tooth needs an aesthetic change and sufficient enamel remains for predictable bonding. A crown becomes more appropriate when a tooth requires full coverage because of extensive structural loss, large restorations, significant fracture, or other restorative indications.",
+    "details": "Key differences: veneers involve case-dependent tooth preparation while crowns usually require substantially greater preparation. Veneers are more conservative of tooth structure than crowns. Veneers are usually not reversible when enamel is removed, while crowns are not reversible. No-prep or minimal-prep veneers may be reversible in selected cases. The decision should not be based only on appearance \u2014 removing unnecessary tooth structure to place a crown for a purely cosmetic problem can be an avoidable treatment step. The choice should be based on the condition and function of the tooth rather than cosmetic preference alone."
+  },
+  "veneers_benefits": {
+    "intent": "veneers_benefits",
+    "topic": "Key Benefits of Dental Veneers",
+    "keywords": [
+      "Veneers ke kya fayde hain",
+      "Benefits of dental veneers",
+      "Veneers kyun lagwayein",
+      "Veneers ke advantages",
+      "Why get veneers",
+      "Veneers se kya hota hai"
+    ],
+    "facts": "Dental veneers offer a wide range of aesthetic, functional, and psychological advantages. They are one of the most effective cosmetic dentistry solutions for patients seeking a confident, natural-looking smile. Veneers address concerns such as tooth discolouration, chips, uneven edges, small gaps, and irregular shapes without extensive dental work.",
+    "details": "Key benefits include: 1. Natural-looking smile enhancement with custom shade matching and translucent materials. 2. Permanent solution for tooth discolouration \u2014 covers intrinsic stains and resists staining from tea, coffee, and tobacco. 3. Correction of minor alignment and spacing issues without braces. 4. Minimally invasive tooth preservation compared to crowns. 5. Strength and surface protection \u2014 shields worn or weakened enamel. 6. Quick smile transformation completed in 1 to 3 visits. 7. Low maintenance \u2014 brush and floss like natural teeth. 8. Long-lasting results \u2014 porcelain veneers last 10 to 15 years or more. 9. Boosted confidence and psychological benefits. 10. Customised smile design tailored to face shape, lip line, and smile width."
+  },
+  "emax_vs_porcelain_vs_zirconia": {
+    "intent": "emax_vs_porcelain_vs_zirconia",
+    "topic": "E.max vs Porcelain vs Zirconia Veneers Comparison",
+    "keywords": [
+      "E.max porcelain zirconia comparison",
+      "Kaunsi veneer material best hai",
+      "E.max ya zirconya kaunsa achha hai",
+      "Veneer material comparison",
+      "Best material for front teeth veneers",
+      "Which veneer material should I choose",
+      "bentley continental veneer",
+      "armoured suv zirconia"
+    ],
+    "facts": "If Zirconia is the armoured SUV built for sheer force, and feldspathic porcelain is the delicate crystal glass, E.max is the Bentley Continental\u2014the ultimate hybrid of high-performance durability and breathtaking aesthetic luxury. It remains the undisputed gold standard for the discerning HNWI, offering ultra-thin possibilities with conservative enamel removal and superior optical integration.",
+    "details": "Comparison: E.max offers ultra-thin possibilities at 0.3 to 0.5 mm with conservative enamel removal and 10 to 15 year longevity \u2014 best for smile-zone anterior veneers prioritising aesthetics. Porcelain veneers are thin but fragile at reduced thickness with a shorter lifespan compared to E.max \u2014 best for select cosmetic cases with ideal bite conditions. Zirconia requires more bulk at 0.8 to 1.5 mm with more aggressive preparation and 15 to 20 year longevity \u2014 best for high-load cases or masking severe discolouration. Material selection should always consider enamel availability, occlusal forces, and shade requirements. E.max provides superior optical integration compared to zirconia and more predictable bonding than feldspathic porcelain."
+  },
+  "veneers_cost_india": {
+    "intent": "veneers_cost_india",
+    "topic": "Cost of Dental Veneers in India",
+    "keywords": [
+      "Veneers ka rate kya hai India mein",
+      "Dental veneers cost in India",
+      "Veneers kitne mein lagte hain",
+      "Veneers price India",
+      "E.max veneers ka kharcha",
+      "Veneers ke daam"
+    ],
+    "facts": "Treatments through Ultimate Smile Design start at \u20b925,000 per unit, with the total investment depending on the customised treatment plan, number of units, materials, and clinical complexity. The cost varies based on veneer material, number of teeth, dentist's experience, laboratory involved, digital planning requirements, complexity of the smile design, need for preliminary dental treatment, and city and clinic.",
+    "details": "There is no single fixed cost for dental veneers in India. The investment depends on the specific material chosen, the number of teeth being treated, the complexity of the case, and whether digital smile design planning is included. Always ask for a complete treatment quotation rather than comparing only the advertised price per tooth. The quoted amount may or may not include consultation, digital smile design, scans, temporary restorations, laboratory charges, follow-up visits, or treatment required before veneers. For specific pricing, visit ultimatesmiledesign.com or consult with an authorised smile designer."
+  },
+  "advanced_dsd_technologies": {
+    "intent": "advanced_dsd_technologies",
+    "topic": "Advanced Digital Smile Design (DSD) Technologies",
+    "keywords": [
+      "dsd technologies",
+      "3d-printed try-ins",
+      "digital mock-ups",
+      "test-drive smile"
+    ],
+    "facts": "Advanced DSD technologies utilize 3D-printed try-ins and digital mock-ups, allowing patients to physically test-drive their new smile before any permanent changes are made.",
+    "details": "By leveraging Advanced DSD Technologies, patients do not have to guess their final results. The workflow includes 3D-printed try-ins and highly accurate digital mock-ups. This innovative approach allows patients to physically test-drive their smile, evaluating the aesthetics, speech, and comfort before committing to permanent restorations."
+  }
+}

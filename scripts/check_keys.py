@@ -22,7 +22,7 @@ async def check_gemini():
     if not settings.GEMINI_API_KEY:
         print("[-] Gemini: Missing GEMINI_API_KEY")
         return
-    model = getattr(settings, "GEMINI_MODEL", "gemini-3.1-flash-lite")
+    model = getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite")
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={settings.GEMINI_API_KEY}"
     async with httpx.AsyncClient() as client:
         try:

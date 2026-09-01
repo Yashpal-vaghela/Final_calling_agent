@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from backend.app.services.smartflo_service import smartflo_client
 from backend.app.services.caller_context import register_caller_context
-from backend.app.services.city_service import is_city_covered
+from backend.app.services.city_service import is_city_covered, get_doctors_by_city
 
 router = APIRouter()
 
@@ -31,6 +31,12 @@ async def get_booking_form():
     with open(template_path, "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content, status_code=200)
+
+@router.get("/api/booking-form/doctors")
+async def get_booking_form_doctors(city: str = ""):
+    """Returns the list of doctors for the requested city."""
+    doctors = get_doctors_by_city(city)
+    return {"city": city, "doctors": doctors}
 
 @router.post("/api/booking-form/submit")
 async def submit_booking_form(form_data: BookingFormSubmission):
@@ -66,7 +72,10 @@ async def submit_booking_form(form_data: BookingFormSubmission):
     # Initiate Smartflo Click-to-Call
     custom_params = {
         "lead_id": lead_id,
-        "opening_intent": "outbound_booking_form"
+        "opening_intent": "outbound_booking_form",
+        "first_name": form_data.first_name.strip(),
+        "doctor": form_data.doctor.strip(),
+        "city": form_data.city.strip()
     }
 
     result = await smartflo_client.initiate_click_to_call(

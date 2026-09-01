@@ -9,16 +9,16 @@ from agent.knowledge import get_retriever
 
 _NOT_FOUND = {
     "en": (
-        "I don't have specific information on that topic right now. "
-        "I'd recommend speaking with our team directly — I can arrange a callback for you."
+        "I don't have specific information on that right now. "
+        "For more details, I'd recommend visiting our official website at ultimatesmiledesign.com."
     ),
     "hi": (
-        "मुझे अभी उस topic पर specific information नहीं है। "
-        "मैं recommend करूँगा कि आप हमारी team से directly बात करें — मैं आपके लिए callback arrange कर सकता हूँ।"
+        "मेरे पास अभी इसकी पूरी जानकारी नहीं है। "
+        "अधिक जानकारी के लिए, आप हमारी वेबसाइट ultimatesmiledesign.com पर जा सकते हैं।"
     ),
     "gu": (
-        "Maṇe halyāre te topic par specific information nathī. "
-        "Maiṃ recommend karīś ke āp amārī team sāthe directly vāt karo — maiṃ āpnā māṭe callback arrange karī śakuṃ."
+        "મારી પાસે અત્યારે આની પૂરી માહિતી નથી. "
+        "વધારે માહિતી માટે, તમે અમારી વેબસાઇટ ultimatesmiledesign.com ની મુલાકાત લઈ શકો છો."
     ),
 }
 
@@ -27,7 +27,8 @@ SUPPORTED_TOPICS = [
     "warranty", "veneers", "implants", "whitening", "treatments_general",
     "preview_ai_digital", "process_timeline", "cities_coverage", "cost_value",
     "aftercare_comfort", "privacy_busy_schedule", "contact_booking",
-    "process", "timeline", "cities", "cost", "before_after"
+    "process", "timeline", "cities", "cost", "before_after",
+    "join_usd", "for_dentists", "join_team", "partner_dentist"
 ]
 
 

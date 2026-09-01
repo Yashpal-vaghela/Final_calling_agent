@@ -27,30 +27,22 @@ def _save_leads(leads: list) -> None:
 def human_handoff(reason: str, phone_number: Optional[str] = None, call_id: Optional[str] = None) -> dict:
     """
     Escalate to human patient care team.
-    If phone_number is None, Kiara must ask the caller for it before 
-    completing the handoff. Saves status 'human_handoff_requested' to 
-    data/leads.json with call_id linkage.
+    Saves status 'human_handoff_requested' to data/leads.json with call_id linkage.
     
     Args:
         reason: The reason for the handoff.
-        phone_number: The caller's phone number.
+        phone_number: The caller's phone number (optional).
         call_id: The ID of the call (injected at runtime).
         
     Returns:
         dict: A response dictionary indicating the action Kiara should take next.
     """
-    if not phone_number:
-        return {
-            "status": "missing_phone",
-            "message": "Please ask the caller for their phone number so the patient care team can call them back."
-        }
-        
     # Save the handoff request to leads.json
     lead = {
         "id": str(uuid.uuid4()),
         "call_id": call_id,
         "name": "Unknown", # Can be updated if we had capture_lead before
-        "phone": phone_number.strip(),
+        "phone": phone_number.strip() if phone_number else "Unknown",
         "city": "Unknown",
         "intent": "human_handoff_requested",
         "notes": f"Handoff Reason: {reason}",
@@ -80,6 +72,6 @@ def human_handoff(reason: str, phone_number: Optional[str] = None, call_id: Opti
     # Return a message instructing the LLM what to say before ending the call
     return {
         "status": "success",
-        "message": "Handoff details recorded successfully. Please let the caller know that a member of our patient care team will call them back shortly, and then politely end the call.",
+        "message": "Handoff details recorded successfully. Tell the caller exactly: 'You can reach our patient care team directly by calling the number on ultimatesmiledesign.com.', and then politely end the call.",
         "action": "end_call"
     }
