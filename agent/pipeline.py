@@ -78,6 +78,15 @@ class VoicePipelineOrchestrator:
                     f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. I'm calling to confirm that we've received your appointment booking request with {doctor}{city_str}. "
                     "Your consultation has been scheduled, and our team will contact you shortly to confirm the details. Do you have any other questions I can help you with?"
                 )
+            elif self.opening_intent == "outbound_smile_preview":
+                first_name = self.caller_context.get("first_name") or self.lead_name.split()[0]
+                clean_first_name = re.sub(r"[\x00-\x1F<>\"\\{}]", "", first_name).strip()[:50]
+                if not clean_first_name:
+                    clean_first_name = "the customer"
+                self.greeting = (
+                    f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. I see you just tried out your AI Smile Preview! "
+                    f"How did you like your new smile, and would you like to book an appointment with our authorized smile designer{city_str}?"
+                )
             elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 self.greeting = (
                     f"Hi {self.lead_name}, this is Kiara from Ultimate Smile Design, "
@@ -95,6 +104,12 @@ class VoicePipelineOrchestrator:
                 self.greeting = (
                     f"Hello! This is Kiara from Ultimate Smile Design. I'm calling to confirm that we've received your appointment booking request with {doctor}{city_str}. "
                     "Your consultation has been scheduled, and our team will contact you shortly to confirm the details. Do you have any other questions I can help you with?"
+                )
+            elif self.opening_intent == "outbound_smile_preview":
+                city_str = f" in {self.lead_city}" if self.lead_city else ""
+                self.greeting = (
+                    f"Hello! This is Kiara from Ultimate Smile Design. I see you just tried out your AI Smile Preview online! "
+                    f"How did you like your new smile, and would you like to book an appointment with our authorized smile designer{city_str}?"
                 )
             elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 city_str = f" {self.lead_city}" if self.lead_city else ""
@@ -496,6 +511,11 @@ class VoicePipelineOrchestrator:
                     f"CRITICAL: You already know the caller's First Name, Last Name, City ({city_display}), and selected Doctor ({doctor}) from the form they just submitted. "
                     f"DO NOT ask them for their name, city, or doctor. You MUST open by confirming the appointment with {doctor} in {city_display} and asking if they have any other questions. {location_rule}"
                 )
+        elif self.opening_intent == "outbound_smile_preview":
+            crucial_instruction = (
+                f"CRITICAL: You already know the caller's Name and City ({city_display}) because they just completed the AI Smile Preview online. "
+                f"DO NOT ask for their name or city again. Open the call by acknowledging they saw their AI smile and ask if they want to book a consultation. {location_rule}"
+            )
 
         if msg:
             subj_str = f" regarding {subj}" if subj else ""

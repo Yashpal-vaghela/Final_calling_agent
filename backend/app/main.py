@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import os
 
-from backend.app.routes import smartflo_voice, contact_form, internal_callback, booking_form, cities
+from backend.app.routes import smartflo_voice, contact_form, internal_callback, booking_form, cities, smile_preview
 from backend.app.services.caller_context import ACTIVE_CALLER_CONTEXTS
 
 app = FastAPI(title="USD Calling Agent")
@@ -19,6 +19,7 @@ app.include_router(contact_form.router)
 app.include_router(internal_callback.router)
 app.include_router(booking_form.router)
 app.include_router(cities.router)
+app.include_router(smile_preview.router)
 
 @app.get("/")
 def root():

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Smile Design - AI Preview Consultation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gold: #D4AF37;
+            --dark-bg: #0A0A0A;
+            --surface-bg: #1A1A1A;
+            --text-light: #F0F0F0;
+            --border-color: rgba(212, 175, 55, 0.3);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .modal {
+            background: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .logo {
+            text-align: center;
+            color: var(--primary-gold);
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 30px;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary-gold);
+        }
+
+        .phone-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .country-code {
+            position: absolute;
+            left: 16px;
+            color: #aaa;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .phone-input {
+            padding-left: 70px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #e6c875 0%, #a67c00 100%);
+            color: black;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        #status-message {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #F44336; }
+    </style>
+</head>
+<body>
+
+    <div class="modal">
+        <button class="close-btn">&times;</button>
+        <div class="logo">ULTIMATE<br><span style="font-size: 12px; letter-spacing: 4px;">SMILE DESIGNING</span></div>
+        <h2>Contact Information</h2>
+
+        <form id="smileForm">
+            <div class="form-group">
+                <input type="text" id="name" placeholder="Name" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group phone-group">
+                    <div class="country-code">🇮🇳 +91</div>
+                    <input type="tel" id="phone" class="phone-input" placeholder="Contact" required pattern="[0-9]{10}">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="city" placeholder="City" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="email" id="email" placeholder="Email" required>
+            </div>
+
+            <button type="submit" id="submitBtn">Talk to a Smile Designer</button>
+        </form>
+
+        <div id="status-message"></div>
+    </div>
+
+    <script>
+        document.getElementById('smileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            const statusMsg = document.getElementById('status-message');
+            
+            btn.disabled = true;
+            btn.textContent = "Connecting...";
+            statusMsg.style.display = "none";
+            
+            const payload = {
+                name: document.getElementById('name').value,
+                phone: "+91" + document.getElementById('phone').value,
+                city: document.getElementById('city').value,
+                email: document.getElementById('email').value
+            };
+
+            try {
+                const response = await fetch('/api/smile-preview/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusMsg.textContent = "Success! Please expect an incoming call from our AI consultant shortly.";
+                    statusMsg.className = "success";
+                    document.getElementById('smileForm').reset();
+                } else {
+                    statusMsg.textContent = data.detail || "An error occurred. Please try again.";
+                    statusMsg.className = "error";
+                }
+            } catch (err) {
+                statusMsg.textContent = "Network error. Please try again.";
+                statusMsg.className = "error";
+            } finally {
+                statusMsg.style.display = "block";
+                btn.disabled = false;
+                btn.textContent = "Talk to a Smile Designer";
+            }
+        });
+    </script>
+</body>
+</html>

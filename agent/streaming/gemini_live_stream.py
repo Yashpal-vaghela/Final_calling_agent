@@ -43,6 +43,7 @@ def build_system_prompt(opening_intent: str) -> str:
     intent_file_map = {
         "outbound_booking_form": "outbound_booking.md",
         "outbound_contact_form": "outbound_contact.md",
+        "outbound_smile_preview": "outbound_smile_preview.md",
         "inbound": "inbound.md"
     }
     
@@ -112,8 +113,8 @@ class GeminiLiveStreamClient:
             self.system_instruction = (
                 f"### SUPREME DIRECTIVE 1: REAL-TIME LANGUAGE MIRRORING (RULE #1)\n"
                 f"You MUST match the caller's spoken language on EVERY SINGLE TURN without exception, even on short 1-3 word phrases:\n"
-                f"- If the caller speaks Hindi / Hinglish (e.g. 'haan', 'bolo', 'acha', 'kitna lagega') -> Respond 100% in Hindi / Hinglish.\n"
-                f"- If the caller speaks Gujarati / Gujlish (e.g. 'ha', 'bolo ne', 'kem cho', 'su chhe', 'ketla thashe') -> Respond 100% in Gujarati / Gujlish.\n"
+                f"- If the caller speaks Hindi (e.g. 'haan' / 'हाँ', 'bolo' / 'बोलो', 'acha' / 'अच्छा') -> Respond in conversational Hindi. You SHOULD use common English words naturally (e.g. 'appointment', 'smile design', 'consultation'), but you MUST output the ENTIRE response exclusively in the Devanagari script (e.g., 'अपॉइंटमेंट', 'स्माइल डिज़ाइन'). NEVER use Latin script for Hindi.\n"
+                f"- If the caller speaks Gujarati (e.g. 'ha' / 'હા', 'bolo ne' / 'બોલો ને', 'kem cho' / 'કેમ છો') -> Respond in conversational Gujarati. You SHOULD use common English words naturally, but you MUST output the ENTIRE response exclusively in the Gujarati script (e.g., 'એપોઇન્ટમેન્ટ'). NEVER use Latin script for Gujarati.\n"
                 f"- If the caller speaks English -> Respond 100% in refined Indian-English.\n"
                 f"- MANDATORY KNOWLEDGE TRANSLATION: Your knowledge facts are written in English. You MUST deliver these facts in the EXACT SAME language the caller is currently speaking.\n\n"
                 f"### SUPREME DIRECTIVE 2: 100% FEMALE IDENTITY & GRAMMATICAL INFLECTIONS (STRICT)\n"
