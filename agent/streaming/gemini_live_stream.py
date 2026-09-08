@@ -111,12 +111,20 @@ class GeminiLiveStreamClient:
         else:
             base_prompt = build_system_prompt(self.opening_intent or "inbound")
             self.system_instruction = (
-                f"### SUPREME DIRECTIVE 1: REAL-TIME LANGUAGE MIRRORING (RULE #1)\n"
-                f"You MUST match the caller's spoken language on EVERY SINGLE TURN without exception, even on short 1-3 word phrases:\n"
-                f"- If the caller speaks Hindi (e.g. 'haan' / 'हाँ', 'bolo' / 'बोलो', 'acha' / 'अच्छा') -> Respond in conversational Hindi. You SHOULD use common English words naturally (e.g. 'appointment', 'smile design', 'consultation'), but you MUST output the ENTIRE response exclusively in the Devanagari script (e.g., 'अपॉइंटमेंट', 'स्माइल डिज़ाइन'). NEVER use Latin script for Hindi.\n"
-                f"- If the caller speaks Gujarati (e.g. 'ha' / 'હા', 'bolo ne' / 'બોલો ને', 'kem cho' / 'કેમ છો') -> Respond in conversational Gujarati. You SHOULD use common English words naturally, but you MUST output the ENTIRE response exclusively in the Gujarati script (e.g., 'એપોઇન્ટમેન્ટ'). NEVER use Latin script for Gujarati.\n"
-                f"- If the caller speaks English -> Respond 100% in refined Indian-English.\n"
-                f"- MANDATORY KNOWLEDGE TRANSLATION: Your knowledge facts are written in English. You MUST deliver these facts in the EXACT SAME language the caller is currently speaking.\n\n"
+                f"### SUPREME DIRECTIVE 1: REAL-TIME LANGUAGE MIRRORING & CONVERSATIONAL CODE-SWITCHING (RULE #1)\n"
+                f"1. **Detect & Sync**: Actively detect the caller's spoken language on EVERY turn. Call `set_caller_language` immediately whenever the caller switches between English ('en'), Hindi ('hi'), or Gujarati ('gu').\n"
+                f"2. **NO PURE OR TEXTBOOK HINDI/GUJARATI (MANDATORY ENGLISH BLEND)**:\n"
+                f"   - You MUST sound like a modern urban Indian speaker. NEVER speak 100% pure, formal, literary, or textbook Hindi/Gujarati.\n"
+                f"   - In BOTH Hindi and Gujarati, you MUST actively weave in common everyday English words (e.g., 'appointment', 'booking', 'check', 'confirm', 'schedule', 'doctor', 'clinic', 'process', 'smile design', 'consultation', 'details', 'website', 'timeline', 'customized', 'difference', 'options', 'comfortable').\n"
+                f"   - Example Gujarati (Gujlish): 'હા, હું તમારું appointment check કરી દઉં છું.' or 'Normal smile design કરતા આપણી process ઘણી different છે કારણ કે આમાં bespoke smile create થાય છે.'\n"
+                f"   - Example Hindi (Hinglish): 'जी, मैं आपका appointment check कर देती हूँ.' or 'Normal smile design से हमारा process काफी different है क्योंकि इसमें personalized consultation मिलती है.'\n"
+                f"3. **Zero Cross-Contamination Between Hindi and Gujarati**:\n"
+                f"   - When in Hindi/Hinglish mode: NEVER use Gujarati words or Gujarati script. NEVER use Perso-Arabic/Urdu script. Hindi words must be in Devanagari, English words in Latin or Devanagari.\n"
+                f"   - When in Gujarati/Gujlish mode: NEVER use Hindi words or Devanagari script. Gujarati words must be in Gujarati script, English words in Latin or Gujarati script.\n"
+                f"   - When in English mode: Output 100% in polished, refined Indian-English (Latin script only).\n"
+                f"4. **English Switching vs. Loan Words Boundary**:\n"
+                f"   - **Loan words**: If the caller speaks Hindi or Gujarati and uses standard English words, STAY in their active Hindi or Gujarati (blend English words naturally).\n"
+                f"   - **Full English inquiries**: If the caller asks a question or speaks a complete sentence in English (e.g., 'What can you give me the name?', 'Can you tell me the price?', 'Speak in English', 'Yes, please tell me'), you MUST IMMEDIATELY switch 100% to English on that turn and call `set_caller_language(language='en')`.\n\n"
                 f"### SUPREME DIRECTIVE 2: 100% FEMALE IDENTITY & GRAMMATICAL INFLECTIONS (STRICT)\n"
                 f"You are KIARA, a female consultant. In Hindi and Gujarati, you MUST ALWAYS use feminine verb forms and self-references:\n"
                 f"- In Hindi: ALWAYS say '-ती हूँ / -ti hoon' (e.g. 'बता सकती हूँ', 'करूँगी', 'देख रही हूँ', 'आपकी कंसल्टेंट'). NEVER say masculine '-ता हूँ', '-ऊँगा', '-रहा हूँ', or 'आपका कंसल्टेंट'.\n"
@@ -124,6 +132,8 @@ class GeminiLiveStreamClient:
                 f"- NEVER mirror masculine grammar from male callers.\n\n"
                 f"### SUPREME DIRECTIVE 3: AUDIO TRANSCRIPTION LANGUAGE LOCK (ANTI-HALLUCINATION)\n"
                 f"The caller is from India and will ONLY speak in English, Hindi, or Gujarati. You MUST transcribe their audio ONLY into English, Hindi (Devanagari script), or Gujarati script. NEVER transcribe or translate audio into any other language.\n\n"
+                f"### SUPREME DIRECTIVE 4: MANDATORY KNOWLEDGE BASE RETRIEVAL (ANTI-HALLUCINATION)\n"
+                f"You MUST call the `get_faq` tool to answer ANY question about prices, procedures, or doctors. NEVER guess, deflect, or speculate on these topics without calling the tool.\n\n"
                 f"{base_prompt}\n\n"
                 f"---\n\n"
                 f"## CURRENT SESSION (LIVE VOICE CALL)\n"
@@ -183,11 +193,11 @@ class GeminiLiveStreamClient:
 
         get_faq_tool = genai_types.FunctionDeclaration(
             name="get_faq",
-            description="Retrieve authoritative FAQ answers about Ultimate Smile Design process, timeline, cities, cost, before_after, or warranty.",
+            description="Retrieve authoritative FAQ answers about Ultimate Smile Design prices, procedures, doctors, course_price, dentist_partner_benefits, process, timeline, cities, cost, before_after, or warranty.",
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
                 properties={
-                    "topic": genai_types.Schema(type=genai_types.Type.STRING, description="FAQ topic: process, timeline, cities, cost, before_after, warranty"),
+                    "topic": genai_types.Schema(type=genai_types.Type.STRING, description="FAQ topic or question: prices, procedures, doctors, course_price, dentist_partner_benefits, process, timeline, cities, cost, before_after, warranty"),
                     "language": genai_types.Schema(type=genai_types.Type.STRING, description="Response language: en, hi, gu"),
                 },
                 required=["topic"],
@@ -207,8 +217,20 @@ class GeminiLiveStreamClient:
             ),
         )
 
+        set_language_tool = genai_types.FunctionDeclaration(
+            name="set_caller_language",
+            description="Call this immediately when the caller speaks or switches their language between en (English), hi (Hindi), or gu (Gujarati). Updates backend state.",
+            parameters=genai_types.Schema(
+                type=genai_types.Type.OBJECT,
+                properties={
+                    "language": genai_types.Schema(type=genai_types.Type.STRING, description="Caller's active language: en (English), hi (Hindi), gu (Gujarati)"),
+                },
+                required=["language"],
+            ),
+        )
+
         return genai_types.Tool(
-            function_declarations=[check_city_tool, get_faq_tool]
+            function_declarations=[check_city_tool, get_faq_tool, set_language_tool]
         )
 
     def _build_default_tool_mapping(self) -> Dict[str, Callable]:
@@ -226,11 +248,16 @@ class GeminiLiveStreamClient:
             kwargs.setdefault("call_id", self.call_id)
             return human_handoff(**kwargs)
 
+        def wrap_set_caller_language(**kwargs):
+            # This is a dummy wrapper, pipeline.py will override this with real session state logic
+            return {"status": "success", "language": kwargs.get("language")}
+
         return {
             "capture_lead": wrap_capture_lead,
             "check_city_coverage": check_city_coverage,
             "get_faq": wrap_get_faq,
             "human_handoff": wrap_handoff,
+            "set_caller_language": wrap_set_caller_language,
         }
 
     async def send_audio(self, audio_chunk: bytes) -> None:
@@ -403,8 +430,15 @@ class GeminiLiveStreamClient:
                                         await event_queue.put({"type": "interrupted"})
 
                                 if tool_call:
-                                    function_responses = []
-                                    for fc in getattr(tool_call, "function_calls", []):
+                                    original_fcs = list(getattr(tool_call, "function_calls", []))
+                                    
+                                    # Ensure language state updates execute before any knowledge retrieval
+                                    priority_fcs = [fc for fc in original_fcs if fc.name == "set_caller_language"]
+                                    other_fcs = [fc for fc in original_fcs if fc.name != "set_caller_language"]
+                                    
+                                    responses_dict = {}
+                                    
+                                    for fc in priority_fcs + other_fcs:
                                         func_name = fc.name
                                         args = dict(fc.args) if fc.args else {}
                                         print(f"\n  [Gemini Live Tool Call] -> {func_name}({json.dumps(args, ensure_ascii=False)})")
@@ -425,15 +459,15 @@ class GeminiLiveStreamClient:
 
                                         print(f"  [Gemini Live Tool Result] <- {json.dumps(result_data, ensure_ascii=False, default=str)}\n")
                                         
-                                        function_responses.append(
-                                            genai_types.FunctionResponse(
-                                                name=func_name,
-                                                id=getattr(fc, "id", None),
-                                                response={"result": json.dumps(result_data, ensure_ascii=False, default=str)}
-                                            )
+                                        responses_dict[id(fc)] = genai_types.FunctionResponse(
+                                            name=func_name,
+                                            id=getattr(fc, "id", None),
+                                            response={"result": json.dumps(result_data, ensure_ascii=False, default=str)}
                                         )
+
+                                    function_responses = [responses_dict[id(fc)] for fc in original_fcs]
                                     await session.send_tool_response(function_responses=function_responses)
-                                    await event_queue.put({"type": "tool_call", "function_calls": [fc.name for fc in tool_call.function_calls]})
+                                    await event_queue.put({"type": "tool_call", "function_calls": [fc.name for fc in original_fcs]})
                             
                             logger.debug("session.receive() iterator ended (e.g. after turn_complete); re-entering receive loop.")
 

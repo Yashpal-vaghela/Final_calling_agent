@@ -142,5 +142,54 @@
     ],
     "facts": "To join our team or become a partner dentist with Ultimate Smile Design, visit our official website at ultimatesmiledesign.com, navigate to the 'For Dentist' section, fill out the form, and submit it. Our clinical onboarding team will review your application and contact you directly.",
     "details": "Dentists, clinics, and professionals looking to join or partner with Ultimate Smile Design can easily apply online. Visit ultimatesmiledesign.com, go to the 'For Dentist' section, complete the registration form with your clinic details, credentials, and location, and submit it. Our team will review the application and guide you through the certification and onboarding process."
+  },
+  "dentist_course_price_and_certification_fee": {
+    "intent": "dentist_course_price_and_certification_fee",
+    "topic": "Dentist Course Price, Certification Fees, and Training Cost",
+    "keywords": [
+      "course price",
+      "course fee",
+      "course fees",
+      "training cost",
+      "training fee",
+      "certification price",
+      "certification fee",
+      "course ki price kitni hai",
+      "dentist course fees kitni hai",
+      "course fee shu chhe",
+      "cours price",
+      "course price ketli che",
+      "training fee kitni hai",
+      "partner dentist banne ki fee",
+      "certification cost",
+      "how much is the dentist course",
+      "course charges",
+      "program fees",
+      "course nu price shu chhe"
+    ],
+    "facts": "Once a dentist submits the partnership form in the 'For Dentist' section on ultimatesmiledesign.com, our professional onboarding team connects directly to share complete curriculum, certification modules",
+    "details": "For dentists inquiring about course fees, certification charges, or partnership investment: Do NOT state that fees depend on courses or clinic setups. Simply explain that course and certification details are shared directly by our onboarding team. Guide them to submit the form under the 'For Dentist' section on ultimatesmiledesign.com, after which our team connects with the complete course structure."
+  },
+  "dentist_partner_benefits_and_training": {
+    "intent": "dentist_partner_benefits_and_training",
+    "topic": "Benefits of Ultimate Smile Design Partner Dentist Training and Certification",
+    "keywords": [
+      "benefits of joining",
+      "what do dentists get",
+      "course benefits",
+      "training benefits",
+      "why join ultimate smile design as dentist",
+      "dentist partner fayda",
+      "dentist partner benefits",
+      "learn new skills",
+      "marketing support",
+      "more patients",
+      "dentist ko kya benefit milega",
+      "course thi shu faydo thashe",
+      "certification benefits for dentists",
+      "growth for dentist clinic"
+    ],
+    "facts": "Partnering with Ultimate Smile Design and completing our certification offers three key benefits for dentists: 1. Learn New Skills: Master advanced aesthetic dentistry, Digital Smile Design (DSD), and micro-precision ceramic workflows from Master Ceramist Haresh Savani's team. 2. Marketing & Branding Support: Get full marketing, branding, and visibility as an Authorized USD Smile Designer. 3. More Patients: Attract high-ticket, premium smile makeover patients to rapidly grow your clinical practice.",
+    "details": "Dentists who join Ultimate Smile Design gain access to world-class master ceramist Haresh Savani's laboratory back-end from Advance Dental Export, comprehensive clinical training in aesthetic restorations, co-branding and targeted digital marketing support, and a steady influx of high-value patient inquiries in their city."
   }
 }

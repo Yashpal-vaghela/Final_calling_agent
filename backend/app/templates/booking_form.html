@@ -376,13 +376,6 @@
           </div>
 
           <div class="form-group full-width">
-            <label for="doctor">Select Doctor <span class="required-badge">*</span></label>
-            <select id="doctor" name="doctor" style="background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--text-primary); font-family: inherit; font-size: 13.5px; outline: none; width: 100%; appearance: none;" required>
-              <option value="">Select a city to view available doctors...</option>
-            </select>
-          </div>
-
-          <div class="form-group full-width">
             <button type="submit" id="submitBtn" class="submit-btn">
               <span class="spinner" id="btnSpinner"></span>
               <span id="btnText">Submit Details & Start Call</span>
@@ -421,34 +414,6 @@
     const statusTitle = document.getElementById('statusTitle');
     const statusDetails = document.getElementById('statusDetails');
     const cityInput = document.getElementById('city');
-    const doctorSelect = document.getElementById('doctor');
-
-    cityInput.addEventListener('change', async (e) => {
-      const city = e.target.value.trim();
-      doctorSelect.innerHTML = '<option value="">Loading doctors...</option>';
-      if (!city) {
-        doctorSelect.innerHTML = '<option value="">Select a city to view available doctors...</option>';
-        return;
-      }
-      try {
-        const response = await fetch(`/api/booking-form/doctors?city=${encodeURIComponent(city)}`);
-        const data = await response.json();
-        doctorSelect.innerHTML = '';
-        if (data.doctors && data.doctors.length > 0) {
-          data.doctors.forEach(doc => {
-            const opt = document.createElement('option');
-            opt.value = doc;
-            opt.textContent = doc;
-            doctorSelect.appendChild(opt);
-          });
-        } else {
-          doctorSelect.innerHTML = '<option value="">No doctors found for this city</option>';
-        }
-      } catch (err) {
-        console.error('Error fetching doctors:', err);
-        doctorSelect.innerHTML = '<option value="">Error loading doctors</option>';
-      }
-    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -459,7 +424,6 @@
       const email = document.getElementById('email').value.trim();
       const city = document.getElementById('city').value.trim();
       const message = document.getElementById('message').value.trim();
-      const doctor = document.getElementById('doctor').value.trim();
 
       if (!first_name || !last_name || !email || !phone || !city) {
         showStatus('error', 'Incomplete Form', 'Please fill in all required fields (First Name, Last Name, Email, Phone, City).');
@@ -489,8 +453,7 @@
             email: email,
             phone: phone,
             city: city,
-            message: message,
-            doctor: doctor
+            message: message
           })
         });
 

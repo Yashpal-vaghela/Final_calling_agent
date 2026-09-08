@@ -28,7 +28,8 @@ SUPPORTED_TOPICS = [
     "preview_ai_digital", "process_timeline", "cities_coverage", "cost_value",
     "aftercare_comfort", "privacy_busy_schedule", "contact_booking",
     "process", "timeline", "cities", "cost", "before_after",
-    "join_usd", "for_dentists", "join_team", "partner_dentist"
+    "join_usd", "for_dentists", "join_team", "partner_dentist",
+    "course_price", "dentist_course", "dentist_partner_benefits"
 ]
 
 

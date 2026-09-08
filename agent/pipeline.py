@@ -339,6 +339,7 @@ class VoicePipelineOrchestrator:
                         pass
                         
                 self.session.transition_state("listening")
+                self._turn_start_time = None
                 if getattr(self, "_silence_state", "") == "stage_1_prompting":
                     print("[Orchestrator] Finished asking if user is there. Now waiting 25s for user response before disconnect.")
                     self._silence_state = "stage_2_waiting"
@@ -378,9 +379,9 @@ class VoicePipelineOrchestrator:
         """Callback invoked when Gemini Live detects caller interruption (barge-in)."""
         if self._stopped:
             return
-        # Early-turn echo guard: Ignore interruptions within first 1.2s of assistant speaking
-        if self._turn_start_time and (time.time() - self._turn_start_time < 1.2):
-            print(f"[Orchestrator] Ignoring early-turn echo interruption ({time.time() - self._turn_start_time:.2f}s < 1.2s)")
+        # Early-turn echo guard: Ignore interruptions within first 1.8s of assistant speaking
+        if self._turn_start_time and (time.time() - self._turn_start_time < 1.8):
+            print(f"[Orchestrator] Ignoring early-turn echo interruption ({time.time() - self._turn_start_time:.2f}s < 1.8s)")
             return
 
         print("[Orchestrator] Gemini Live server interruption received! Clearing output buffer and media stream.")
@@ -416,14 +417,6 @@ class VoicePipelineOrchestrator:
             if text:
                 print(f"[Live STT Transcript] User: '{text}'")
                 self.session.add_transcript(text, role="user")
-                switched = self.session.update_language_if_requested(text)
-                if switched and getattr(self, "gemini_live_client", None):
-                    lang_name = {"hi": "Hindi / Hinglish", "gu": "Gujarati / Gujlish", "en": "English"}.get(self.session.preferred_language, "English")
-                    print(f"[Orchestrator] Language switch detected -> Steering live session to {lang_name}")
-                    try:
-                        await self.gemini_live_client.send_text(f"[SYSTEM INSTRUCTION: Caller switched language to {lang_name}. Respond 100% in {lang_name} using feminine grammatical inflections starting on this turn.]")
-                    except Exception as e:
-                        print(f"[Orchestrator Warning] Failed to send language switch directive: {e}")
         elif event_type == "gemini":
             text = event.get("text", "").strip()
             if text:
@@ -432,7 +425,6 @@ class VoicePipelineOrchestrator:
         elif event_type == "turn_complete":
             print("[Orchestrator] Live turn complete; output buffer draining to caller.")
             self._assistant_turn_complete = True
-            self._turn_start_time = None
         elif event_type == "error":
             print(f"[Orchestrator Error] Gemini Live event error: {event.get('error')}")
             if hasattr(self, "_gemini_reconnect_event") and ("1008" in str(event.get('error')) or "GoAway" in str(event.get('error')) or "Connection aborted" in str(event.get('error'))):
@@ -479,11 +471,19 @@ class VoicePipelineOrchestrator:
             self.session.booking_stage = "handoff"
             return res
 
+        def live_set_caller_language(**kwargs):
+            lang = kwargs.get("language")
+            if lang:
+                self.session.set_preferred_language(lang)
+                return {"status": "success", "language": lang, "message": f"Language set to {lang}"}
+            return {"status": "error", "message": "No language provided"}
+
         return {
             "capture_lead": live_capture_lead,
             "check_city_coverage": live_check_city,
             "get_faq": live_get_faq,
             "human_handoff": live_handoff,
+            "set_caller_language": live_set_caller_language,
         }
 
 
@@ -496,7 +496,7 @@ class VoicePipelineOrchestrator:
         city_display = self.lead_city or "their city"
         location_rule = (
             f"CRITICAL LOCATION & PARTNER RULE: The caller's consultation will be arranged with our Authorized USD Smile Designer in {city_display}. "
-            f"If they ask where the meeting or consultation will take place, confidently confirm it will be with our local Authorized Smile Designer in {city_display}. "
+            f"If they ask where the meeting or consultation will take place, confidently confirm it will be with our Authorized Smile Designer in {city_display}. "
             f"NEVER invent, guess, or suggest other cities (like Hyderabad, Delhi, or Mumbai) if the user explicitly selected {city_display}."
         )
         crucial_instruction = (
@@ -676,9 +676,18 @@ class VoicePipelineOrchestrator:
             try:
                 pcm8k = audioop.ulaw2lin(audio_bytes, 2)
                 
-                # RMS Digital Noise Gate: Suppress ambient line noise, breathing, and mobile AEC artifacts
+                # Dynamic RMS Digital Noise Gate:
+                # When assistant is speaking or audio is draining to the caller, elevate the gate threshold
+                # to 1200 RMS to block carrier echo, ambient line noise, and mobile AEC reflections from
+                # triggering false barge-in interruptions in Gemini Live.
+                is_speaking = (
+                    self.session.state == "speaking"
+                    or len(self.output_buffer) > 0
+                    or (self._send_audio_task is not None and not self._send_audio_task.done())
+                )
+                gate_threshold = 1200 if is_speaking else 400
                 rms = audioop.rms(pcm8k, 2)
-                if rms < 400:
+                if rms < gate_threshold:
                     pcm8k = b"\x00" * len(pcm8k)
 
                 pcm16k, self._inbound_resample_state = resample_pcm16(

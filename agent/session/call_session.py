@@ -54,49 +54,10 @@ class CallSession:
 
     def update_language_if_requested(self, text: str) -> bool:
         """
-        Inspects user utterance in Python for language selection, script detection,
-        or dynamic code-switch triggers (including short 1-3 word phrases).
-        Updates preferred language immediately on the fly.
+        Deprecated: Text-based language parsing is now disabled.
+        Language detection is natively handled by the Gemini Live `set_caller_language` tool.
+        This function remains as a no-op for backward compatibility.
         """
-        if not text:
-            return False
-        text_lower = text.lower().strip()
-        
-        # 1. Script-based Unicode detection
-        if re.search(r"[\u0A80-\u0AFF]", text):  # Gujarati script
-            self.set_preferred_language("gu")
-            return True
-        if re.search(r"[\u0900-\u097F]", text):  # Devanagari (Hindi) script
-            self.set_preferred_language("hi")
-            return True
-
-        # 2. Conversational Gujarati triggers (including 1-3 word micro-utterances)
-        gu_tokens = [
-            "gujarati", "gujlish", "gujarati ma", "kem cho", "su chhe", "shu chhe",
-            "ketla", "thashe", "nathi", "tamare", "tame", "karo", "bolo ne", "saru",
-            "kaho", "barabar", "aavse", "chhe", "maare", "aapo ne", "saheb", "tamari"
-        ]
-        if any(token in text_lower for token in gu_tokens):
-            self.set_preferred_language("gu")
-            return True
-
-        # 3. Conversational Hindi triggers (including 1-3 word micro-utterances)
-        hi_tokens = [
-            "hindi", "hinglish", "hindi mein", "hindi me", "hindi mein baat",
-            "kaise ho", "namaste", "kaise", "kya", "kitna", "batao", "bataiye",
-            "suno", "haan", "haanji", "theek", "acha", "boliye", "kariye",
-            "hoga", "chahiye", "kya hai", "sahi hai", "mujhe", "aapko"
-        ]
-        if any(token in text_lower for token in hi_tokens):
-            self.set_preferred_language("hi")
-            return True
-
-        # 4. Explicit English selection triggers
-        en_tokens = ["english", "in english", "continue in english", "speak in english"]
-        if any(token in text_lower for token in en_tokens):
-            self.set_preferred_language("en")
-            return True
-
         return False
 
     def update_topic(self, topic: str) -> None:

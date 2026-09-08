@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from backend.app.services.smartflo_service import smartflo_client
 from backend.app.services.caller_context import register_caller_context
-from backend.app.services.city_service import is_city_covered, get_doctors_by_city
+from backend.app.services.city_service import is_city_covered
 
 router = APIRouter()
 
@@ -19,7 +19,6 @@ class BookingFormSubmission(BaseModel):
     phone: str = Field(..., min_length=5, description="Caller phone number")
     city: str = Field(..., min_length=1, description="Caller city")
     message: str = Field(default="", description="Enquiry details or notes")
-    doctor: str = Field(..., min_length=1, description="Selected doctor")
 
 @router.get("/booking-form", response_class=HTMLResponse)
 async def get_booking_form():
@@ -31,12 +30,6 @@ async def get_booking_form():
     with open(template_path, "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content, status_code=200)
-
-@router.get("/api/booking-form/doctors")
-async def get_booking_form_doctors(city: str = ""):
-    """Returns the list of doctors for the requested city."""
-    doctors = get_doctors_by_city(city)
-    return {"city": city, "doctors": doctors}
 
 @router.post("/api/booking-form/submit")
 async def submit_booking_form(form_data: BookingFormSubmission):
@@ -58,7 +51,6 @@ async def submit_booking_form(form_data: BookingFormSubmission):
         "phone": form_data.phone.strip(),
         "email": form_data.email.strip(),
         "city": form_data.city.strip(),
-        "doctor": form_data.doctor.strip(),
         "notes": form_data.message.strip() if form_data.message else "",
         "message": form_data.message.strip() if form_data.message else "",
         "intent": "outbound_booking_form",
@@ -74,7 +66,6 @@ async def submit_booking_form(form_data: BookingFormSubmission):
         "lead_id": lead_id,
         "opening_intent": "outbound_booking_form",
         "first_name": form_data.first_name.strip(),
-        "doctor": form_data.doctor.strip(),
         "city": form_data.city.strip()
     }
 
