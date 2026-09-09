@@ -51,12 +51,23 @@ class TestThreeLayerArchitecture(unittest.TestCase):
         session = CallSession("test_call_001", opening_intent="general")
         self.assertEqual(session.preferred_language, "en") # default
         
-        # Test mutable language update
-        session.update_language_if_requested("Mujhe Hindi me baat krni hai please")
+        # Test mutable language update with native Devanagari script
+        switched = session.update_language_if_requested("मुझे हिंदी में बात करनी है")
+        self.assertTrue(switched)
         self.assertEqual(session.preferred_language, "hi")
 
-        # Test another language change later in session
-        session.update_language_if_requested("Can we switch back to English now?")
+        # Test another language change back to English
+        switched = session.update_language_if_requested("Can we switch back to English now?")
+        self.assertTrue(switched)
+        self.assertEqual(session.preferred_language, "en")
+
+        # Test language change to Gujarati with native script
+        switched = session.update_language_if_requested("મારે ગુજરાતીમાં વાત કરવી છે")
+        self.assertTrue(switched)
+        self.assertEqual(session.preferred_language, "gu")
+
+        # Switch back to English
+        session.update_language_if_requested("Okay, tell me about the cost")
         self.assertEqual(session.preferred_language, "en")
 
         # Test session topic and lead info tracking

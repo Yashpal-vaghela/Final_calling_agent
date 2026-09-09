@@ -13,6 +13,11 @@ import time
 import re
 from typing import Optional
 
+# Silero VAD integration (commented out)
+# import numpy as np
+# from silero_vad import load_silero_vad, VADIterator
+# _VAD_MODEL = load_silero_vad(onnx=True)
+
 from agent.streaming.gemini_live_stream import GeminiLiveStreamClient
 from agent.session.call_session import CallSession
 from agent.audio.codecs import resample_pcm16
@@ -124,7 +129,8 @@ class VoicePipelineOrchestrator:
                 )
 
         # Initialize session and Gemini Live client
-        self.session = CallSession(call_id=call_id, opening_intent=opening_intent, lead_id=lead_id)
+        initial_lang = self.caller_context.get("preferred_language", "en") if self.caller_context else "en"
+        self.session = CallSession(call_id=call_id, opening_intent=opening_intent, lead_id=lead_id, preferred_language=initial_lang)
         if self.caller_context:
             self.session.update_user_info(
                 name=self.caller_context.get("name"),
@@ -156,6 +162,10 @@ class VoicePipelineOrchestrator:
         self._waiting_for_user_since: Optional[float] = None
         self._silence_state: str = "active"
         self._silence_monitor_task: Optional[asyncio.Task] = None
+        self._turns_since_last_directive: int = 0
+        
+        # self.vad_buffer = bytearray()
+        # self.vad_iterator = VADIterator(_VAD_MODEL, sampling_rate=16000, threshold=0.5, min_silence_duration_ms=600)
 
 
     async def _silence_monitor(self) -> None:
@@ -178,29 +188,9 @@ class VoicePipelineOrchestrator:
                     # Dynamically determine the caller's active spoken language
                     active_lang = "en"
                     if getattr(self, "session", None):
-                        # 1. First prioritize recent user turns in conversation history
-                        history = getattr(self.session, "conversation_history", [])
-                        user_turns = [t for t in history if t.get("role") == "user"]
-                        detected_from_history = None
-                        if user_turns:
-                            last_text = (user_turns[-1].get("content") or user_turns[-1].get("text") or "").strip()
-                            if re.search(r"[\u0A80-\u0AFF]", last_text) or any(w in last_text.lower() for w in [
-                                "kem cho", "su chhe", "shu chhe", "ketla", "thashe", "nathi", "tamare", "tame",
-                                "karo", "bolo ne", "saru", "kaho", "barabar", "aavse", "chhe", "gujarati", "gujlish"
-                            ]):
-                                detected_from_history = "gu"
-                            elif re.search(r"[\u0900-\u097F]", last_text) or any(w in last_text.lower() for w in [
-                                "namaste", "kaise", "kya", "kitna", "batao", "bataiye", "hindi", "suno", "haan",
-                                "haanji", "theek", "acha", "boliye", "kariye", "hoga", "chahiye"
-                            ]):
-                                detected_from_history = "hi"
-
-                        if detected_from_history:
-                            active_lang = detected_from_history
-                        else:
-                            pref = getattr(self.session, "preferred_language", "en")
-                            if pref in ("hi", "gu", "en"):
-                                active_lang = pref
+                        pref = getattr(self.session, "preferred_language", "en")
+                        if pref in ("hi", "gu", "en"):
+                            active_lang = pref
 
                     if active_lang == "hi":
                         silence_text = "The user has been silent for 15 seconds. In your refined female voice, politely ask in natural Hindi: 'नमस्ते, क्या आप अभी भी कॉल पर हैं?' and wait for their reply."
@@ -417,6 +407,21 @@ class VoicePipelineOrchestrator:
             if text:
                 print(f"[Live STT Transcript] User: '{text}'")
                 self.session.add_transcript(text, role="user")
+                
+                # 1. Deterministic microsecond Python detection on native scripts
+                language_switched = self.session.update_language_if_requested(text)
+                if language_switched:
+                    active_lang = self.session.preferred_language
+                    lang_name = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}.get(active_lang, active_lang)
+                    print(f"[Orchestrator] Active caller language updated: {lang_name} ({active_lang})")
+                    if self.gemini_live_client:
+                        other_langs = [l for l in ["Hindi", "Gujarati", "English"] if l != lang_name]
+                        directive = (
+                            f"[CRITICAL SYSTEM DIRECTIVE: The caller just spoke in {lang_name}. "
+                            f"You MUST immediately reply 100% in {lang_name}! "
+                            f"Do NOT speak {' or '.join(other_langs)} or any other language!]"
+                        )
+                        await self.gemini_live_client.send_text(directive)
         elif event_type == "gemini":
             text = event.get("text", "").strip()
             if text:
@@ -459,7 +464,7 @@ class VoicePipelineOrchestrator:
             return res
 
         def live_get_faq(**kwargs):
-            kwargs.setdefault("language", self.session.preferred_language)
+            kwargs["language"] = self.session.preferred_language
             res = get_faq(**kwargs)
             if kwargs.get("topic"):
                 self.session.update_topic(kwargs.get("topic"))
@@ -506,15 +511,26 @@ class VoicePipelineOrchestrator:
         )
         if self.opening_intent == "outbound_booking_form":
             doctor = self.caller_context.get("doctor") if self.caller_context else None
-            if doctor:
-                crucial_instruction = (
-                    f"CRITICAL: You already know the caller's First Name, Last Name, City ({city_display}), and selected Doctor ({doctor}) from the form they just submitted. "
-                    f"DO NOT ask them for their name, city, or doctor. You MUST open by confirming the appointment with {doctor} in {city_display} and asking if they have any other questions. {location_rule}"
-                )
+            doc_info = f" with {doctor}" if doctor else ""
+            crucial_instruction = (
+                f"CRITICAL: You already know the caller's First Name, Last Name, City ({city_display}){doc_info} from the booking form they just submitted. "
+                f"DO NOT ask them for their name, city, or doctor. "
+                "STRICT RULE: The appointment is ALREADY booked. NEVER tell them to book an appointment, schedule a consultation, or fill out any booking form again! "
+                f"You MUST open by confirming the appointment{doc_info} in {city_display} and asking if they have any other questions. {location_rule}"
+            )
         elif self.opening_intent == "outbound_smile_preview":
             crucial_instruction = (
                 f"CRITICAL: You already know the caller's Name and City ({city_display}) because they just completed the AI Smile Preview online. "
-                f"DO NOT ask for their name or city again. Open the call by acknowledging they saw their AI smile and ask if they want to book a consultation. {location_rule}"
+                f"DO NOT ask for their name or city again. "
+                "STRICT RULE: The user ALREADY completed the AI Smile Preview. NEVER tell them to try the AI Smile Preview, upload a photo, or fill out the preview form again! "
+                f"Open the call by acknowledging they saw their AI smile and ask if they want to book a consultation with our authorized designer in {city_display}. {location_rule}"
+            )
+        elif self.opening_intent == "outbound_contact_form":
+            crucial_instruction = (
+                f"CRITICAL: You already know the caller's Name and City ({city_display}) from the contact form they just submitted. "
+                f"DO NOT ask them for their name or city again. "
+                "STRICT RULE: The user ALREADY submitted their enquiry via the contact form. NEVER tell them to fill out the contact form or submit an enquiry again! "
+                f"Directly address their message and provide expert consultation. {location_rule}"
             )
 
         if msg:
@@ -571,7 +587,8 @@ class VoicePipelineOrchestrator:
             else:
                 initial_prompt = (
                     f"The call has just connected. "
-                    f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply."
+                    f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply. "
+                    "You are fluent in Gujarati, Hindi, and English; after greeting, seamlessly converse in whichever language the caller uses."
                 )
             return initial_prompt
 
@@ -586,7 +603,8 @@ class VoicePipelineOrchestrator:
                     initial_prompt=None if is_reconnect else self._build_initial_prompt(),
                     tool_mapping=self._build_live_tool_mapping(),
                     caller_context=self.caller_context,
-                    opening_intent=self.opening_intent
+                    opening_intent=self.opening_intent,
+                    session=self.session
                 )
                 
                 self._gemini_reconnect_event.clear()
@@ -611,9 +629,11 @@ class VoicePipelineOrchestrator:
                     history_text = "\n".join(history_lines) if history_lines else "No previous turns recorded."
                     session_memory = self.session.get_session_context_prompt()
                     caller_name = self.lead_name or "the caller"
+                    lang_label = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}.get(self.session.preferred_language, "English")
                     reconnect_prompt = (
                         f"You are continuing an ongoing phone call as Kiara with {caller_name}. "
                         "Maintain your exact calm, warm, refined, and confident tone and natural speaking pitch at all times. "
+                        f"ACTIVE LANGUAGE: The caller was speaking {lang_label}. You MUST continue speaking ONLY in {lang_label}. "
                         "Do NOT say hello again or greet the caller. Retain full context of the ongoing discussion.\n\n"
                         f"{session_memory}\n\n"
                         f"--- RECENT CONVERSATION CONTEXT ---\n"
@@ -677,15 +697,15 @@ class VoicePipelineOrchestrator:
                 pcm8k = audioop.ulaw2lin(audio_bytes, 2)
                 
                 # Dynamic RMS Digital Noise Gate:
-                # When assistant is speaking or audio is draining to the caller, elevate the gate threshold
-                # to 1200 RMS to block carrier echo, ambient line noise, and mobile AEC reflections from
-                # triggering false barge-in interruptions in Gemini Live.
+                # When assistant is speaking, filter faint carrier echo/leakage (350 RMS).
+                # When listening to the caller, keep the natural acoustic spectrum intact (only filter dead silence < 80 RMS)
+                # so that soft consonants, vowels, and phonemes are not mutilated before reaching Gemini STT.
                 is_speaking = (
                     self.session.state == "speaking"
                     or len(self.output_buffer) > 0
                     or (self._send_audio_task is not None and not self._send_audio_task.done())
                 )
-                gate_threshold = 1200 if is_speaking else 400
+                gate_threshold = 350 if is_speaking else 80
                 rms = audioop.rms(pcm8k, 2)
                 if rms < gate_threshold:
                     pcm8k = b"\x00" * len(pcm8k)
@@ -693,6 +713,20 @@ class VoicePipelineOrchestrator:
                 pcm16k, self._inbound_resample_state = resample_pcm16(
                     pcm8k, 8000, 16000, self._inbound_resample_state
                 )
+                
+                # Silero VAD processing loop (commented out)
+                # self.vad_buffer.extend(pcm16k)
+                # while len(self.vad_buffer) >= 1024:
+                #     chunk = self.vad_buffer[:1024]
+                #     del self.vad_buffer[:1024]
+                #     audio_float32 = np.frombuffer(chunk, dtype=np.int16).astype(np.float32) / 32768.0
+                #     speech_dict = self.vad_iterator(audio_float32, return_seconds=False)
+                #     if speech_dict:
+                #         if 'start' in speech_dict:
+                #             print("🗣️ [VAD] User STARTED speaking!")
+                #         if 'end' in speech_dict:
+                #             print("🛑 [VAD] User STOPPED speaking!")
+                
                 await self.gemini_live_client.send_audio(pcm16k)
             except Exception as e:
                 print(f"[Orchestrator Error] Failed to process and send live audio: {e}")
