@@ -176,11 +176,13 @@ class JSONFaqRetriever(KnowledgeRetriever):
                 score += 1.0
 
             # 2. Exact keyword or phrase occurrences in raw query string
+            query_clean = query_lower.rstrip("?!., ")
             for kw in item.get("keywords", []):
                 kw_lower = kw.lower()
-                if kw_lower in query_lower:
+                kw_clean = kw_lower.rstrip("?!., ")
+                if kw_lower in query_lower or (kw_clean and kw_clean in query_clean):
                     # Longer phrases get higher weight (e.g., "how long" vs "cost")
-                    phrase_len = len(kw_lower.split())
+                    phrase_len = len(kw_clean.split())
                     score += 0.35 * (1 + 0.2 * phrase_len)
 
             # 3. Token overlap density against keywords and topics

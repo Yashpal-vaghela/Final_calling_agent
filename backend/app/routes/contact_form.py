@@ -46,9 +46,16 @@ async def submit_contact_form(form_data: ContactFormSubmission):
         raise HTTPException(status_code=400, detail=f"City '{form_data.city}' is not covered. Please select a valid city.")
 
     lead_id = str(uuid.uuid4())
+    raw_name = form_data.name.strip()
+    name_parts = raw_name.split(maxsplit=1) if raw_name else []
+    first_name = name_parts[0] if name_parts else ""
+    last_name = name_parts[1] if len(name_parts) > 1 else "."
+
     context_data = {
         "id": lead_id,
-        "name": form_data.name.strip(),
+        "name": raw_name,
+        "first_name": first_name,
+        "last_name": last_name,
         "phone": form_data.phone.strip(),
         "email": form_data.email.strip(),
         "city": form_data.city.strip(),

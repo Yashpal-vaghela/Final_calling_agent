@@ -29,7 +29,8 @@ from agent.tools.check_city_coverage import check_city_coverage
 from agent.tools.capture_lead import capture_lead
 from agent.tools.get_faq import get_faq
 from agent.tools.handoff import human_handoff
-
+from agent.tools.book_consultation import book_consultation
+from agent.tools.cancel_consultation import cancel_consultation
 
 def build_system_prompt(opening_intent: str) -> str:
     """Dynamically assembles the system prompt from the modular prompts directory."""
@@ -114,17 +115,40 @@ class GeminiLiveStreamClient:
         )
 
         # Build system instruction incorporating conversational context
+        intent_directive = ""
+        if self.opening_intent == "outbound_booking_form":
+            intent_directive = (
+                "### STRICT FORM RESTRICTION - OUTBOUND BOOKING (ABSOLUTE PRIORITY ON EVERY TURN):\n"
+                "- The caller ALREADY filled out and submitted the Appointment Booking Form on the website.\n"
+                "- NEVER, under any circumstances, ask or suggest the caller fill out the booking form, contact form, or search for a dentist on the website.\n"
+                "- NEVER tell the caller to visit ultimatesmiledesign.com to book an appointment.\n"
+                "- If the caller asks about next steps, appointment schedule, or meeting the doctor: Confirm that their appointment request is ALREADY registered with our authorized designer in their city, and our clinical coordinator will contact them directly with their appointment slot.\n\n"
+            )
+        elif self.opening_intent == "outbound_smile_preview":
+            intent_directive = (
+                "### STRICT FORM RESTRICTION - OUTBOUND SMILE PREVIEW (ABSOLUTE PRIORITY ON EVERY TURN):\n"
+                "- The caller ALREADY completed the Virtual AI Smile Preview and submitted their details.\n"
+                "- NEVER ask or tell the caller to try the AI Smile Preview, upload a photo, or fill out the preview form again.\n\n"
+            )
+        elif self.opening_intent == "outbound_contact_form":
+            intent_directive = (
+                "### STRICT FORM RESTRICTION - OUTBOUND CONTACT FORM (ABSOLUTE PRIORITY ON EVERY TURN):\n"
+                "- The caller ALREADY submitted their enquiry via the website contact form.\n"
+                "- NEVER tell the caller to fill out a contact form, enquiry form, or send a message on the website again.\n\n"
+            )
+
         if system_instruction is not None:
-            self.system_instruction = f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n{system_instruction}"
+            self.system_instruction = f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n{intent_directive}{system_instruction}"
         else:
             base_prompt = build_system_prompt(self.opening_intent or "inbound")
             self.system_instruction = (
                 f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n"
+                f"{intent_directive}"
                 "### PRIMARY DIRECTIVE: MULTILINGUAL VOICE & IMMEDIATE LANGUAGE MIRRORING (ABSOLUTE PRIORITY)\n"
                 "You are Kiara, an elite multilingual dental consultant for Ultimate Smile Design. "
                 "You speak fluent Gujarati, Hindi, and English. You MUST strictly follow these language rules on EVERY single turn:\n\n"
                 "1. **NATURAL USE OF 'OKAY' / 'OK' (CRITICAL)**:\n"
-                "   - 'Okay' or 'ok' inside Hindi or Gujarati sentences is a natural conversational filler (e.g. 'ओके, समझी गयो', 'ઓકે, સમજી ગયો', 'ओके ठीक है', 'okay toh batao'). You MUST REMAIN 100% IN HINDI OR GUJARATI when 'okay' is used with Indian words! NEVER switch to English on phrases like 'ओके, समझी गयो'!\n"
+                "   - 'Okay' or 'ok' inside Hindi or Gujarati sentences is a natural conversational filler (e.g. 'ओके ठीक है', 'ઓકે, બરાબર', 'ઓકે, સમજાયું', 'okay toh batao'). You MUST REMAIN 100% IN HINDI OR GUJARATI when 'okay' is used with Indian words! NEVER switch to English on phrases like 'ओके ठीक है'!\n"
                 "   - ONLY switch to English if the caller speaks a full sentence or question in English (e.g., 'Okay, what is the cost?'), or explicitly asks in English.\n\n"
                 "2. **ANSWERING CALLER QUESTIONS (CRITICAL - NO LANGUAGE DRIFT)**:\n"
                 "   - When the caller asks a question in Hindi (e.g. asking about teeth, dental pain, veneers, cost, doctor), you MUST answer 100% in Hindi! Never switch to Gujarati or English.\n"
@@ -141,16 +165,27 @@ class GeminiLiveStreamClient:
                 "   - Callers from Gujarat cities (e.g. Rajkot, Surat, Ahmedabad) may speak Hindi or English.\n"
                 "   - NEVER assume or switch to Gujarati just because the caller's city is Rajkot or anywhere in Gujarat!\n"
                 "   - If the caller speaks Hindi, you MUST reply 100% in Hindi regardless of their city!\n\n"
-                "### FEMALE IDENTITY & GRAMMATICAL INFLECTIONS (STRICT)\n"
-                "You are Kiara, a female consultant. Always use feminine verb forms and self-references:\n"
-                "- In Hindi: Always use feminine endings (e.g. 'बता सकती हूँ', 'देख रही हूँ', 'करूँगी', 'आपकी कंसल्टेंट'). Never say masculine forms like 'बता सकता हूँ'.\n"
-                "- In Gujarati: Always say 'હું તમારી એલીટ કન્સલ્ટન્ટ કિયારા છું' (tamari, never tamaro) and 'જણાવી શકું છું / કરી શકીશ'.\n\n"
+                "### FEMALE IDENTITY & GRAMMAR (STRICT)\n"
+                "You are Kiara, a female consultant. NEVER use masculine verbs for yourself:\n"
+                "- Hindi: Always use feminine endings ('बता सकती हूँ', 'देख रही हूँ', 'करूँगी', 'आपकी कंसल्टेंट'). Never say 'बता सकता हूँ'.\n"
+                "- Gujarati: Always use feminine endings (-ઈ): say 'હું તમારી કન્સલ્ટન્ટ છું' (tamari, never tamaro), 'હું સમજી ગઈ' / 'મને સમજાયું' (NEVER 'સમજી ગયો' or 'ગયો'), and 'જોઈ/કરી રહી છું' (NEVER 'રહ્યો છું').\n\n"
                 "### MANDATORY KNOWLEDGE BASE RETRIEVAL\n"
                 "Call the `get_faq` tool to answer questions about prices, procedures, or doctors. Never guess without calling the tool.\n\n"
+                "### STRICT DENTIST PRIVACY & VERIFICATION RULES (ZERO TOLERANCE):\n"
+                "- NEVER VOLUNTEER OR OFFER DENTIST NAMES: You are strictly forbidden from offering to tell, suggesting, or listing doctor names. NEVER say 'Should I tell you another doctor's name?' or 'કે પછી કોઈ બીજા ડોક્ટરનું નામ જણાવું?' or 'क्या मैं किसी दूसरे डॉक्टर का नाम बताऊँ?'. If the user asks who our doctors are or asks for doctor names, say: 'I cannot provide dentist names over the phone. You can explore all our authorized smile designers on ultimatesmiledesign.com.'\n"
+                "- MANDATORY CHECK ON CALLER-PROVIDED DENTIST NAME: If the caller mentions, asks about, or gives a doctor's name (e.g. 'Is Rajesh Patel your dentist?', 'Dr. Hetal Buch che Surat ma?'): You MUST call the `check_dentist` tool immediately with their name and city! NEVER answer 'Yes he is in [City]' or confirm a dentist without the tool result! If the tool returns is_authorized=False, you MUST tell the caller clearly that Dr. [Name] is NOT an authorized Ultimate Smile Design specialist in [City], and offer to proceed without specifying a doctor.\n\n"
+                "### MANDATORY TOOL EXECUTION FOR BOOKING (ZERO SPEECH-ONLY HALLUCINATIONS):\n"
+                "- Whenever you ask the caller: 'Shall I submit your consultation request?' (or 'શું તમે ચોક્કસ ડૉક્ટર વગર રિક્વેસ્ટ સબમિટ કરવા માંગો છો?' / 'Shall I proceed without a doctor?') AND the caller replies with 'હા', 'हां', 'yes', 'sure', 'go ahead', 'બુક કરો', 'કરો', 'appointment book karo':\n"
+                "  YOU MUST EMIT THE `book_consultation` TOOL CALL ON THAT VERY TURN!\n"
+                "- YOU CANNOT SUBMIT A BOOKING BY SPEAKING. If you do not execute the `book_consultation` tool, the booking DOES NOT EXIST in the admin panel!\n"
+                "- If `check_dentist` returned is_authorized=True (e.g. Dr. Viren K Savani in Surat), call `book_consultation(doctor_name='Dr. Viren K Savani', city='Surat')`.\n"
+                "- If the caller agrees to proceed without a doctor, call `book_consultation(doctor_name='', city='Surat')`.\n"
+                "- NEVER say 'તમારી વિગતો સબમિટ કરી દીધી છે' / 'I have submitted your booking' / 'એપોઇન્ટમેન્ટ બુક થઈ ગઈ છે' UNLESS `book_consultation` was actually called and returned status: 'success'!\n"
+                "- If the caller says they cannot see it in the admin panel ('admin panel par nathi dikhati') or says 'appointment book karo': If book_consultation was not executed yet, call `book_consultation` immediately!\n\n"
                 f"{base_prompt}\n\n"
                 "---\n\n"
                 "## CURRENT SESSION (LIVE VOICE CALL)\n"
-                "DELIVERY: Speak warmly, calmly, and elegantly with a natural Indian cadence. Enunciate crisply. Keep responses concise (2-3 sentences). Never ask about budget or price range.\n"
+                "DELIVERY: Speak warmly and concisely with a natural Indian cadence. Enunciate crisply. Answer standard questions directly in 2 to 3 elegant sentences without filler or repeating the caller's question. For comparisons and objections, use 3 to 4 sentences to clearly explain the distinction and include the luxury analogy. Never give abrupt 1-sentence answers, and never ask about budget or price range.\n"
             )
 
         # Input queues and state flags
@@ -227,12 +262,76 @@ class GeminiLiveStreamClient:
             ),
         )
 
+        book_consultation_tool = genai_types.FunctionDeclaration(
+            name="book_consultation",
+            description=(
+                "Book an in-call consultation with an authorized dentist in the specified city. "
+                "MANDATORY EXECUTION: Whenever the caller confirms or agrees to submit/book an appointment "
+                "(e.g., caller says 'Yes', 'Go ahead', 'Haan', 'હા', 'हां', 'બુક કરો', 'હા કરો', 'કન્ફર્મ કરો', 'appointment book karo', or agrees to proceed without a doctor): "
+                "YOU MUST EMIT THIS TOOL CALL IMMEDIATELY ON THAT EXACT TURN. "
+                "NEVER say 'I have submitted your request' or 'મેં તમારી વિગતો સબમિટ કરી દીધી છે' in voice without calling this tool! "
+                "Speech alone DOES NOT submit the booking to the backend database. "
+                "If the caller agreed to proceed without specifying a doctor, call this tool with doctor_name=''. "
+                "If the caller confirmed with an authorized doctor, pass doctor_name."
+            ),
+            parameters=genai_types.Schema(
+                type=genai_types.Type.OBJECT,
+                properties={
+                    "doctor_name": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. The name of the specific dentist the caller wants to see, or empty string '' if no specific doctor requested."),
+                    "city": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. The consultation city requested by the caller (e.g. Surat, Ahmedabad)."),
+                    "message": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. Any additional notes or message from the caller."),
+                    "first_name": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
+                    "last_name": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
+                    "phone": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
+                    "email": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
+                },
+                required=[],
+            ),
+        )
+
+        check_dentist_tool = genai_types.FunctionDeclaration(
+            name="check_dentist",
+            description=(
+                "Check if a specific doctor or dentist named by the caller is an authorized Ultimate Smile Design partner in a specific city. "
+                "You MUST call this whenever a caller asks if a specific doctor is available, asks if Dr. [Name] is our smile designer, or mentions a doctor name before booking. "
+                "CRITICAL: Do NOT use this tool to list dentists. NEVER volunteer or give dentist names to the caller."
+            ),
+            parameters=genai_types.Schema(
+                type=genai_types.Type.OBJECT,
+                properties={
+                    "doctor_name": genai_types.Schema(type=genai_types.Type.STRING, description="The name of the doctor mentioned by the caller (e.g. 'Rajesh Patel', 'Purvi Patel', 'Dr. Hetal Buch')"),
+                    "city": genai_types.Schema(type=genai_types.Type.STRING, description="The city to check for this doctor (e.g. 'Surat', 'Ahmedabad', 'Rajkot')"),
+                },
+                required=["doctor_name", "city"],
+            ),
+        )
+
+        cancel_consultation_tool = genai_types.FunctionDeclaration(
+            name="cancel_consultation",
+            description=(
+                "Cancel an existing in-call consultation appointment via the backend API. "
+                "MANDATORY: You MUST only call this tool AFTER the user explicitly insists on canceling, "
+                "AND only AFTER you have asked them why they want to cancel and attempted to help them. "
+                "If the user insists on canceling, you MUST call this tool. Do NOT say 'I have canceled your appointment' "
+                "without calling this tool."
+            ),
+            parameters=genai_types.Schema(
+                type=genai_types.Type.OBJECT,
+                properties={
+                    "reason": genai_types.Schema(type=genai_types.Type.STRING, description="The reason the caller gave for canceling the appointment."),
+                },
+                required=[],
+            ),
+        )
+
         return genai_types.Tool(
-            function_declarations=[check_city_tool, get_faq_tool]
+            function_declarations=[check_city_tool, get_faq_tool, book_consultation_tool, check_dentist_tool, cancel_consultation_tool]
         )
 
     def _build_default_tool_mapping(self) -> Dict[str, Callable]:
         """Maps schema names to callable execution wrappers supplying session parameters."""
+        from agent.tools.check_dentist import check_dentist
+
         def wrap_capture_lead(**kwargs):
             kwargs.setdefault("call_id", self.call_id)
             kwargs.setdefault("preferred_language", self.preferred_language)
@@ -256,6 +355,9 @@ class GeminiLiveStreamClient:
             "get_faq": wrap_get_faq,
             "human_handoff": wrap_handoff,
             "set_caller_language": wrap_set_caller_language,
+            "book_consultation": book_consultation,
+            "cancel_consultation": cancel_consultation,
+            "check_dentist": check_dentist,
         }
 
     async def send_audio(self, audio_chunk: bytes) -> None:
@@ -421,22 +523,29 @@ class GeminiLiveStreamClient:
                                                     else:
                                                         audio_output_callback(part.inline_data.data)
 
+                                    if getattr(server_content, "interim_input_transcription", None) and server_content.interim_input_transcription.text:
+                                        print(f"  [DIAGNOSTIC] Interim input_transcription: '{server_content.interim_input_transcription.text}'")
+
                                     if getattr(server_content, "input_transcription", None) and server_content.input_transcription.text:
                                         user_text = server_content.input_transcription.text
-                                        if getattr(self, "session", None):
-                                            self.session.update_language_if_requested(user_text)
+                                        print(f"  [DIAGNOSTIC] Finalized input_transcription received: '{user_text}'")
                                         await event_queue.put({
                                             "type": "user",
                                             "text": user_text
                                         })
 
                                     if getattr(server_content, "output_transcription", None) and server_content.output_transcription.text:
+                                        if not getattr(self, "_diagnostic_model_started", False):
+                                            print(f"  [DIAGNOSTIC] Gemini response model_turn / output_transcription started!")
+                                            self._diagnostic_model_started = True
                                         await event_queue.put({
                                             "type": "gemini",
                                             "text": server_content.output_transcription.text
                                         })
 
                                     if getattr(server_content, "turn_complete", False):
+                                        self._diagnostic_model_started = False
+                                        print(f"  [DIAGNOSTIC] turn_complete event received")
                                         await event_queue.put({"type": "turn_complete"})
 
                                     if getattr(server_content, "interrupted", False):

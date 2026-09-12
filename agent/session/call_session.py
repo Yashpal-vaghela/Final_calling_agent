@@ -14,54 +14,82 @@ _LATIN_SCRIPT_REGEX = re.compile(r"[a-zA-Z]")
 
 
 # High-precision LID Distinguisher Lexicons for Gujarati, Hindi, and English
-# IMPORTANT: Only words that are UNIQUE to Gujarati should be in Gujarati triggers.
+# High-precision LID Distinguisher Lexicons for Gujarati, Hindi, and English
+# IMPORTANT: Words shared between Gujarati and Hindi (or common to dental inquiries) are treated as neutral loanwords.
+_DENTAL_LOANWORDS = {
+    "appointment", "veneers", "veneer", "clinic", "treatment", "dentist", 
+    "crown", "crowns", "teeth", "aligners", "aligner", "smile", "braces",
+    "dant", "daant", "दांत", "दांतों", "દાંત",
+    "kharch", "kharcha", "kharcho", "खर्च", "खर्चा", "ખર્ચ", "ખર્ચો",
+    "ilaaj", "इलाज", "ઇલાજ"
+}
+
 _GUJARATI_DEV_TRIGGERS = {
-    "केम", "छे", "छो", "छुं", "छीए", 
-    "शु", "शुं", "थशे", "थाशे", "करशे", "आवशे", "जशे", "मलशे",
-    "केटला", "केटलु", "केटली", "तमने", "तमारु", "तमारो", "तमारी", "तमारे",
-    "मारु", "मारो", "મારી", "मारा", "नथी", "माटे", "सारु", "वधारे",
-    "हवे", "जोडे", "बोलने", "बोलोने", "वांधो", "अमे", "हुं", "चोक्कस",
-    "गयो", "समजी", "समझी", "समजाय", "समजावु", "जवु", "करवु"
+    "केम", "छे", "છે", "छो", "છો", "छुं", "છું", "छीए", "છીએ", "नथी", "નથી",
+    "शु", "शुं", "શું", "शाने", "कयारे", "क्यारे", "ક્યારે", "कयां", "क्यां", "ક્યાં",
+    "थशे", "थाશે", "થશે", "थाशे", "थाय", "થાય", "थयुं", "थई", "थयो",
+    "करशे", "કરશે", "करवु", "કરવું", "करवी", "કરવી", "करवो", "करो", "કરો", "करी", "કરી", "कयुँ",
+    "आवशे", "આવશે", "आवुं", "आवो", "જશે", "जशे", "जवु", "जवुं", "मलशे", "मळशे", "મળશે",
+    "केटला", "કેટલા", "केटलु", "કેટલું", "केटली", "કેટલી", "केटलो", "કેટલો",
+    "केवु", "કેવું", "केवी", "કેવી", "केवो", "केवा", "કેવા",
+    "तमने", "તમને", "तमारु", "તમારું", "तमारो", "તમારો", "तमारी", "તમારી", "तमारे", "તમારે", "તમારા", "तमे", "તમે",
+    "मने", "મને", "मारु", "મારું", "मारो", "મારો", "मारी", "મારી", "मारा", "हुं", "હું", "अमे", "અમે", "अमने", "अमारु",
+    "माटे", "માટે", "सारु", "સારું", "वधारे", "વધારે", "ओछु", "हवे", "હવે", "जोडे", "साथे", "સાથે",
+    "बोलने", "બોલોને", "बोलोने", "વાંધો", "वांधो", "ચોક્કસ", "चोक्कस",
+    "સમજી", "समजी", "समझी", "સમજાય", "સમજાવો", "समजाय", "समजावु", "સમજાવું", "समजवु",
+    "जोइए", "જોઈએ", "जोईए", "आपनुं", "આપનું", "आपो", "આપો", "आपशो", "આપશો",
+    "हतो", "हती", "हता", "हतुं", "અને", "अने", "पण", "પણ", "वात", "વાત"
 }
 
 _GUJARATI_LATIN_TRIGGERS = {
-    "kem", "chhe", "che", "chho", "cho",
-    "chhu", "chun", "chhiye", "chiye", "shu", "thase", "thashe",
-    "karse", "karshe", "aavse", "aavshe", "jase", "jashe", "malse", "malshe",
-    "ketlu", "ketla", "ketli", "tamne", "tamaru", "tamaro", "tamari", "tamara",
-    "tamare", "maru", "maro", "mari", "mara", "nathi", "mate", "maate",
-    "saru", "have", "hve", "bolo ne", "bolone", "vandho", "chokkas",
-    "gayo", "samji", "samjay", "samjavu", "javu", "karvu"
+    "kem", "chhe", "che", "chho", "cho", "chhu", "chun", "chhiye", "chiye", "nathi",
+    "shu", "shun", "kyare", "kyaare", "thase", "thashe", "thay", "thaay", "thayu", "thai", "thayo",
+    "karse", "karshe", "karvu", "karvi", "karvo", "karo", "kari", "karyu",
+    "aavse", "aavshe", "aavvu", "aavo", "jase", "jashe", "javu", "malse", "malshe",
+    "ketlu", "ketla", "ketli", "ketlo", "kevu", "kevi", "keva", "kevo",
+    "tamne", "tamaru", "tamaro", "tamari", "tamara", "tamare", "tame",
+    "mane", "maru", "maro", "mari", "mara", "hun", "hu", "ame", "amne", "amaru",
+    "mate", "maate", "saru", "saaru", "vadhare", "ochhu", "have", "hve",
+    "sathe", "jode", "bolone", "vandho", "chokkas",
+    "samji", "samjay", "samjavo", "samjavu", "joie", "joiye",
+    "hato", "hati", "hata", "hatu", "ane", "pan", "vaat", "vat",
+    "aapo", "aapsho", "shako", "shakish", "shakay"
 }
 
+# Strict Hindi Triggers: ONLY unambiguous, exclusive Hindi words.
+# Overlapping words (हा, हाँ, नमस्ते, दांत, खर्च, ठीक, अच्छा, बहुत, ज़्यादा, बात) are removed.
 _HINDI_DEV_TRIGGERS = {
-    "हाँ", "हाँजी", "हा", "क्या", "क्यों", "कहाँ", "कब", "कितना", "कितने", "कितनी",
+    "क्या", "क्यों", "कहाँ", "कब", "कितना", "कितने", "कितनी",
     "कैसा", "कैसी", "कैसे", "बताओ", "बताइए", "बोलिए", "सुनो", "सुनिए",
     "चाहिए", "होगा", "होगी", "होंगे", "था", "थी", "थे", "रहा", "रही", "रहे",
     "सकता", "सकती", "सकते", "मेरा", "मेरी", "मेरे", "तुम्हारा", "तुम्हारी",
-    "तुम्हारे", "आपका", "आपकी", "आपके", "इसका", "उसका", "हमारा", "नहीं",
-    "ठीक", "अच्छा", "बहुत", "ज़्यादा", "नमस्ते", "बात", "करना", "दांत", "दांतों",
-    "खर्च", "खर्चा", "इलाज"
+    "तुम्हारे", "आपका", "आपकी", "आपके", "इसका", "उसका", "हमारा", "मुझे", "हमें",
+    "करना", "करिए", "करदो", "करते", "है", "हैं", "हूँ", "और", "दोनों", "नहीं"
 }
 
 _HINDI_LATIN_TRIGGERS = {
-    "haan", "haanji", "kya", "kyun", "kyu", "kahan", "kab", "kitna", "kitne",
-    "kitni", "kaisa", "kaisi", "kaise", "batao", "bataiye", "boliye", "suno",
-    "suniye", "chahiye", "hoga", "hogi", "honge", "tha", "thi", "thhe",
+    "kya", "kyun", "kyu", "kahan", "kab", "kitna", "kitne", "kitni",
+    "kaisa", "kaisi", "kaise", "batao", "bataiye", "boliye", "suno", "suniye",
+    "chahiye", "hoga", "hogi", "honge", "tha", "thi", "thhe",
     "raha", "rahi", "rahe", "sakta", "sakti", "sakte", "mera", "meri", "mere",
     "tumhara", "tumhari", "tumhare", "aapka", "aapki", "aapke", "iska", "uska",
-    "hamara", "nahi", "nahin", "theek", "thik", "acha", "achha", "bahut",
-    "zyada", "namaste", "karna", "kariye", "ji haan", "daant", "dant", "kharcha", "ilaaj"
+    "hamara", "mujhe", "humein", "nahin", "karna", "kariye", "kardo", "karte",
+    "hai", "hain", "hoon", "aur", "dono"
 }
 
 _ENGLISH_LATIN_TRIGGERS = {
     "what", "how", "cost", "price", "why", "when", "where", "who", "which",
     "can", "could", "would", "should", "please", "tell", "okay", "ok", 
     "yes", "sure", "thanks", "thank", "hello", "good", "fine", "bye",
-    "appointment", "book", "booking", "consultation", "doctor", "clinic", 
-    "smile", "teeth", "veneer", "veneers", "process", "treatment", "much",
+    "book", "booking", "consultation", "doctor", "process", "much",
     "right", "yeah", "yep", "details", "help", "information", "charges", "quote",
-    "explain", "english", "then", "now", "alright", "got", "it", "cool", "understood"
+    "explain", "then", "now", "alright", "got", "it", "cool", "understood",
+    "want", "need", "know"
+}
+
+_AMBIGUOUS_SHORT_TOKENS = {
+    "yes", "no", "okay", "ok", "haan", "ha", "haa", "nahi", "na", 
+    "please", "hai", "che", "book", "sure", "yeah", "yep"
 }
 
 
@@ -112,14 +140,7 @@ class CallSession:
 
     def update_language_if_requested(self, text: str) -> bool:
         """
-        Inspects user STT transcript using high-precision vocabulary distinguishers.
-        Correctly distinguishes between Gujarati, Hindi, and English across:
-          - Native Gujarati script ([\u0A80-\u0AFF])
-          - Gujarati transliterated in Devanagari (e.g., केम, छे, शु, थशे, तमारु)
-          - Hindi in Devanagari (हाँ, क्या, कितना, बताइए, चाहिए, दांत)
-          - Romanized Gujarati (kem, chhe, shu, ketlu)
-          - Romanized Hindi (haan, kya, kitna, batao, daant)
-          - English inquiries (what, cost, price, okay, yes, tell)
+        Inspects user STT transcript using stable evidence and precedence rules.
         Returns True if a language switch occurred, else False.
         """
         if not text or not text.strip():
@@ -129,59 +150,52 @@ class CallSession:
         lower_text = clean_text.lower()
         all_tokens = re.findall(r'[a-zA-Z\u0900-\u097F\u0A80-\u0AFF]+', lower_text)
 
-        # Extract words for cross-script token matching
-        dev_words = set(re.findall(r'[\u0900-\u097F]+', clean_text))
-        latin_words = set(re.findall(r'\b[a-z]+\b', lower_text))
+        # Early exit for entirely ambiguous or short acknowledgment turns
+        if all_tokens and all(t in _AMBIGUOUS_SHORT_TOKENS for t in all_tokens):
+            return False
 
-        # 1. Explicit English switch on "okay", "ok", "okay then", "alright":
-        if any(w in ("okay", "ok", "alright") for w in latin_words):
-            has_indic = bool(
-                dev_words.intersection(_HINDI_DEV_TRIGGERS) or 
-                dev_words.intersection(_GUJARATI_DEV_TRIGGERS) or
-                _GUJARATI_SCRIPT_REGEX.search(clean_text) or
-                latin_words.intersection(_GUJARATI_LATIN_TRIGGERS) or
-                latin_words.intersection(_HINDI_LATIN_TRIGGERS)
-            )
-            if not has_indic:
-                if self.preferred_language != "en":
-                    self.set_preferred_language("en")
-                    return True
-                return False
-
-        # 2. Single-word neutral affirmations ("ha", "haa", "haan"):
-        # Retain whatever language the user was speaking at that time!
-        if len(all_tokens) == 1 and all_tokens[0] in ("ha", "haa", "haan"):
-            if self.preferred_language in ("hi", "gu"):
-                return False
-            elif self.preferred_language == "en":
-                if all_tokens[0] == "haan":
-                    self.set_preferred_language("hi")
-                else:
-                    self.set_preferred_language("gu")
+        # 0. Explicit Language Command Detection
+        if lower_text == "english" or re.search(r'\b(?:speak english|in english|english please|english mein|english me|english ma|tell me in english)\b', lower_text):
+            target_lang = "en"
+            if target_lang != self.preferred_language:
+                self.set_preferred_language(target_lang)
                 return True
-
-        # 3. Native Gujarati Unicode Script Range ([\u0A80-\u0AFF]) -> Always 100% Gujarati
-        if _GUJARATI_SCRIPT_REGEX.search(clean_text):
+            return False
+            
+        if lower_text == "hindi" or re.search(r'\b(?:speak hindi|in hindi|hindi please|hindi mein|hindi me)\b', lower_text):
+            target_lang = "hi"
+            if target_lang != self.preferred_language:
+                self.set_preferred_language(target_lang)
+                return True
+            return False
+            
+        if lower_text == "gujarati" or re.search(r'\b(?:speak gujarati|in gujarati|gujarati please|gujarati ma|gujarati mein|gujarati me)\b', lower_text):
             target_lang = "gu"
             if target_lang != self.preferred_language:
                 self.set_preferred_language(target_lang)
                 return True
             return False
 
-        target_lang: Optional[str] = None
+        # Extract words for cross-script token matching, stripping strictly neutral dental loanwords
+        dev_words = set(re.findall(r'[\u0900-\u097F]+', clean_text)) - _DENTAL_LOANWORDS
+        latin_words = set(re.findall(r'\b[a-z]+\b', lower_text)) - _DENTAL_LOANWORDS
 
-        # 4. Check Unique Gujarati Distinguishers (Devanagari or Latin)
-        if dev_words.intersection(_GUJARATI_DEV_TRIGGERS) or latin_words.intersection(_GUJARATI_LATIN_TRIGGERS):
+        # Precedence Rule: Strong Indic grammatical markers outweigh isolated English vocabulary.
+        has_gujarati_grammar = bool(dev_words.intersection(_GUJARATI_DEV_TRIGGERS) or latin_words.intersection(_GUJARATI_LATIN_TRIGGERS))
+        has_hindi_grammar = bool(dev_words.intersection(_HINDI_DEV_TRIGGERS) or latin_words.intersection(_HINDI_LATIN_TRIGGERS))
+        
+        # 1. Native Gujarati Unicode Script Range ([\u0A80-\u0AFF]) -> Always 100% Gujarati
+        if _GUJARATI_SCRIPT_REGEX.search(clean_text):
             target_lang = "gu"
-        # 5. Check Hindi Distinguishers (Devanagari or Latin)
-        elif dev_words.intersection(_HINDI_DEV_TRIGGERS) or latin_words.intersection(_HINDI_LATIN_TRIGGERS):
+        # 2. Strong Gujarati Precedence
+        elif has_gujarati_grammar:
+            target_lang = "gu"
+        # 3. Strong Hindi Precedence
+        elif has_hindi_grammar:
             target_lang = "hi"
-        # 6. Check English Inquiries & Keywords
+        # 4. English Inquiries & Keywords (Only if no strong Indic markers)
         elif latin_words.intersection(_ENGLISH_LATIN_TRIGGERS):
             target_lang = "en"
-        # 7. Fallback for unclassified Devanagari text -> Hindi
-        elif _DEVANAGARI_SCRIPT_REGEX.search(clean_text):
-            target_lang = "hi"
         else:
             target_lang = self.preferred_language
 

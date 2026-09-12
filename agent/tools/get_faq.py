@@ -29,7 +29,8 @@ SUPPORTED_TOPICS = [
     "aftercare_comfort", "privacy_busy_schedule", "contact_booking",
     "process", "timeline", "cities", "cost", "before_after",
     "join_usd", "for_dentists", "join_team", "partner_dentist",
-    "course_price", "dentist_course", "dentist_partner_benefits"
+    "course_price", "dentist_course", "dentist_partner_benefits",
+    "local_dentist_vs_usd"
 ]
 
 
@@ -49,6 +50,10 @@ TOPIC_ALIASES = {
     "doctor": "about_ade_haresh_savani",
     "cities": "cities_coverage",
     "city": "cities_coverage",
+    "local_dentist": "local_dentist_vs_usd",
+    "local_dentist_comparison": "local_dentist_vs_usd",
+    "dentist_comparison": "local_dentist_vs_usd",
+    "other_dentist": "local_dentist_vs_usd",
 }
 
 

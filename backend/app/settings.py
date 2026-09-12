@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-3.5-flash-lite"
     GEMINI_LIVE_MODEL: str = "gemini-3.1-flash-live-preview"
-    GEMINI_LIVE_VOICE: str = "Erinome"
+    GEMINI_LIVE_VOICE: str = "Aoede"
 
     INTERNAL_KEY: str = "default_internal_secret_key"
     ALLOWED_NUMBERS: str = ""

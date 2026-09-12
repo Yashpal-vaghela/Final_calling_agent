@@ -13,10 +13,12 @@ import time
 import re
 from typing import Optional
 
-# Silero VAD integration (commented out)
-# import numpy as np
-# from silero_vad import load_silero_vad, VADIterator
-# _VAD_MODEL = load_silero_vad(onnx=True)
+import numpy as np
+try:
+    from agent.audio.silero import SileroVAD
+except Exception as e:
+    SileroVAD = None
+    print(f"[Orchestrator] SileroVAD not available: {e}")
 
 from agent.streaming.gemini_live_stream import GeminiLiveStreamClient
 from agent.session.call_session import CallSession
@@ -146,8 +148,10 @@ class VoicePipelineOrchestrator:
         self.gemini_live_client = None
         self.tts_provider_name = "Gemini Live"
         self.mulaw_frame_size = 160
-        self.prebuffer_threshold = 800  # 100ms jitter buffer (absorbs internet streaming jitter)
+        self.prebuffer_threshold = 480  # 60ms jitter buffer (optimized for immediate greeting)
         self.output_buffer = bytearray()
+        self._initial_greeting_complete = False
+        self._timings = {}
         self._send_audio_task: Optional[asyncio.Task] = None
         self._outbound_chunk_counter: int = 1
         self._turn_start_time: Optional[float] = None
@@ -155,6 +159,11 @@ class VoicePipelineOrchestrator:
         # Persistent resampler states per stream stage
         self._inbound_resample_state: Optional[tuple] = None
         self._outbound_resample_state: Optional[tuple] = None
+        
+        # Track consultation booking in this session to prevent duplicate submissions
+        self._consultation_booked: bool = False
+        self._consultation_doctor: Optional[str] = None
+        self._cancellation_save_attempted: bool = False
         
         self._is_running: bool = False
         self._stopped: bool = False
@@ -164,8 +173,15 @@ class VoicePipelineOrchestrator:
         self._silence_monitor_task: Optional[asyncio.Task] = None
         self._turns_since_last_directive: int = 0
         
-        # self.vad_buffer = bytearray()
-        # self.vad_iterator = VADIterator(_VAD_MODEL, sampling_rate=16000, threshold=0.5, min_silence_duration_ms=600)
+        self.vad_buffer = bytearray()
+        if SileroVAD:
+            try:
+                self.vad_iterator = SileroVAD(threshold=0.5, min_silence_duration_ms=500, sample_rate=16000)
+            except Exception as e:
+                print(f"[Orchestrator] SileroVAD initialization failed: {e}")
+                self.vad_iterator = None
+        else:
+            self.vad_iterator = None
 
 
     async def _silence_monitor(self) -> None:
@@ -258,6 +274,8 @@ class VoicePipelineOrchestrator:
                         self._outbound_chunk_counter += 1
                         if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
                             try:
+                                if 'first_telephony_audio_tx' not in getattr(self, '_timings', {}):
+                                    self._timings['first_telephony_audio_tx'] = time.monotonic()
                                 await self.websocket.send_text(json.dumps(media_message))
                             except Exception as e:
                                 print(f"[Orchestrator Warning] Failed to send buffered live audio: {e}")
@@ -306,6 +324,8 @@ class VoicePipelineOrchestrator:
                             self._outbound_chunk_counter += 1
                             if self.websocket and getattr(self.websocket, "client_state", None) != "DISCONNECTED":
                                 try:
+                                    if 'first_telephony_audio_tx' not in getattr(self, '_timings', {}):
+                                        self._timings['first_telephony_audio_tx'] = time.monotonic()
                                     await self.websocket.send_text(json.dumps(media_message))
                                 except Exception:
                                     pass
@@ -316,6 +336,24 @@ class VoicePipelineOrchestrator:
             
             # When buffer is fully drained and assistant is done speaking
             if len(self.output_buffer) == 0 and self._is_running and not self._stopped:
+                if not getattr(self, "_initial_greeting_complete", True) and getattr(self, "_assistant_turn_complete", False):
+                    self._initial_greeting_complete = True
+                    self._timings['greeting_complete'] = time.monotonic()
+                    
+                    t = self._timings
+                    start = t.get('call_start', 0)
+                    print("\n" + "="*50)
+                    print("🚀 ZERO-LATENCY GREETING TIMING REPORT")
+                    print("="*50)
+                    if 'call_start' in t: print(f"Call Start: 0.000s")
+                    if 'gemini_connecting' in t: print(f"Gemini Connecting: {t['gemini_connecting'] - start:.3f}s")
+                    if 'gemini_connected' in t: print(f"Gemini Connected: {t['gemini_connected'] - start:.3f}s")
+                    if 'greeting_triggered' in t: print(f"Greeting Triggered: {t['greeting_triggered'] - start:.3f}s")
+                    if 'first_gemini_audio_rx' in t: print(f"First Gemini Audio Rx: {t['first_gemini_audio_rx'] - start:.3f}s")
+                    if 'first_telephony_audio_tx' in t: print(f"First Telephony Audio Tx: {t['first_telephony_audio_tx'] - start:.3f}s")
+                    if 'greeting_complete' in t: print(f"Greeting Complete & Input Gate Opened: {t['greeting_complete'] - start:.3f}s")
+                    print("="*50 + "\n")
+
                 # Send Mark Event to indicate end of speech turn
                 if self.websocket and not getattr(self.websocket, "client_state", None) == "DISCONNECTED":
                     try:
@@ -345,6 +383,9 @@ class VoicePipelineOrchestrator:
         if not self._is_running or self._stopped or not self.stream_sid:
             return
         try:
+            if 'first_gemini_audio_rx' not in getattr(self, '_timings', {}):
+                self._timings['first_gemini_audio_rx'] = time.monotonic()
+
             # Direct single-stage 24kHz -> 8kHz stateful resampling (3:1 integer decimation)
             resampled_8k, self._outbound_resample_state = resample_pcm16(
                 data, 24000, 8000, self._outbound_resample_state
@@ -369,6 +410,10 @@ class VoicePipelineOrchestrator:
         """Callback invoked when Gemini Live detects caller interruption (barge-in)."""
         if self._stopped:
             return
+        if not getattr(self, "_initial_greeting_complete", True):
+            print("[Orchestrator] Ignoring interruption: Initial greeting is still playing.")
+            return
+
         # Early-turn echo guard: Ignore interruptions within first 1.8s of assistant speaking
         if self._turn_start_time and (time.time() - self._turn_start_time < 1.8):
             print(f"[Orchestrator] Ignoring early-turn echo interruption ({time.time() - self._turn_start_time:.2f}s < 1.8s)")
@@ -408,18 +453,21 @@ class VoicePipelineOrchestrator:
                 print(f"[Live STT Transcript] User: '{text}'")
                 self.session.add_transcript(text, role="user")
                 
-                # 1. Deterministic microsecond Python detection on native scripts
+                # Directly evaluate the finalized transcript string
+                prev_lang = self.session.preferred_language
                 language_switched = self.session.update_language_if_requested(text)
+                
+                print(f"  [DIAGNOSTIC] Detected Language Switch: {language_switched}. Previous: {prev_lang}, New: {self.session.preferred_language}")
+                
                 if language_switched:
                     active_lang = self.session.preferred_language
                     lang_name = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}.get(active_lang, active_lang)
                     print(f"[Orchestrator] Active caller language updated: {lang_name} ({active_lang})")
                     if self.gemini_live_client:
-                        other_langs = [l for l in ["Hindi", "Gujarati", "English"] if l != lang_name]
                         directive = (
                             f"[CRITICAL SYSTEM DIRECTIVE: The caller just spoke in {lang_name}. "
-                            f"You MUST immediately reply 100% in {lang_name}! "
-                            f"Do NOT speak {' or '.join(other_langs)} or any other language!]"
+                            f"Respond in the language the caller is currently speaking. Support Gujarati, Hindi, and English. "
+                            f"Follow a genuine language switch immediately; do not remain locked to the previous language.]"
                         )
                         await self.gemini_live_client.send_text(directive)
         elif event_type == "gemini":
@@ -443,6 +491,13 @@ class VoicePipelineOrchestrator:
         from agent.tools.capture_lead import capture_lead
         from agent.tools.get_faq import get_faq
         from agent.tools.handoff import human_handoff
+        from agent.tools.book_consultation import book_consultation
+        from agent.tools.check_dentist import check_dentist
+        from agent.tools.cancel_consultation import cancel_consultation
+
+        def live_check_dentist(**kwargs):
+            city = kwargs.get("city") or self.caller_context.get("city") or self.lead_city or ""
+            return check_dentist(doctor_name=kwargs.get("doctor_name", ""), city=city)
 
         def live_capture_lead(**kwargs):
             kwargs.setdefault("call_id", self.call_id)
@@ -483,17 +538,85 @@ class VoicePipelineOrchestrator:
                 return {"status": "success", "language": lang, "message": f"Language set to {lang}"}
             return {"status": "error", "message": "No language provided"}
 
+        def live_cancel_consultation(**kwargs):
+            if not getattr(self, "_cancellation_save_attempted", False):
+                # The agent tried to cancel immediately. Block it and force the prompt.
+                self._cancellation_save_attempted = True
+                return {
+                    "status": "error",
+                    "message": "SYSTEM GUARDRAIL: Do not cancel yet. First politely ask the caller why they want to cancel and if you can help resolve their issue."
+                }
+            
+            lead_id_to_cancel = kwargs.get("lead_id") or getattr(self, "lead_id", None) or ""
+            full_name = self.caller_context.get("name") or self.lead_name or ""
+            name_parts = full_name.strip().split(maxsplit=1) if full_name.strip() else []
+            
+            first_name = self.caller_context.get("first_name") or (name_parts[0] if name_parts else "")
+            last_name  = self.caller_context.get("last_name") or (name_parts[1] if len(name_parts) > 1 else ".")
+            phone      = self.caller_context.get("phone", "")
+            email      = self.caller_context.get("email", "")
+            city       = self.caller_context.get("city", "")
+            doctor     = getattr(self, "_consultation_doctor", None) or ""
+
+            res = cancel_consultation(
+                lead_id=lead_id_to_cancel, 
+                reason=kwargs.get("reason", ""),
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                email=email,
+                city=city,
+                doctor_name=doctor
+            )
+            return res
+
+        def live_book_consultation(**kwargs):
+            # REMOVED the "_consultation_booked" guard here so the agent can send updates.
+            
+            # Pass lead_id if an earlier booking in this session already registered one.
+            # Do NOT fall back to caller_context['id'] which is an internal UUID.
+            kwargs["lead_id"] = getattr(self, "lead_id", None) or ""
+            # CRITICAL: Always use form-submitted data for identity fields.
+            full_name = self.caller_context.get("name") or self.lead_name or ""
+            name_parts = full_name.strip().split(maxsplit=1) if full_name.strip() else []
+            
+            first_name = self.caller_context.get("first_name") or (name_parts[0] if name_parts else "")
+            last_name  = self.caller_context.get("last_name") or (name_parts[1] if len(name_parts) > 1 else "")
+            
+            if not last_name:
+                last_name = kwargs.get("last_name", "").strip() or "."
+            kwargs["first_name"] = first_name
+            kwargs["last_name"]  = last_name
+            kwargs["phone"]      = self.caller_context.get("phone", "")
+            kwargs["email"]      = self.caller_context.get("email", "")
+            
+            requested_city = kwargs.get("city", "").strip()
+            if not requested_city:
+                kwargs["city"] = self.caller_context.get("city", "")
+            
+            res = book_consultation(**kwargs)
+            if res.get("status") == "success":
+                self._consultation_booked = True
+                self._consultation_doctor = (kwargs.get("doctor_name") or "").strip()
+                # If the backend returned a newly generated lead_id, save it for future updates in this call
+                if res.get("lead_id"):
+                    self.lead_id = res.get("lead_id")
+                    
+            return res
+
         return {
             "capture_lead": live_capture_lead,
             "check_city_coverage": live_check_city,
             "get_faq": live_get_faq,
             "human_handoff": live_handoff,
             "set_caller_language": live_set_caller_language,
+            "book_consultation": live_book_consultation,
+            "cancel_consultation": live_cancel_consultation,
+            "check_dentist": live_check_dentist,
         }
 
-
-
     def _build_initial_prompt(self) -> str:
+        self._timings['greeting_triggered'] = time.monotonic()
         msg = (self.lead_message or "").strip()
         subj = (self.lead_subject or "").strip()
         known_name = self.lead_name if (self.lead_name and self.lead_name.lower() != "there") else ""
@@ -545,7 +668,7 @@ class VoicePipelineOrchestrator:
                 
                 initial_prompt = (
                     f"The outbound call has connected to {clean_first_name}. "
-                    f"Speak now: State exactly '{greet_phrase}', then answer the question from their message in about 2-3 natural sentences using our knowledge base, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                    f"Say exactly: '{greet_phrase}' Then answer the question from their message directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options) using our knowledge base, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
                     f"{crucial_instruction}"
                 )
             else:
@@ -557,7 +680,7 @@ class VoicePipelineOrchestrator:
                 
                 initial_prompt = (
                     f"The outbound call has connected to {known_name or 'the customer'}. "
-                    f"Speak now: Greet the customer ('{greet_phrase}'), then answer the question from their message in about 2-3 natural sentences using our knowledge base and an intuitive real-world analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                    f"Say exactly: '{greet_phrase}' Then answer the question from their message directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options with an intuitive analogy) using our knowledge base, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
                     f"{crucial_instruction}"
                 )
             return initial_prompt
@@ -573,7 +696,7 @@ class VoicePipelineOrchestrator:
             
             initial_prompt = (
                 f"The outbound call has connected to {known_name or 'the customer'}. "
-                f"Speak now: Greet the customer ('{greet_phrase}'), then address their topic from the caller context clearly in 2-3 sentences based on our knowledge base and an intuitive analogy, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                f"Say exactly: '{greet_phrase}' Then address their topic directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options with an intuitive analogy) based on our knowledge base, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
                 f"{crucial_instruction}"
             )
             return initial_prompt
@@ -581,13 +704,13 @@ class VoicePipelineOrchestrator:
             if known_name:
                 initial_prompt = (
                     f"The outbound call has connected to {known_name}. "
-                    f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply. "
+                    f"Say exactly: '{self.greeting}' Then wait for their reply. "
                     f"{crucial_instruction}"
                 )
             else:
                 initial_prompt = (
                     f"The call has just connected. "
-                    f"Greet the caller by saying exactly: '{self.greeting}' and wait for their reply. "
+                    f"Say exactly: '{self.greeting}' Then wait for their reply. "
                     "You are fluent in Gujarati, Hindi, and English; after greeting, seamlessly converse in whichever language the caller uses."
                 )
             return initial_prompt
@@ -596,6 +719,9 @@ class VoicePipelineOrchestrator:
         is_reconnect = False
         while self._is_running and not self._stopped:
             try:
+                if not is_reconnect:
+                    self._timings['gemini_connecting'] = time.monotonic()
+
                 self.gemini_live_client = GeminiLiveStreamClient(
                     call_id=self.call_id,
                     preferred_language="multi",
@@ -615,6 +741,9 @@ class VoicePipelineOrchestrator:
                     event_callback=self._on_live_event,
                 )
 
+                if not is_reconnect:
+                    self._timings['gemini_connected'] = time.monotonic()
+
                 client = self.gemini_live_client
                 if is_reconnect:
                     full_history = self.session.conversation_history if self.session.conversation_history else []
@@ -633,7 +762,8 @@ class VoicePipelineOrchestrator:
                     reconnect_prompt = (
                         f"You are continuing an ongoing phone call as Kiara with {caller_name}. "
                         "Maintain your exact calm, warm, refined, and confident tone and natural speaking pitch at all times. "
-                        f"ACTIVE LANGUAGE: The caller was speaking {lang_label}. You MUST continue speaking ONLY in {lang_label}. "
+                        f"ACTIVE LANGUAGE: The caller was speaking {lang_label}. Respond in the language the caller is currently speaking. "
+                        "Support Gujarati, Hindi, and English. Follow a genuine language switch immediately; do not remain locked to the previous language. "
                         "Do NOT say hello again or greet the caller. Retain full context of the ongoing discussion.\n\n"
                         f"{session_memory}\n\n"
                         f"--- RECENT CONVERSATION CONTEXT ---\n"
@@ -670,6 +800,9 @@ class VoicePipelineOrchestrator:
 
     async def start(self) -> None:
         """Starts the voice pipeline connections and initiates the opening greeting."""
+        if 'call_start' not in getattr(self, '_timings', {}):
+            self._timings['call_start'] = time.monotonic()
+
         self._is_running = True
         self._waiting_for_user_since = None
         self._silence_state = "active"
@@ -688,6 +821,10 @@ class VoicePipelineOrchestrator:
         Processes an inbound chunk of 8kHz ulaw audio from Smartflo Streams and sends to Gemini Live.
         """
         if not self._is_running:
+            return
+            
+        if not getattr(self, "_initial_greeting_complete", True):
+            # Hard-drop user audio while the initial greeting is playing
             return
 
         audio_bytes = base64.b64decode(ulaw_base64)
@@ -714,18 +851,30 @@ class VoicePipelineOrchestrator:
                     pcm8k, 8000, 16000, self._inbound_resample_state
                 )
                 
-                # Silero VAD processing loop (commented out)
-                # self.vad_buffer.extend(pcm16k)
-                # while len(self.vad_buffer) >= 1024:
-                #     chunk = self.vad_buffer[:1024]
-                #     del self.vad_buffer[:1024]
-                #     audio_float32 = np.frombuffer(chunk, dtype=np.int16).astype(np.float32) / 32768.0
-                #     speech_dict = self.vad_iterator(audio_float32, return_seconds=False)
-                #     if speech_dict:
-                #         if 'start' in speech_dict:
-                #             print("🗣️ [VAD] User STARTED speaking!")
-                #         if 'end' in speech_dict:
-                #             print("🛑 [VAD] User STOPPED speaking!")
+                if getattr(self, 'vad_iterator', None):
+                    self.vad_buffer.extend(pcm16k)
+                    # Bounded buffer ceiling to prevent latency spiral (max 1 second)
+                    if len(self.vad_buffer) > 32000:
+                        print("[Orchestrator Warning] VAD buffer exceeded 32000 bytes. Truncating to newest 16000 bytes.")
+                        self.vad_buffer = self.vad_buffer[-16000:]
+                        
+                    while len(self.vad_buffer) >= 1024:
+                        chunk = self.vad_buffer[:1024]
+                        del self.vad_buffer[:1024]
+                        
+                        audio_float32 = np.frombuffer(chunk, dtype=np.int16).astype(np.float32) / 32768.0
+                        try:
+                            speech_dict = self.vad_iterator(audio_float32, return_seconds=False)
+                            if speech_dict:
+                                if 'start' in speech_dict:
+                                    print("🗣️ [VAD] Local speech start detected.")
+                                    if is_speaking:
+                                        print("⚠️ [VAD] Genuine candidate barge-in detected during AI playback! Triggering local interruption.")
+                                        asyncio.create_task(self._on_live_interruption())
+                                if 'end' in speech_dict:
+                                    print("🛑 [VAD] Local speech end detected.")
+                        except Exception as e:
+                            print(f"[Orchestrator Error] VAD inference failed: {e}")
                 
                 await self.gemini_live_client.send_audio(pcm16k)
             except Exception as e:

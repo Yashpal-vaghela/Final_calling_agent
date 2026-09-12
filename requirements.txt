@@ -110,3 +110,4 @@ win32_setctime==1.2.0
 yarl==1.24.5
 scipy>=1.10.0
 numpy
+onnxruntime
