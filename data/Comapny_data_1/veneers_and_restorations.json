@@ -112,5 +112,19 @@
     ],
     "facts": "Advanced DSD technologies utilize 3D-printed try-ins and digital mock-ups, allowing patients to physically test-drive their new smile before any permanent changes are made.",
     "details": "By leveraging Advanced DSD Technologies, patients do not have to guess their final results. The workflow includes 3D-printed try-ins and highly accurate digital mock-ups. This innovative approach allows patients to physically test-drive their smile, evaluating the aesthetics, speech, and comfort before committing to permanent restorations."
+  },
+  "e_max_worth_extra_cost": {
+    "intent": "e_max_worth_extra_cost",
+    "topic": "Is E.max Worth the Extra Cost?",
+    "keywords": [
+      "Is E.max really worth the extra cost",
+      "Is E.max worth the extra cost",
+      "Is E.max worth it",
+      "Why does E.max cost extra",
+      "E.max extra cost worth it",
+      "E.max veneers worth the price"
+    ],
+    "facts": "E.max veneers are crafted to an ultra-thin 0.3mm micro-precision—demanding the meticulous craftsmanship of a Rolex or Patek Philippe master watchmaker. Rather than an expense, it is an investment in unparalleled biological preservation and aesthetic perfection that lasts.",
+    "details": "E.max lithium disilicate provides the ideal balance of natural enamel-like translucency and durability. The micro-thin 0.3mm to 0.5mm precision allows conservative enamel preservation with maximum bond strength, justifying the investment over standard materials."
   }
-}
+}

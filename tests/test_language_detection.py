@@ -37,8 +37,8 @@ def test_language_detection():
     # Test Short Utterances
     session.set_preferred_language("en")
     switched = session.update_language_if_requested("haan")
-    assert switched is True
-    assert session.preferred_language == "hi"
+    assert switched is False
+    assert session.preferred_language == "en"
 
     session.set_preferred_language("en")
     switched = session.update_language_if_requested("kem")
@@ -65,10 +65,10 @@ def test_language_detection():
     assert switched is False
     assert session.preferred_language == "gu"
 
-    # Test 'okay' switches to English from Gujarati
+    # Test 'okay' retains active language as it is a common acknowledgment
     switched = session.update_language_if_requested("okay")
-    assert switched is True
-    assert session.preferred_language == "en"
+    assert switched is False
+    assert session.preferred_language == "gu"
 
     # In Hindi: "ha", "haa" must stay in Hindi!
     session.set_preferred_language("hi")
@@ -80,10 +80,10 @@ def test_language_detection():
     assert switched is False
     assert session.preferred_language == "hi"
 
-    # Test 'okay' switches to English from Hindi
+    # Test 'okay' retains active language as it is a common acknowledgment
     switched = session.update_language_if_requested("okay")
-    assert switched is True
-    assert session.preferred_language == "en"
+    assert switched is False
+    assert session.preferred_language == "hi"
 
     # Hindi question with 'दांत' MUST stay in Hindi, NEVER flip to Gujarati!
     session.set_preferred_language("hi")
@@ -97,11 +97,16 @@ def test_language_detection():
     assert switched is True
     assert session.preferred_language == "hi"
 
-    # From English initial state, opening with "ha" or "haa" switches to Gujarati
+    # From English initial state, opening with "ha" or "haa" retains English
     session.set_preferred_language("en")
     switched = session.update_language_if_requested("haa")
-    assert switched is True
-    assert session.preferred_language == "gu"
+    assert switched is False
+    assert session.preferred_language == "en"
+
+    session.set_preferred_language("en")
+    switched = session.update_language_if_requested("haan")
+    assert switched is False
+    assert session.preferred_language == "en"
 
     # Test Devanagari-transcribed Gujarati words detect as Gujarati
     session.set_preferred_language("hi")

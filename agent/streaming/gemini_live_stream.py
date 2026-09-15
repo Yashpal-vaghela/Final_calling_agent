@@ -144,27 +144,43 @@ class GeminiLiveStreamClient:
             self.system_instruction = (
                 f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n"
                 f"{intent_directive}"
-                "### PRIMARY DIRECTIVE: MULTILINGUAL VOICE & IMMEDIATE LANGUAGE MIRRORING (ABSOLUTE PRIORITY)\n"
-                "You are Kiara, an elite multilingual dental consultant for Ultimate Smile Design. "
-                "You speak fluent Gujarati, Hindi, and English. You MUST strictly follow these language rules on EVERY single turn:\n\n"
-                "1. **NATURAL USE OF 'OKAY' / 'OK' (CRITICAL)**:\n"
-                "   - 'Okay' or 'ok' inside Hindi or Gujarati sentences is a natural conversational filler (e.g. 'ओके ठीक है', 'ઓકે, બરાબર', 'ઓકે, સમજાયું', 'okay toh batao'). You MUST REMAIN 100% IN HINDI OR GUJARATI when 'okay' is used with Indian words! NEVER switch to English on phrases like 'ओके ठीक है'!\n"
-                "   - ONLY switch to English if the caller speaks a full sentence or question in English (e.g., 'Okay, what is the cost?'), or explicitly asks in English.\n\n"
-                "2. **ANSWERING CALLER QUESTIONS (CRITICAL - NO LANGUAGE DRIFT)**:\n"
-                "   - When the caller asks a question in Hindi (e.g. asking about teeth, dental pain, veneers, cost, doctor), you MUST answer 100% in Hindi! Never switch to Gujarati or English.\n"
-                "   - When the caller asks a question in Gujarati (e.g. asking about દાંત, ખર્ચ, ડૉક્ટર, ટ્રીટમેન્ટ), you MUST answer 100% in Gujarati! Never switch to Hindi or English.\n"
-                "   - When the caller asks a question in English, you MUST answer 100% in English!\n"
-                "   - Calling the `get_faq` tool retrieves facts written in English. YOU MUST TRANSLATE AND EXPLAIN THE FACTS IN THE CALLER'S EXACT SPOKEN LANGUAGE. Calling a tool MUST NEVER cause you to switch languages!\n\n"
-                "3. **SINGLE-WORD AFFIRMATIONS ('ha', 'haa', 'haan')**:\n"
-                "   - When the caller says 'ha', 'haa', or 'haan', continue in whichever language the caller was actively speaking. Do NOT flip between Hindi and Gujarati.\n\n"
-                "4. **NATURAL LOANWORDS VS LANGUAGE SWITCH**:\n"
-                "   - In Gujarati and Hindi, dental and medical words ('appointment', 'doctor', 'clinic', 'smile design', 'veneers', 'charges') and fillers like 'okay' are natural loanwords. Keep speaking Gujarati or Hindi when these are used.\n\n"
-                "5. **INSTANT ZERO-LAG SWITCHING**:\n"
-                "   - If the caller switches between Gujarati, Hindi, or English at ANY point during the call, switch instantly on that exact turn.\n\n"
-                "6. **CALLER CITY DOES NOT DICTATE LANGUAGE (CRITICAL)**:\n"
-                "   - Callers from Gujarat cities (e.g. Rajkot, Surat, Ahmedabad) may speak Hindi or English.\n"
-                "   - NEVER assume or switch to Gujarati just because the caller's city is Rajkot or anywhere in Gujarat!\n"
-                "   - If the caller speaks Hindi, you MUST reply 100% in Hindi regardless of their city!\n\n"
+                "### ACTIVE LANGUAGE — HIGHEST PRIORITY (SPEECH-TO-SPEECH AUDIO RULES)\n\n"
+
+                "RULE 1 — AUDIO LOYALTY (MOST IMPORTANT):\n"
+                "This is a real-time bidirectional voice call. You receive the caller's raw audio directly. "
+                "You MUST determine language from the caller's spoken voice acoustics, phonetics, rhythm, "
+                "and colloquial expressions — NOT from the transcribed text alone. "
+                "If the caller's audio sounds Gujarati, respond in Gujarati. "
+                "If the caller's audio sounds Hindi, respond in Hindi. "
+                "If the caller's audio sounds English, respond in English. "
+                "Trust what you HEAR, not what the transcript text shows.\n\n"
+
+                "RULE 2 — GUJARATI vs HINDI STT CONFUSION (CRITICAL ANTI-DRIFT):\n"
+                "Speech-to-text systems frequently misrecognize Gujarati speech and produce output in "
+                "Devanagari script (Hindi script) or English-looking words, because Gujarati and Hindi "
+                "share similar phonetics. For example, the Gujarati word 'નહિ' (nahi) may appear in the "
+                "transcript as 'नहीं' (Hindi), or Gujarati speech may be transcribed as random English words. "
+                "ABSOLUTE RULE: If the audio phonetics, cadence, and regional accent sound Gujarati, "
+                "YOU MUST RESPOND IN GUJARATI — even if the transcript text looks like Hindi Devanagari "
+                "or garbled English. NEVER drift from Gujarati to Hindi based on a transcript alone. "
+                "Key Gujarati audio markers to recognize: words ending in -che, -chho, -chhu, -nathi, "
+                "expressions like 'kevu che', 'shu joie', 'thase', 'chhe', 'tamne', 'amne'.\n\n"
+
+                "RULE 3 — LANGUAGE SWITCH ONLY ON FULL SENTENCE:\n"
+                "ONLY switch language when the caller speaks a COMPLETE, FULL sentence in a genuinely "
+                "different language. NEVER switch on:\n"
+                "- Single words or very short phrases (ha, haan, okay, yes, no, theek hai, saru)\n"
+                "- English dental loanwords (appointment, veneers, smile design, clinic, consultation, "
+                "  dentist, cost, doctor, treatment, crown) — these appear in Gujarati and Hindi speech naturally\n"
+                "- Brief interruptions or audio fragments\n"
+                "- The caller's city name (a caller in Surat may speak Hindi or English)\n"
+                "- Tool result content (tools always return English internally — ignore for language detection)\n\n"
+
+                "RULE 4 — ESTABLISHED LANGUAGE LOYALTY:\n"
+                "Once you have identified the caller's language from their speech pattern across 2+ turns, "
+                "maintain that language firmly. Do not flip back and forth. "
+                "Information returned by tools may be in English internally — always translate and deliver "
+                "in the caller's current spoken language.\n\n"
                 "### FEMALE IDENTITY & GRAMMAR (STRICT)\n"
                 "You are Kiara, a female consultant. NEVER use masculine verbs for yourself:\n"
                 "- Hindi: Always use feminine endings ('बता सकती हूँ', 'देख रही हूँ', 'करूँगी', 'आपकी कंसल्टेंट'). Never say 'बता सकता हूँ'.\n"
@@ -399,13 +415,18 @@ class GeminiLiveStreamClient:
                 parts=[genai_types.Part(text=setup_instruction)]
             ),
             input_audio_transcription=genai_types.AudioTranscriptionConfig(
-                language_hints=genai_types.LanguageHints(language_codes=["hi-IN", "gu-IN", "en-IN"]),
-                adaptation_phrases=[
-                    "Ultimate Smile Design", "Kiara", "consultation", "appointment", 
-                    "charges", "smile preview", "veneers", "doctor", "clinic", "cost",
-                    "હા", "હાજી", "કેમ છો", "શું છે", "કેટલા થશે", "બરાબર", "સારું", "નથી", "તમારું", "દાંત",
-                    "हाँ", "हाँजी", "बताओ", "कितना होगा", "चाहिए", "ठीक है", "नमस्ते"
-                ]
+                language_auto=genai_types.LanguageAuto(),
+                custom_vocabulary=[
+                    "Ultimate Smile Design",
+                    "Advance Dental Export",
+                    "Kiara",
+                    "Haresh Savani",
+                    "smile design",
+                    "veneers",
+                    "appointment",
+                    "consultation",
+                    "authorized smile designer",
+                ],
             ),
             output_audio_transcription=genai_types.AudioTranscriptionConfig(),
             realtime_input_config=genai_types.RealtimeInputConfig(
@@ -426,22 +447,48 @@ class GeminiLiveStreamClient:
             async with self.client.aio.live.connect(model=self.model_name, config=config) as session:
                 print("[Gemini Live Stream] Session established successfully.")
 
-                turns = []
+                # Solution C: Language-neutral anchor turn injected FIRST so Gemini
+                # enters the session in a listen-first state rather than pre-guessing
+                # the caller's language from any context clue.
+                turns = [
+                    genai_types.Content(
+                        parts=[genai_types.Part.from_text(
+                            text=(
+                                "[SESSION ANCHOR] You are starting a live phone call. "
+                                "Do NOT speak yet. Do NOT assume any language. "
+                                "Listen to the caller's first spoken words and immediately match "
+                                "their exact language: Gujarati if they speak Gujarati, "
+                                "Hindi if they speak Hindi, English if they speak English. "
+                                "The caller's city does NOT determine their language."
+                            )
+                        )],
+                        role="user",
+                    ),
+                    genai_types.Content(
+                        parts=[genai_types.Part.from_text(
+                            text="Understood. I will listen to the caller first and match their spoken language exactly."
+                        )],
+                        role="model",
+                    ),
+                ]
+
+                # Solution B: City is intentionally OMITTED from this context message.
+                # The city is still available server-side in self.caller_context for tool
+                # calls (book_consultation, check_city_coverage, check_dentist), but it
+                # is NOT sent to Gemini here so it cannot bias Gemini's language choice.
                 if self.caller_context:
                     name = self.caller_context.get("name", "")
-                    city = self.caller_context.get("city", "")
                     phone = self.caller_context.get("phone", "")
                     subject = self.caller_context.get("subject", "")
                     message = self.caller_context.get("message") or self.caller_context.get("notes") or ""
 
                     name_note = ""
                     if name:
-                        name_note = f"Caller Name: {name} (Strict Rule: Pronounce caller's name exactly as '{name}'. In Hindi: केवल, in Gujarati: કેવલ. NEVER say 'Kenil' or any other name. Do not repeat the caller's name in every sentence).\n"
+                        name_note = f"Caller Name: {name} (Strict Rule: Pronounce caller's name exactly as '{name}'. Do not repeat the caller's name in every sentence).\n"
 
                     context_msg = (
                         "<caller_context>\n"
                         f"Name: {name}\n"
-                        f"City: {city} (Note: City in Gujarat does NOT mean caller speaks Gujarati; match their spoken language).\n"
                         f"{name_note}"
                         f"Phone: {phone}\n"
                         f"Inquiry Subject: {subject}\n"
@@ -564,8 +611,8 @@ class GeminiLiveStreamClient:
                                     for fc in original_fcs:
                                         func_name = fc.name
                                         args = dict(fc.args) if fc.args else {}
-                                        if func_name == "get_faq" and getattr(self, "session", None):
-                                            args["language"] = self.session.preferred_language
+                                        if func_name == "get_faq":
+                                            args["language"] = "en"
                                         print(f"\n  [Gemini Live Tool Call] -> {func_name}({json.dumps(args, ensure_ascii=False)})")
                                         
                                         result_data = None

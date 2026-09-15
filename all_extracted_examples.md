@@ -228,7 +228,7 @@
 - Master ceramist founder
 
 **Response (Facts & Details)**:
-> Ultimate Smile Design is a premium smile makeover service by Advance Dental Export. Haresh Savani is the Master Ceramist and Founder. The network includes 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ countries and 750+ dedicated professionals. Patients can use the 'Find Dentist' feature on the official website ultimatesmiledesign.com to search by location and book an authorised smile designer.
+> Ultimate Smile Design is a premium smile makeover service by Advance Dental Export. Haresh Savani is the Master Ceramist and Founder. The network includes 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ cities and 750+ dedicated professionals. Patients can use the 'Find Dentist' feature on the official website ultimatesmiledesign.com to search by location and book an authorised smile designer.
 > Advance Dental Export is the dental laboratory and organisation behind Ultimate Smile Design. The laboratory uses state-of-the-art digital workflows and CAD/CAM systems to craft restorations. The network connects patients with experienced cosmetic dentists across India. Genuine treatments are supported and verified by an Authentication Card. To find the nearest authorised smile design clinic, patients can visit ultimatesmiledesign.com or contact customer support.
 
 #### Intent: `smile_design_aftercare`
@@ -487,8 +487,8 @@
 - How can I find an Ultimate Smile Design dentist near me?
 
 **Response (Facts & Details)**:
-> There are 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ countries and 750+ dedicated professionals. Use the 'Find Dentist' feature on the official website to search by location and book a certified dentist or call customer...
-> There are 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ countries and 750+ dedicated professionals. Use the 'Find Dentist' feature on the official website to search by location and book a certified dentist or call customer support for help.
+> There are 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ cities and 750+ dedicated professionals. Use the 'Find Dentist' feature on the official website to search by location and book a certified dentist or call customer...
+> There are 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ cities and 750+ dedicated professionals. Use the 'Find Dentist' feature on the official website to search by location and book a certified dentist or call customer support for help.
 
 #### Intent: `what_is_the_difference_between_smile_designing_and`
 **Topic**: What is the difference between smile designing and traditional cosmetic dentistry?

@@ -1,0 +1,29 @@
+# Appointment Update & Cancellation Walkthrough
+
+I have successfully implemented the architecture plan to safely allow the agent to update and cancel existing appointments!
+
+## 1. The `cancel_consultation` Tool
+I created a new dedicated tool: [cancel_consultation.py](file:///d:/Final_calling_agent/agent/tools/cancel_consultation.py).
+This tool cleanly separates the cancellation logic from the booking logic. It uses the existing API endpoint but modifies the payload:
+- Sends `"status": "cancelled"` to the backend.
+- Prefixes the provided `reason` into the message field (e.g., `CANCELLATION REASON: User no longer needs it.`), ensuring your clinical coordinators know *why* the cancellation occurred.
+
+## 2. Programmatic Guardrail
+To guarantee that the LLM cannot skip your "Ask Why First" rule, I implemented a stateful guardrail in the [VoicePipelineOrchestrator](file:///d:/Final_calling_agent/agent/pipeline.py#L161-L503).
+- The pipeline now tracks `self._cancellation_save_attempted`.
+- If the AI tries to cancel the appointment on the first request, the tool immediately blocks the API call and forces the AI to reply: *"SYSTEM GUARDRAIL: Do not cancel yet. First politely ask the caller why they want to cancel and if you can help resolve their issue."*
+- Once the AI asks why, the tool unlocks, allowing the cancellation to proceed on the next turn if the user insists.
+
+## 3. Conversational Guardrails
+I updated the core instructions in [guardrails.md](file:///d:/Final_calling_agent/agent/prompts/core/guardrails.md#L57-L63) with a strict `CANCELLATION POLICY`.
+This instructs Kiara to:
+- **Rule A:** Never proactively offer cancellation.
+- **Rule B:** Always make a save attempt first.
+- **Rule C:** Execute the cancellation if the user insists.
+- **Rule D:** Confirm the cancellation verbally *only after* the backend returns success.
+
+## 4. Updates (Already Working)
+As discussed, updating an appointment already works perfectly through the existing `book_consultation` tool! Whenever the user changes their city or dentist, the tool simply passes the existing `lead_id`, which performs an "upsert" on the CRM backend. I added instructions to ensure Kiara explicitly asks for confirmation before updating any details.
+
+> [!TIP]
+> **Testing it out:** Try starting a call, booking an appointment, and then say *"I want to cancel"*. Kiara will now attempt to save the appointment first. If you insist, she will seamlessly cancel it!

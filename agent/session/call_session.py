@@ -49,7 +49,7 @@ _GUJARATI_LATIN_TRIGGERS = {
     "ketlu", "ketla", "ketli", "ketlo", "kevu", "kevi", "keva", "kevo",
     "tamne", "tamaru", "tamaro", "tamari", "tamara", "tamare", "tame",
     "mane", "maru", "maro", "mari", "mara", "hun", "hu", "ame", "amne", "amaru",
-    "mate", "maate", "saru", "saaru", "vadhare", "ochhu", "have", "hve",
+    "mate", "maate", "saru", "saaru", "vadhare", "ochhu", "hve",
     "sathe", "jode", "bolone", "vandho", "chokkas",
     "samji", "samjay", "samjavo", "samjavu", "joie", "joiye",
     "hato", "hati", "hata", "hatu", "ane", "pan", "vaat", "vat",

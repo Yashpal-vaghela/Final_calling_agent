@@ -24,6 +24,18 @@ from agent.streaming.gemini_live_stream import GeminiLiveStreamClient
 from agent.session.call_session import CallSession
 from agent.audio.codecs import resample_pcm16
 
+# ─────────────────────────────────────────────────────────────────────────────
+# LANGUAGE EXPERIMENT FLAGS  — flip these to switch between Phase A and Hybrid
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase A (Gemini-only):  ENABLE_LOCAL_VAD = False, ENABLE_NOISE_GATE = False,
+#                         ENABLE_PYTHON_LANGUAGE_STEERING = False
+# Hybrid Mode:            ENABLE_PYTHON_LANGUAGE_STEERING = True
+#                         (also re-enable VAD / gate only if needed)
+ENABLE_LOCAL_VAD = False
+ENABLE_NOISE_GATE = False
+# Hybrid Mode: Python LID sends a language directive to Gemini Live on every detected switch.
+ENABLE_PYTHON_LANGUAGE_STEERING = True
+
 
 class VoicePipelineOrchestrator:
     """
@@ -133,6 +145,8 @@ class VoicePipelineOrchestrator:
         # Initialize session and Gemini Live client
         initial_lang = self.caller_context.get("preferred_language", "en") if self.caller_context else "en"
         self.session = CallSession(call_id=call_id, opening_intent=opening_intent, lead_id=lead_id, preferred_language=initial_lang)
+        # Phase A LID observer session (isolated from production session state)
+        self.lid_observer = CallSession(call_id=f"{call_id}:lid", preferred_language="en")
         if self.caller_context:
             self.session.update_user_info(
                 name=self.caller_context.get("name"),
@@ -453,23 +467,71 @@ class VoicePipelineOrchestrator:
                 print(f"[Live STT Transcript] User: '{text}'")
                 self.session.add_transcript(text, role="user")
                 
-                # Directly evaluate the finalized transcript string
-                prev_lang = self.session.preferred_language
-                language_switched = self.session.update_language_if_requested(text)
-                
-                print(f"  [DIAGNOSTIC] Detected Language Switch: {language_switched}. Previous: {prev_lang}, New: {self.session.preferred_language}")
-                
-                if language_switched:
-                    active_lang = self.session.preferred_language
-                    lang_name = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}.get(active_lang, active_lang)
-                    print(f"[Orchestrator] Active caller language updated: {lang_name} ({active_lang})")
-                    if self.gemini_live_client:
+                # Directly evaluate the finalized transcript string via observer session
+                if not hasattr(self, "lid_observer") or self.lid_observer is None:
+                    self.lid_observer = CallSession(f"{self.call_id}:lid", preferred_language="en")
+                prev_lang = self.lid_observer.preferred_language
+                language_switched = self.lid_observer.update_language_if_requested(text)
+                detected_lang = self.lid_observer.preferred_language
+
+                print(f"  [DIAGNOSTIC] Python LID Observer: switched={language_switched}. "
+                      f"Prev: {prev_lang}, Now: {detected_lang}")
+
+                if ENABLE_PYTHON_LANGUAGE_STEERING:
+                    # Capture session language BEFORE updating — used to detect effective changes
+                    # even when the lid_observer itself didn't switch (e.g. Issue 1: lid was already
+                    # at "en" but session.preferred_language was "gu" from last turn).
+                    prev_session_lang = self.session.preferred_language
+                    self.session.preferred_language = detected_lang
+                    lang_name = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}.get(detected_lang, detected_lang)
+
+                    # --- Tier 1: Native Unicode script detection ---
+                    # Gujarati Unicode [\u0A80-\u0AFF] is always 100% Gujarati.
+                    # Devanagari [\u0900-\u097F] is usually Hindi BUT Gujarati speech is frequently
+                    # transcribed as Devanagari by STT due to shared phonetics. If LID also says
+                    # Gujarati (detected_lang=="gu"), trust the LID — it's the STT confusion case.
+                    has_gujarati_script = bool(re.search(r'[\u0A80-\u0AFF]', text))
+                    has_devanagari_script = bool(re.search(r'[\u0900-\u097F]', text))
+                    script_lang = None
+                    if has_gujarati_script:
+                        script_lang = "Gujarati"              # Always unambiguous
+                    elif has_devanagari_script:
+                        if detected_lang == "gu":
+                            # STT confusion: Gujarati audio → Devanagari transcript
+                            # LID detected Gujarati markers (che, nathi, etc.) → trust LID
+                            script_lang = "Gujarati"
+                        else:
+                            script_lang = "Hindi"             # Devanagari + LID agrees Hindi
+
+                    # --- Tier 2: Effective language change (with or without LID switch) ---
+                    # Fires when: (a) lid_observer switched, OR (b) session language is newly
+                    # different from previous turn's detected lang (catches Issue 1).
+                    session_language_changed = (prev_session_lang != detected_lang)
+
+                    if script_lang and self.gemini_live_client:
+                        # Script-confirmed directive
+                        reason = "STT Gujarati→Devanagari confusion" if (script_lang == "Gujarati" and has_devanagari_script) else "native script"
+                        print(f"[Orchestrator] [HYBRID MODE] {reason} → {script_lang}. Sending directive.")
                         directive = (
-                            f"[CRITICAL SYSTEM DIRECTIVE: The caller just spoke in {lang_name}. "
-                            f"Respond in the language the caller is currently speaking. Support Gujarati, Hindi, and English. "
-                            f"Follow a genuine language switch immediately; do not remain locked to the previous language.]"
+                            f"[LANGUAGE CONTROL] The caller's audio confirms {script_lang}. "
+                            f"Respond ONLY in {script_lang}. "
+                            f"Do not switch to any other language."
                         )
                         await self.gemini_live_client.send_text(directive)
+                    elif (language_switched or session_language_changed) and self.gemini_live_client:
+                        # Latin-switch or session-level effective language change
+                        reason = "LID switch" if language_switched else "session lang change"
+                        print(f"[Orchestrator] [HYBRID MODE] {reason} → {lang_name}. Sending directive.")
+                        directive = (
+                            f"[LANGUAGE CONTROL] "
+                            f"The caller's current spoken language is {lang_name}. "
+                            f"Always respond in {lang_name} only. "
+                            f"Do not switch to any other language."
+                        )
+                        await self.gemini_live_client.send_text(directive)
+                elif language_switched:
+                    lang_name = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}.get(detected_lang, detected_lang)
+                    print(f"[Orchestrator] [OBSERVER] Python detected → {lang_name} (no directive sent in Phase A)")
         elif event_type == "gemini":
             text = event.get("text", "").strip()
             if text:
@@ -519,7 +581,8 @@ class VoicePipelineOrchestrator:
             return res
 
         def live_get_faq(**kwargs):
-            kwargs["language"] = self.session.preferred_language
+            # Phase A: don't inject preferred_language — let get_faq use default
+            # and instruction is now language-neutral (Gemini decides from caller voice)
             res = get_faq(**kwargs)
             if kwargs.get("topic"):
                 self.session.update_topic(kwargs.get("topic"))
@@ -833,25 +896,24 @@ class VoicePipelineOrchestrator:
             try:
                 pcm8k = audioop.ulaw2lin(audio_bytes, 2)
                 
-                # Dynamic RMS Digital Noise Gate:
-                # When assistant is speaking, filter faint carrier echo/leakage (350 RMS).
-                # When listening to the caller, keep the natural acoustic spectrum intact (only filter dead silence < 80 RMS)
-                # so that soft consonants, vowels, and phonemes are not mutilated before reaching Gemini STT.
-                is_speaking = (
-                    self.session.state == "speaking"
-                    or len(self.output_buffer) > 0
-                    or (self._send_audio_task is not None and not self._send_audio_task.done())
-                )
-                gate_threshold = 350 if is_speaking else 80
-                rms = audioop.rms(pcm8k, 2)
-                if rms < gate_threshold:
-                    pcm8k = b"\x00" * len(pcm8k)
+                # NOISE GATE — only active when ENABLE_NOISE_GATE is True
+                if ENABLE_NOISE_GATE:
+                    is_speaking = (
+                        self.session.state == "speaking"
+                        or len(self.output_buffer) > 0
+                        or (self._send_audio_task is not None and not self._send_audio_task.done())
+                    )
+                    gate_threshold = 350 if is_speaking else 80
+                    rms = audioop.rms(pcm8k, 2)
+                    if rms < gate_threshold:
+                        pcm8k = b"\x00" * len(pcm8k)
 
                 pcm16k, self._inbound_resample_state = resample_pcm16(
                     pcm8k, 8000, 16000, self._inbound_resample_state
                 )
                 
-                if getattr(self, 'vad_iterator', None):
+                # SILERO VAD — only active when ENABLE_LOCAL_VAD is True
+                if ENABLE_LOCAL_VAD and getattr(self, 'vad_iterator', None):
                     self.vad_buffer.extend(pcm16k)
                     # Bounded buffer ceiling to prevent latency spiral (max 1 second)
                     if len(self.vad_buffer) > 32000:
@@ -868,7 +930,7 @@ class VoicePipelineOrchestrator:
                             if speech_dict:
                                 if 'start' in speech_dict:
                                     print("🗣️ [VAD] Local speech start detected.")
-                                    if is_speaking:
+                                    if self.session.state == "speaking" or len(self.output_buffer) > 0 or (self._send_audio_task is not None and not self._send_audio_task.done()):
                                         print("⚠️ [VAD] Genuine candidate barge-in detected during AI playback! Triggering local interruption.")
                                         asyncio.create_task(self._on_live_interruption())
                                 if 'end' in speech_dict:

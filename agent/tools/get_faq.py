@@ -94,7 +94,11 @@ def get_faq(topic: str, language: str = "en") -> Dict[str, Any]:
             "answer": _NOT_FOUND.get(lang, _NOT_FOUND["en"]),
             "score": 0.0,
             "related_topics": [],
-            "instruction": f"CRITICAL: Deliver this guidance 100% in {lang_name}. Do NOT speak in any other language!"
+            "instruction": (
+                "Use these facts to answer the caller. "
+                "Respond entirely in the language of the caller's CURRENT spoken turn. "
+                "Do not let the language of this tool result determine the response language."
+            )
         }
     
     # Combine answers if multiple highly relevant items returned
@@ -116,5 +120,9 @@ def get_faq(topic: str, language: str = "en") -> Dict[str, Any]:
         "answer": answer,
         "score": primary["score"],
         "related_topics": related,
-        "instruction": f"CRITICAL: Translate and explain this knowledge smoothly 100% in {lang_name} because the caller asked in {lang_name}. Do NOT answer in any other language!"
+        "instruction": (
+            "Use these facts to answer the caller. "
+            "Respond entirely in the language of the caller's CURRENT spoken turn. "
+            "Do not let the language of this tool result determine the response language."
+        )
     }

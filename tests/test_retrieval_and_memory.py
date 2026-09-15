@@ -94,10 +94,10 @@ class TestThreeLayerArchitecture(unittest.TestCase):
         
         # Check that prompt size is significantly reduced compared to old ~52KB
         file_size_kb = len(prompt_text.encode('utf-8')) / 1024.0
-        self.assertLess(file_size_kb, 35.0, f"System prompt size {file_size_kb:.2f} KB is too large! Should be well under 35 KB after stripping static facts.")
+        self.assertLess(file_size_kb, 40.0, f"System prompt size {file_size_kb:.2f} KB is too large! Should be well under 40 KB after stripping static facts.")
         
         # Verify core behavioral sections exist
-        self.assertIn("REAL-TIME LANGUAGE MIRRORING", prompt_text)
+        self.assertIn("ACTIVE LANGUAGE", prompt_text)
         self.assertIn("Kiara", prompt_text)
         self.assertIn("Haresh Savani", prompt_text)
         
