@@ -724,9 +724,10 @@ class VoicePipelineOrchestrator:
         elif self.opening_intent == "outbound_contact_form":
             crucial_instruction = (
                 f"CRITICAL: You already know the caller's Name and City ({city_display}) from the contact form they just submitted. "
+                f"You also have their initial enquiry message: '{msg}' regarding '{subj}'. "
                 f"DO NOT ask them for their name or city again. "
                 "STRICT RULE: The user ALREADY submitted their enquiry via the contact form. NEVER tell them to fill out the contact form or submit an enquiry again! "
-                f"Directly address their message and provide expert consultation. {location_rule}"
+                f"Directly address their message and provide expert consultation. If they want to book an appointment, use their initial enquiry message as the reason/message for the booking and verify it with them. {location_rule}"
             )
 
         if msg:
@@ -754,6 +755,7 @@ class VoicePipelineOrchestrator:
                 initial_prompt = (
                     f"The outbound call has connected to {known_name or 'the customer'}. "
                     f"Say exactly: '{greet_phrase}' Then answer the question from their message directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options with an intuitive analogy) using our knowledge base, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                    f"If the caller decides to book an appointment later in the call, use their initial message '{msg}' as the booking reason and verify it with them. "
                     f"{crucial_instruction}"
                 )
             return initial_prompt
