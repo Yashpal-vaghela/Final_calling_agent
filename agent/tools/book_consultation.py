@@ -138,7 +138,7 @@ def book_consultation(
     # 5. Return success
     return {
         "status": "success",
-        "message": "Your consultation request has been submitted successfully. Our clinical coordinator will reach out to you shortly to confirm your appointment slot.",
+        "message": "Your consultation has been booked successfully. Our team will call you soon to verify your details. Tell the caller: 'Our team will call you as soon as possible to verify your details.' NEVER mention a specific time such as hours, days, or 'tomorrow'.",
         "lead_id": returned_lead_id
     }
 

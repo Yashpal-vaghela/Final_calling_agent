@@ -631,6 +631,16 @@ class VoicePipelineOrchestrator:
                 city=city,
                 doctor_name=doctor
             )
+
+            # --- RE-BOOKING FIX ---
+            # After a successful cancellation, clear the lead_id so that if the
+            # user decides to re-book in the same call, book_consultation will
+            # send lead_id="" to the CRM, which creates a BRAND NEW booking
+            # record instead of trying to "update" the already-cancelled record.
+            if res.get("status") == "success":
+                self.lead_id = ""
+                self._consultation_booked = False
+                self._cancellation_save_attempted = False  # allow cancel guard to reset for safety
             return res
 
         def live_book_consultation(**kwargs):
