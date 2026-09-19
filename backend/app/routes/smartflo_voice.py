@@ -257,6 +257,13 @@ async def smartflo_media_stream(
             elif event_type == "media":
                 if orchestrator is not None:
                     media_obj = data.get("media", {})
+                    # Low-volume diagnostic logging for the first 5 media events to inspect metadata keys
+                    if not hasattr(websocket, "_media_log_count"):
+                        websocket._media_log_count = 0
+                    if websocket._media_log_count < 5:
+                        websocket._media_log_count += 1
+                        meta_info = {k: v for k, v in media_obj.items() if k != "payload"}
+                        print(f"[Smartflo WS Media Diagnostic #{websocket._media_log_count}] top_keys={list(data.keys())}, media_meta={meta_info}")
                     payload = media_obj.get("payload", "")
                     if payload:
                         await orchestrator.handle_media_payload(payload)

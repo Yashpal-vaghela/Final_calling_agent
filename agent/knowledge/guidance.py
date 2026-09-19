@@ -59,6 +59,8 @@ class GuidanceRetriever(KnowledgeRetriever):
 
                     for item_id, item_data in data.items():
                         if not isinstance(item_data, dict):
+                            if item_id in ("usage_rule", "metadata", "description", "version"):
+                                continue
                             print(f"[GuidanceRetriever] Warning: Item '{item_id}' in {filename} is not a dict. Skipping.")
                             continue
                         
@@ -123,17 +125,20 @@ class GuidanceRetriever(KnowledgeRetriever):
 
     def _tokenize(self, text: str) -> List[str]:
         """Tokenizes text, cleans symbols, and filters common stop words."""
-        words = re.findall(r"\w+(?:\.\w+)?", text.lower())
+        clean_text = text.replace("_", " ").replace("-", " ")
+        words = re.findall(r"\w+(?:\.\w+)?", clean_text.lower())
         return [w for w in words if w not in _STOP_WORDS and len(w) > 1]
 
     def _match_keyword(self, kw: str, query_lower: str) -> bool:
         """Checks if a keyword phrase occurs in the query with safe boundary matching."""
         if not kw:
             return False
-        start_boundary = r"\b" if kw[0].isalnum() else ""
-        end_boundary = r"\b" if kw[-1].isalnum() else ""
-        pattern = start_boundary + re.escape(kw) + end_boundary
-        return bool(re.search(pattern, query_lower))
+        normalized_query = query_lower.replace("_", " ").replace("-", " ")
+        normalized_kw = kw.replace("_", " ").replace("-", " ")
+        start_boundary = r"\b" if normalized_kw[0].isalnum() else ""
+        end_boundary = r"\b" if normalized_kw[-1].isalnum() else ""
+        pattern = start_boundary + re.escape(normalized_kw) + end_boundary
+        return bool(re.search(pattern, normalized_query))
 
     def retrieve(
         self,
@@ -180,7 +185,12 @@ class GuidanceRetriever(KnowledgeRetriever):
             if topic and (topic.strip().lower() == item_topic or topic.strip().lower() == item_intent):
                 score += 1.5
 
-            # 2. Keyword matching with Phrase Weighting
+            # 2. Exact item ID / direct concept match bonus
+            clean_id = item_id.replace("_", " ").lower()
+            if clean_id in query_tokens or clean_id == query_lower.strip() or self._match_keyword(item_id, query_lower):
+                score += 2.5
+
+            # 3. Keyword matching with Phrase Weighting
             # Exact word-boundary matches get significantly higher weight for multi-word phrases
             for kw in keywords:
                 if self._match_keyword(kw, query_lower):
@@ -194,7 +204,7 @@ class GuidanceRetriever(KnowledgeRetriever):
                     else:
                         score += 2.2 + 0.3 * (word_count - 3)
 
-            # 3. Token Overlap Density (handles scattered matches & semantic affinity)
+            # 4. Token Overlap Density (handles scattered matches & semantic affinity)
             if keywords or item_intent:
                 item_text_for_tokens = item_topic + " " + item_intent + " " + " ".join(keywords)
                 item_tokens = set(self._tokenize(item_text_for_tokens))

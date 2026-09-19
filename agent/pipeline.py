@@ -12,6 +12,9 @@ import audioop
 import time
 import re
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 import numpy as np
 try:
@@ -24,17 +27,8 @@ from agent.streaming.gemini_live_stream import GeminiLiveStreamClient
 from agent.session.call_session import CallSession
 from agent.audio.codecs import resample_pcm16
 
-# ─────────────────────────────────────────────────────────────────────────────
-# LANGUAGE EXPERIMENT FLAGS  — flip these to switch between Phase A and Hybrid
-# ─────────────────────────────────────────────────────────────────────────────
-# Phase A (Gemini-only):  ENABLE_LOCAL_VAD = False, ENABLE_NOISE_GATE = False,
-#                         ENABLE_PYTHON_LANGUAGE_STEERING = False
-# Hybrid Mode:            ENABLE_PYTHON_LANGUAGE_STEERING = True
-#                         (also re-enable VAD / gate only if needed)
 ENABLE_LOCAL_VAD = False
 ENABLE_NOISE_GATE = False
-# Hybrid Mode: Python LID sends a language directive to Gemini Live on every detected switch.
-ENABLE_PYTHON_LANGUAGE_STEERING = True
 
 
 class VoicePipelineOrchestrator:
@@ -145,18 +139,18 @@ class VoicePipelineOrchestrator:
         # Initialize session and Gemini Live client
         initial_lang = self.caller_context.get("preferred_language", "en") if self.caller_context else "en"
         self.session = CallSession(call_id=call_id, opening_intent=opening_intent, lead_id=lead_id, preferred_language=initial_lang)
-        # Phase A LID observer session (isolated from production session state)
-        self.lid_observer = CallSession(call_id=f"{call_id}:lid", preferred_language="en")
-        if self.caller_context:
-            self.session.update_user_info(
-                name=self.caller_context.get("name"),
-                phone=self.caller_context.get("phone"),
-                email=self.caller_context.get("email"),
-                city=self.caller_context.get("city"),
-                subject=self.caller_context.get("subject"),
-                intent=self.caller_context.get("subject") or opening_intent,
-                notes=self.caller_context.get("message") or self.caller_context.get("notes")
-            )
+        
+        # Seed known caller information from trusted context into session immediately
+        self.session.update_user_info(
+            name=self.lead_name or self.caller_context.get("name"),
+            phone=self.lead_phone or self.caller_context.get("phone"),
+            email=self.lead_email or self.caller_context.get("email"),
+            city=self.lead_city or self.caller_context.get("city"),
+            subject=self.lead_subject or self.caller_context.get("subject"),
+            intent=self.lead_subject or self.caller_context.get("subject") or opening_intent,
+            notes=self.lead_message or self.caller_context.get("message") or self.caller_context.get("notes")
+        )
+        self._pending_phone: Optional[str] = None
         print(f"[Orchestrator] Pipeline Mode: LIVE (using GeminiLiveStreamClient for CallSid: {call_id})")
         
         self.gemini_live_client = None
@@ -185,7 +179,13 @@ class VoicePipelineOrchestrator:
         self._waiting_for_user_since: Optional[float] = None
         self._silence_state: str = "active"
         self._silence_monitor_task: Optional[asyncio.Task] = None
-        self._turns_since_last_directive: int = 0
+        
+        # Session resumption and safe rotation state
+        self._current_resumption_handle: Optional[str] = None
+        self._gemini_rotation_pending: bool = False
+        self._gemini_rotation_reason: Optional[str] = None
+        self._gemini_reconnect_event: asyncio.Event = asyncio.Event()
+        self._gemini_reconnecting: bool = False
         
         self.vad_buffer = bytearray()
         if SileroVAD:
@@ -197,10 +197,54 @@ class VoicePipelineOrchestrator:
         else:
             self.vad_iterator = None
 
+    def update_canonical_identity(
+        self,
+        name: Optional[str] = None,
+        phone: Optional[str] = None,
+        city: Optional[str] = None,
+        email: Optional[str] = None
+    ) -> None:
+        """Maintains strict synchronization of canonical identity across all layers."""
+        if name:
+            clean_name = name.strip()
+            self.lead_name = clean_name
+            self.caller_context["name"] = clean_name
+            parts = clean_name.split(maxsplit=1)
+            self.caller_context["first_name"] = parts[0]
+            self.caller_context["last_name"] = parts[1] if len(parts) > 1 else "."
+            if hasattr(self, "session") and self.session:
+                self.session.update_user_info(name=clean_name)
+        if phone:
+            clean_phone = phone.strip()
+            self.lead_phone = clean_phone
+            self.caller_context["phone"] = clean_phone
+            if hasattr(self, "session") and self.session:
+                self.session.update_user_info(phone=clean_phone)
+        if city:
+            clean_city = city.strip()
+            self.lead_city = clean_city
+            self.caller_context["city"] = clean_city
+            if hasattr(self, "session") and self.session:
+                self.session.update_user_info(city=clean_city)
+        if email:
+            clean_email = email.strip()
+            self.lead_email = clean_email
+            self.caller_context["email"] = clean_email
+            if hasattr(self, "session") and self.session:
+                self.session.update_user_info(email=clean_email)
 
     async def _silence_monitor(self) -> None:
         """Hybrid background task to monitor for user silence. Acts as a safety net if no VAD/events trigger for 15s."""
         while self._is_running and not self._stopped:
+            if (
+                getattr(self, "_gemini_reconnecting", False)
+                or self.gemini_live_client is None
+                or getattr(self.gemini_live_client, "_closed", False)
+                or not getattr(self.gemini_live_client, "_is_connected", False)
+            ):
+                await asyncio.sleep(0.25)
+                continue
+
             # If audio is currently playing or actively streaming through buffer, do not count user silence
             if len(self.output_buffer) > 0 or (self._send_audio_task and not self._send_audio_task.done()):
                 await asyncio.sleep(1)
@@ -215,21 +259,18 @@ class VoicePipelineOrchestrator:
                     self._silence_state = "stage_1_prompting"
                     self._waiting_for_user_since = None
                     
-                    # Dynamically determine the caller's active spoken language
-                    active_lang = "en"
-                    if getattr(self, "session", None):
-                        pref = getattr(self.session, "preferred_language", "en")
-                        if pref in ("hi", "gu", "en"):
-                            active_lang = pref
-
-                    if active_lang == "hi":
-                        silence_text = "The user has been silent for 15 seconds. In your refined female voice, politely ask in natural Hindi: 'नमस्ते, क्या आप अभी भी कॉल पर हैं?' and wait for their reply."
-                    elif active_lang == "gu":
-                        silence_text = "The user has been silent for 15 seconds. In your refined female voice, politely ask in natural Gujarati: 'નમસ્તે, શું તમે હજુ લાઈન પર છો?' and wait for their reply."
-                    else:
-                        silence_text = "The user has been silent for 15 seconds. In your refined female voice, politely ask in English: 'Hello, are you still there?' and wait for their reply."
+                    silence_text = (
+                        "The caller has been silent for 15 seconds. "
+                        "Politely ask whether they are still on the call. "
+                        "Use the same language the caller was most recently speaking in this conversation. "
+                        "If the caller was speaking English, use polished Indian-English. "
+                        "If Hindi, use natural conversational Hindi with feminine grammar. "
+                        "If Gujarati, use natural conversational Gujarati with feminine grammar. "
+                        "Do not change the conversational language merely because this instruction itself is written in English. "
+                        "Then wait for the caller's reply."
+                    )
                     
-                    print(f"[Orchestrator] User silent for {elapsed:.1f}s. Sending language-aware ({active_lang}) silence check.")
+                    print(f"[Silence Monitor] 15s silence; asking Gemini to continue in caller's current conversational language")
                     if getattr(self, "gemini_live_client", None):
                         await self.gemini_live_client.send_text(silence_text)
 
@@ -428,12 +469,7 @@ class VoicePipelineOrchestrator:
             print("[Orchestrator] Ignoring interruption: Initial greeting is still playing.")
             return
 
-        # Early-turn echo guard: Ignore interruptions within first 1.8s of assistant speaking
-        if self._turn_start_time and (time.time() - self._turn_start_time < 1.8):
-            print(f"[Orchestrator] Ignoring early-turn echo interruption ({time.time() - self._turn_start_time:.2f}s < 1.8s)")
-            return
-
-        print("[Orchestrator] Gemini Live server interruption received! Clearing output buffer and media stream.")
+        print("[Gemini Interruption] Server interruption confirmed; clearing queued Smartflo audio")
         if getattr(self, "_send_audio_task", None) and not self._send_audio_task.done():
             self._send_audio_task.cancel()
         self.output_buffer.clear()
@@ -466,72 +502,6 @@ class VoicePipelineOrchestrator:
             if text:
                 print(f"[Live STT Transcript] User: '{text}'")
                 self.session.add_transcript(text, role="user")
-                
-                # Directly evaluate the finalized transcript string via observer session
-                if not hasattr(self, "lid_observer") or self.lid_observer is None:
-                    self.lid_observer = CallSession(f"{self.call_id}:lid", preferred_language="en")
-                prev_lang = self.lid_observer.preferred_language
-                language_switched = self.lid_observer.update_language_if_requested(text)
-                detected_lang = self.lid_observer.preferred_language
-
-                print(f"  [DIAGNOSTIC] Python LID Observer: switched={language_switched}. "
-                      f"Prev: {prev_lang}, Now: {detected_lang}")
-
-                if ENABLE_PYTHON_LANGUAGE_STEERING:
-                    # Capture session language BEFORE updating — used to detect effective changes
-                    # even when the lid_observer itself didn't switch (e.g. Issue 1: lid was already
-                    # at "en" but session.preferred_language was "gu" from last turn).
-                    prev_session_lang = self.session.preferred_language
-                    self.session.preferred_language = detected_lang
-                    lang_name = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}.get(detected_lang, detected_lang)
-
-                    # --- Tier 1: Native Unicode script detection ---
-                    # Gujarati Unicode [\u0A80-\u0AFF] is always 100% Gujarati.
-                    # Devanagari [\u0900-\u097F] is usually Hindi BUT Gujarati speech is frequently
-                    # transcribed as Devanagari by STT due to shared phonetics. If LID also says
-                    # Gujarati (detected_lang=="gu"), trust the LID — it's the STT confusion case.
-                    has_gujarati_script = bool(re.search(r'[\u0A80-\u0AFF]', text))
-                    has_devanagari_script = bool(re.search(r'[\u0900-\u097F]', text))
-                    script_lang = None
-                    if has_gujarati_script:
-                        script_lang = "Gujarati"              # Always unambiguous
-                    elif has_devanagari_script:
-                        if detected_lang == "gu":
-                            # STT confusion: Gujarati audio → Devanagari transcript
-                            # LID detected Gujarati markers (che, nathi, etc.) → trust LID
-                            script_lang = "Gujarati"
-                        else:
-                            script_lang = "Hindi"             # Devanagari + LID agrees Hindi
-
-                    # --- Tier 2: Effective language change (with or without LID switch) ---
-                    # Fires when: (a) lid_observer switched, OR (b) session language is newly
-                    # different from previous turn's detected lang (catches Issue 1).
-                    session_language_changed = (prev_session_lang != detected_lang)
-
-                    if script_lang and self.gemini_live_client:
-                        # Script-confirmed directive
-                        reason = "STT Gujarati→Devanagari confusion" if (script_lang == "Gujarati" and has_devanagari_script) else "native script"
-                        print(f"[Orchestrator] [HYBRID MODE] {reason} → {script_lang}. Sending directive.")
-                        directive = (
-                            f"[LANGUAGE CONTROL] The caller's audio confirms {script_lang}. "
-                            f"Respond ONLY in {script_lang}. "
-                            f"Do not switch to any other language."
-                        )
-                        await self.gemini_live_client.send_text(directive)
-                    elif (language_switched or session_language_changed) and self.gemini_live_client:
-                        # Latin-switch or session-level effective language change
-                        reason = "LID switch" if language_switched else "session lang change"
-                        print(f"[Orchestrator] [HYBRID MODE] {reason} → {lang_name}. Sending directive.")
-                        directive = (
-                            f"[LANGUAGE CONTROL] "
-                            f"The caller's current spoken language is {lang_name}. "
-                            f"Always respond in {lang_name} only. "
-                            f"Do not switch to any other language."
-                        )
-                        await self.gemini_live_client.send_text(directive)
-                elif language_switched:
-                    lang_name = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}.get(detected_lang, detected_lang)
-                    print(f"[Orchestrator] [OBSERVER] Python detected → {lang_name} (no directive sent in Phase A)")
         elif event_type == "gemini":
             text = event.get("text", "").strip()
             if text:
@@ -540,13 +510,25 @@ class VoicePipelineOrchestrator:
         elif event_type == "turn_complete":
             print("[Orchestrator] Live turn complete; output buffer draining to caller.")
             self._assistant_turn_complete = True
-        elif event_type == "error":
-            print(f"[Orchestrator Error] Gemini Live event error: {event.get('error')}")
-            if hasattr(self, "_gemini_reconnect_event") and ("1008" in str(event.get('error')) or "GoAway" in str(event.get('error')) or "Connection aborted" in str(event.get('error'))):
-                self._gemini_reconnect_event.set()
+        elif event_type == "session_resumption_update":
+            handle = event.get("handle")
+            resumable = event.get("resumable", False)
+            if resumable and handle:
+                self._current_resumption_handle = handle
+                logger.debug("[Gemini Resumption] Saved resumable handle: handle_available=True")
         elif event_type == "go_away":
-            print(f"[Orchestrator] Received go_away event. Triggering seamless reconnect.")
+            time_left = event.get("time_left")
+            print(f"[Gemini Rotation] Received go_away event: time_left={time_left}")
+            self._gemini_rotation_pending = True
+            self._gemini_rotation_reason = f"go_away(time_left={time_left})"
             if hasattr(self, "_gemini_reconnect_event"):
+                self._gemini_reconnect_event.set()
+        elif event_type == "error":
+            err_str = str(event.get('error', ''))
+            print(f"[Orchestrator Error] Gemini Live event error: {err_str}")
+            if hasattr(self, "_gemini_reconnect_event") and ("1008" in err_str or "GoAway" in err_str or "Connection aborted" in err_str or "closed" in err_str.lower()):
+                self._gemini_rotation_pending = True
+                self._gemini_rotation_reason = f"error({err_str[:40]})"
                 self._gemini_reconnect_event.set()
     def _build_live_tool_mapping(self):
         from agent.tools.check_city_coverage import check_city_coverage
@@ -563,7 +545,6 @@ class VoicePipelineOrchestrator:
 
         def live_capture_lead(**kwargs):
             kwargs.setdefault("call_id", self.call_id)
-            kwargs.setdefault("preferred_language", self.session.preferred_language)
             res = capture_lead(**kwargs)
             self.session.update_user_info(
                 name=kwargs.get("name"),
@@ -593,13 +574,6 @@ class VoicePipelineOrchestrator:
             res = human_handoff(**kwargs)
             self.session.booking_stage = "handoff"
             return res
-
-        def live_set_caller_language(**kwargs):
-            lang = kwargs.get("language")
-            if lang:
-                self.session.set_preferred_language(lang)
-                return {"status": "success", "language": lang, "message": f"Language set to {lang}"}
-            return {"status": "error", "message": "No language provided"}
 
         def live_cancel_consultation(**kwargs):
             if not getattr(self, "_cancellation_save_attempted", False):
@@ -643,25 +617,51 @@ class VoicePipelineOrchestrator:
                 self._cancellation_save_attempted = False  # allow cancel guard to reset for safety
             return res
 
+        def live_update_caller_profile(**kwargs):
+            from agent.tools.caller_profile import update_caller_profile
+            lead_id_val = getattr(self, "lead_id", None) or ""
+            kwargs.setdefault("lead_id", lead_id_val)
+            if kwargs.get("confirm_phone") and not kwargs.get("phone") and getattr(self, "_pending_phone", None):
+                kwargs["phone"] = self._pending_phone
+
+            res = update_caller_profile(**kwargs)
+            if res.get("status") == "confirmation_required":
+                self._pending_phone = res.get("phone")
+            elif res.get("status") == "success":
+                self._pending_phone = None
+                new_phone = res.get("phone")
+                new_name = res.get("name")
+                old_phone = self.lead_phone or self.caller_context.get("phone")
+
+                if new_name:
+                    self.update_canonical_identity(name=new_name)
+                if new_phone:
+                    self.update_canonical_identity(phone=new_phone)
+                    from backend.app.services.caller_context import reindex_caller_phone
+                    reindex_caller_phone(old_phone=old_phone, new_phone=new_phone, context_data=self.caller_context)
+            return res
+
         def live_book_consultation(**kwargs):
             # REMOVED the "_consultation_booked" guard here so the agent can send updates.
             
             # Pass lead_id if an earlier booking in this session already registered one.
             # Do NOT fall back to caller_context['id'] which is an internal UUID.
             kwargs["lead_id"] = getattr(self, "lead_id", None) or ""
-            # CRITICAL: Always use form-submitted data for identity fields.
-            full_name = self.caller_context.get("name") or self.lead_name or ""
+            # CRITICAL: Always use canonical form-submitted or confirmed data for identity fields.
+            full_name = self.caller_context.get("name") or self.lead_name or (self.session.collected_user_info.get("name") if hasattr(self, "session") else "") or ""
             name_parts = full_name.strip().split(maxsplit=1) if full_name.strip() else []
             
-            first_name = self.caller_context.get("first_name") or (name_parts[0] if name_parts else "")
-            last_name  = self.caller_context.get("last_name") or (name_parts[1] if len(name_parts) > 1 else "")
+            first_name = self.caller_context.get("first_name") or (name_parts[0] if name_parts else (kwargs.get("first_name", "").strip() or ""))
+            last_name  = self.caller_context.get("last_name") or (name_parts[1] if len(name_parts) > 1 else (kwargs.get("last_name", "").strip() or ""))
             
             if not last_name:
                 last_name = kwargs.get("last_name", "").strip() or "."
             kwargs["first_name"] = first_name
             kwargs["last_name"]  = last_name
-            kwargs["phone"]      = self.caller_context.get("phone", "")
-            kwargs["email"]      = self.caller_context.get("email", "")
+
+            canonical_phone = self.caller_context.get("phone") or self.lead_phone or (self.session.collected_user_info.get("phone") if hasattr(self, "session") else "") or kwargs.get("phone", "")
+            kwargs["phone"]      = canonical_phone
+            kwargs["email"]      = self.caller_context.get("email") or self.lead_email or (self.session.collected_user_info.get("email") if hasattr(self, "session") else "") or kwargs.get("email", "")
             
             requested_city = kwargs.get("city", "").strip()
             if not requested_city:
@@ -682,10 +682,11 @@ class VoicePipelineOrchestrator:
             "check_city_coverage": live_check_city,
             "get_faq": live_get_faq,
             "human_handoff": live_handoff,
-            "set_caller_language": live_set_caller_language,
             "book_consultation": live_book_consultation,
             "cancel_consultation": live_cancel_consultation,
             "check_dentist": live_check_dentist,
+            "update_caller_profile": live_update_caller_profile,
+            "update_contact_details": live_update_caller_profile,
         }
 
     def _build_initial_prompt(self) -> str:
@@ -790,6 +791,40 @@ class VoicePipelineOrchestrator:
                 )
             return initial_prompt
 
+    def _is_safe_to_rotate_gemini(self) -> bool:
+        """
+        Determines whether it is safe to rotate the Gemini Live WebSocket.
+        A safe boundary means:
+        - Call is still running
+        - Session is NOT currently speaking
+        - Telephony output_buffer is empty
+        - _send_audio_task is None or done
+        - Assistant turn is complete / no audio actively being generated
+        """
+        if not self._is_running or self._stopped:
+            return True
+        is_speaking = (self.session.state == "speaking")
+        buffer_has_audio = (len(self.output_buffer) > 0)
+        send_task_active = (self._send_audio_task is not None and not self._send_audio_task.done())
+        model_generating = not getattr(self, "_assistant_turn_complete", True) and (is_speaking or buffer_has_audio)
+        
+        return not (is_speaking or buffer_has_audio or send_task_active or model_generating)
+
+    async def _wait_for_safe_rotation(self, max_wait_seconds: float = 12.0) -> None:
+        """
+        Waits for in-progress assistant speech and outbound audio buffer to drain before rotating Gemini.
+        Prevents cutting Kiara mid-sentence while honoring lifetime limits.
+        """
+        print("[Gemini Rotation] Waiting for safe turn boundary")
+        start_wait = time.monotonic()
+        while time.monotonic() - start_wait < max_wait_seconds:
+            if not self._is_running or self._stopped:
+                break
+            if self._is_safe_to_rotate_gemini():
+                break
+            await asyncio.sleep(0.1)
+        print("[Gemini Rotation] Output drained; rotating Gemini connection")
+
     async def _manage_gemini_connection(self) -> None:
         is_reconnect = False
         while self._is_running and not self._stopped:
@@ -797,18 +832,60 @@ class VoicePipelineOrchestrator:
                 if not is_reconnect:
                     self._timings['gemini_connecting'] = time.monotonic()
 
+                # Determine resumption handle and initial prompt for this connection
+                resumption_handle = self._current_resumption_handle if is_reconnect else None
+                fallback_prompt = None
+                fallback_turn_complete = None
+
+                if is_reconnect:
+                    if resumption_handle:
+                        print(f"[Gemini Resumption] Reconnecting with saved session handle: handle_available=True")
+                    else:
+                        print("[Gemini Resumption Warning] No resumption handle available; using silent conversation prefill fallback.")
+                        # Build silent context prefill for fallback (turn_complete=False)
+                        full_history = self.session.conversation_history if self.session.conversation_history else []
+                        history_lines = []
+                        for t in full_history:
+                            role = "USER" if t.get('role') == "user" else "KIARA (YOU)"
+                            text = (t.get('content') or t.get('text') or '').strip()
+                            if text:
+                                history_lines.append(f"{role}: {text}")
+                        history_text = "\n".join(history_lines) if history_lines else "No previous turns recorded."
+                        caller_name = self.lead_name or "the caller"
+                        fallback_prompt = (
+                            f"[CALL CONTINUATION FALLBACK CONTEXT]\n\n"
+                            f"This is a continuation of the same phone call.\n\n"
+                            f"Retain the caller identity, booking state and recent conversation context below.\n\n"
+                            f"LANGUAGE RULE:\n"
+                            f"Do not assume English, Hindi or Gujarati from metadata.\n"
+                            f"Do not speak yet.\n"
+                            f"Wait silently for the caller's next actual spoken audio.\n"
+                            f"On their next clear spoken turn, respond in the language of that CURRENT spoken turn.\n"
+                            f"If the next turn is only a short or ambiguous acknowledgment, infer the conversational language from the recent dialogue context.\n\n"
+                            f"Caller Name: {caller_name}\n"
+                            f"Current Booking Stage: {self.session.booking_stage}\n"
+                            f"Session State: {self.session.get_session_context_prompt()}\n"
+                            f"Recent conversation context:\n{history_text}\n\n"
+                            f"[INSTRUCTION] Retain this background context silently. Do NOT speak. Do NOT generate any output. Wait silently for the caller's next spoken audio turn."
+                        )
+                        fallback_turn_complete = False
+
                 self.gemini_live_client = GeminiLiveStreamClient(
                     call_id=self.call_id,
                     preferred_language="multi",
                     initial_greeting=None if is_reconnect else self.greeting,
-                    initial_prompt=None if is_reconnect else self._build_initial_prompt(),
+                    initial_prompt=fallback_prompt if (is_reconnect and not resumption_handle) else (None if is_reconnect else self._build_initial_prompt()),
+                    turn_complete_on_start=fallback_turn_complete,
                     tool_mapping=self._build_live_tool_mapping(),
                     caller_context=self.caller_context,
                     opening_intent=self.opening_intent,
-                    session=self.session
+                    session=self.session,
+                    resumption_handle=resumption_handle
                 )
                 
                 self._gemini_reconnect_event.clear()
+                self._gemini_rotation_pending = False
+                self._gemini_rotation_reason = None
                 
                 await self.gemini_live_client.connect(
                     audio_output_callback=self._on_live_audio_output,
@@ -816,47 +893,45 @@ class VoicePipelineOrchestrator:
                     event_callback=self._on_live_event,
                 )
 
+                wait_fn = getattr(self.gemini_live_client, "wait_until_ready", None)
+                if callable(wait_fn):
+                    try:
+                        res = wait_fn(timeout=10.0)
+                        if inspect.isawaitable(res):
+                            await res
+                    except Exception as e:
+                        print(f"[Gemini Live Stream Warning] wait_until_ready timed out or error: {e}")
+
                 if not is_reconnect:
                     self._timings['gemini_connected'] = time.monotonic()
-
-                client = self.gemini_live_client
-                if is_reconnect:
-                    full_history = self.session.conversation_history if self.session.conversation_history else []
-                    
-                    history_lines = []
-                    for t in full_history:
-                        role = "USER" if t.get('role') == "user" else "KIARA (YOU)"
-                        text = (t.get('content') or t.get('text') or '').strip()
-                        if text:
-                            history_lines.append(f"{role}: {text}")
-                    
-                    history_text = "\n".join(history_lines) if history_lines else "No previous turns recorded."
-                    session_memory = self.session.get_session_context_prompt()
-                    caller_name = self.lead_name or "the caller"
-                    lang_label = {"en": "English", "hi": "Hindi", "gu": "Gujarati"}.get(self.session.preferred_language, "English")
-                    reconnect_prompt = (
-                        f"You are continuing an ongoing phone call as Kiara with {caller_name}. "
-                        "Maintain your exact calm, warm, refined, and confident tone and natural speaking pitch at all times. "
-                        f"ACTIVE LANGUAGE: The caller was speaking {lang_label}. Respond in the language the caller is currently speaking. "
-                        "Support Gujarati, Hindi, and English. Follow a genuine language switch immediately; do not remain locked to the previous language. "
-                        "Do NOT say hello again or greet the caller. Retain full context of the ongoing discussion.\n\n"
-                        f"{session_memory}\n\n"
-                        f"--- RECENT CONVERSATION CONTEXT ---\n"
-                        f"{history_text}\n"
-                        f"--- END CONTEXT ---\n\n"
-                        "Stay in character and wait for the caller to speak, or smoothly continue where you left off."
-                    )
-                    if client:
-                        await client.send_text(reconnect_prompt)
+                else:
+                    if resumption_handle:
+                        print("[Gemini Resumption] Session resumed successfully")
+                    self._gemini_reconnecting = False
+                    self._silence_state = "stage_1_waiting"
+                    self._waiting_for_user_since = time.time()
                 
                 try:
                     await asyncio.wait_for(self._gemini_reconnect_event.wait(), timeout=540.0)
-                    print("[Orchestrator] Gemini reconnection event triggered (go_away or error).")
+                    reason = self._gemini_rotation_reason or "server event / go_away"
+                    print(f"[Gemini Rotation] Rotation requested (reason: {reason}).")
                 except asyncio.TimeoutError:
-                    print("[Orchestrator] 9-minute proactive reconnect triggered.")
+                    print("[Gemini Rotation] Rotation requested (reason: 9-minute proactive reconnect timer expired).")
                 
                 if self._is_running and not self._stopped:
+                    self._gemini_reconnecting = True
+                    # Kill the old silence countdown.
+                    self._waiting_for_user_since = None
+                    self._silence_state = "active"
+
+                    # Safe turn boundary wait: ensure assistant is not speaking and buffer is drained
+                    await self._wait_for_safe_rotation(max_wait_seconds=12.0)
+
                     old_client = self.gemini_live_client
+                    if old_client and old_client.latest_valid_resumption_handle:
+                        self._current_resumption_handle = old_client.latest_valid_resumption_handle
+                        print(f"[Gemini Resumption] Saved resumable handle from active client: handle_available=True")
+
                     self.gemini_live_client = None
                     if old_client:
                         await old_client.finish()
@@ -864,6 +939,7 @@ class VoicePipelineOrchestrator:
                     print("[Orchestrator] Spawning new Gemini Live session for seamless continuation...")
                     
             except Exception as e:
+                self._gemini_reconnecting = False
                 print(f"[Orchestrator] Failed to manage Gemini Live connection: {e}")
                 if not is_reconnect:
                     await self.stop()
@@ -882,7 +958,7 @@ class VoicePipelineOrchestrator:
         self._waiting_for_user_since = None
         self._silence_state = "active"
         self._silence_monitor_task = asyncio.create_task(self._silence_monitor())
-        self._gemini_reconnect_event = asyncio.Event()
+        self._gemini_reconnect_event.clear()
         
         print(f"[Orchestrator] Starting voice pipeline for CallSid: {self.call_id}, StreamSid: {self.stream_sid}")
         

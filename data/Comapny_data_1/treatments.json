@@ -10,7 +10,7 @@
       "Smile design treatment explain karo",
       "What does smile design involve"
     ],
-    "facts": "Smile design is a personalised cosmetic dental treatment that improves the appearance and function of your smile. It combines science, aesthetics, and clinical expertise to create a smile that looks healthy and natural. Smile design improves more than tooth colour or shape — it evaluates how teeth interact with lips, facial proportions, and natural expressions. Depending on individual needs, it may involve veneers, crowns, teeth whitening, orthodontics, dental implants, or gum contouring, all planned together as one coordinated treatment.",
+    "facts": "Smile design is a personalised cosmetic dental treatment that improves the appearance and function of your smile. It combines science, aesthetics, and clinical expertise to create a smile that looks healthy and natural. Smile design improves more than tooth colour or shape — it evaluates how teeth interact with lips, facial proportions, and natural expressions. Depending on individual needs, it may involve veneers, crowns, teeth whitening, advanced clear aligners, dental implants, or gum contouring, all planned together as one coordinated treatment. Ultimate Smile Design does not use traditional metal or wire braces.",
     "details": "The process begins with a detailed evaluation of oral health, tooth shape, size, colour, alignment, bite, and gum health. Digital technology including photographs, scans, and smile simulations allows both dentist and patient to visualise the expected outcome before treatment begins. The best results come from understanding how teeth interact with the lips, facial proportions, and natural expressions — a smile should look attractive during natural expressions, not only during treatment planning."
   },
   "smile_correction": {
@@ -26,7 +26,7 @@
       "Fix stained teeth"
     ],
     "facts": "Smile correction — also called a smile makeover or smile designing — is a personalised cosmetic dental treatment plan to enhance the appearance of teeth and smile. Unlike a single procedure, a smile makeover is custom-tailored and typically combines several treatments to address multiple issues at once. It can fix tooth discolouration, crooked or misaligned teeth, gaps and spacing issues, chipped or worn teeth, gummy smiles, missing teeth, bite problems, and uneven tooth sizes.",
-    "details": "Treatments commonly involved include professional teeth whitening for surface stains, advanced clear aligners for alignment (a superior alternative to traditional braces), dental veneers for chips and discolouration, cosmetic bonding for minor repairs, gum contouring for gummy smiles, dental crowns for damaged teeth, and dental implants for missing teeth. The timeline varies — simple procedures can be completed in weeks, while complex cases involving orthodontics or implants may take several months. Most procedures are minimally invasive and performed with local anaesthesia when necessary."
+    "details": "Treatments commonly involved include professional teeth whitening for surface stains, advanced clear aligners for alignment (a superior alternative to traditional braces), dental veneers for chips and discolouration, cosmetic bonding for minor repairs, gum contouring for gummy smiles, dental crowns for damaged teeth, and dental implants for missing teeth. The timeline varies — simple procedures can be completed in weeks, while complex cases involving clear aligners or implants may take several months. Ultimate Smile Design does not offer traditional metal braces. Most procedures are minimally invasive and performed with local anaesthesia when necessary."
   },
   "smile_makeover": {
     "intent": "smile_makeover",
@@ -40,7 +40,7 @@
       "Full smile transformation"
     ],
     "facts": "A smile makeover is a fully customised treatment plan that improves the beauty, health, and function of your smile. It is not just one procedure — the dentist combines several cosmetic and restorative treatments to match individual goals and deliver a balanced, natural-looking result. A smile makeover can solve chipped, cracked, or worn teeth, stained or discoloured teeth, crooked or crowded teeth, gaps between teeth, uneven gum lines, missing teeth, and bite problems.",
-    "details": "The process follows clear steps: Step 1 is consultation and smile analysis with photos, X-rays, and scans. Step 2 is digital smile design to create a preview of the future smile. Step 3 is treatment planning where dentist and patient choose the right treatments and sequence. Step 4 is step-by-step treatment — typically whitening first, then orthodontics if needed, then restorations like veneers or crowns, and finally gum contouring. Step 5 is recovery and final adjustments. Simple cases may take 2 to 6 weeks, while complex cases with orthodontics or implants may take several months."
+    "details": "The process follows clear steps: Step 1 is consultation and smile analysis with photos, X-rays, and scans. Step 2 is digital smile design to create a preview of the future smile. Step 3 is treatment planning where dentist and patient choose the right treatments and sequence. Step 4 is step-by-step treatment — typically whitening first, then advanced clear aligners if needed, then restorations like veneers or crowns, and finally gum contouring. Step 5 is recovery and final adjustments. Simple cases may take 2 to 6 weeks, while complex cases with clear aligners or implants may take several months. Traditional wire/metal braces are never used."
   },
   "teeth_whitening_vs_smile_design": {
     "intent": "teeth_whitening_vs_smile_design",
@@ -83,5 +83,26 @@
     ],
     "facts": "Smile design offers benefits that go far beyond just looks. A well-designed smile can boost confidence, improve the function of teeth, and support better oral health. A beautiful smile is often the first thing noticed in social interactions and plays a key role in making first impressions. A healthy smile can boost self-confidence, enhance mood, and impact overall well-being.",
     "details": "Key benefits include: enhanced appearance with balance and symmetry in teeth and gums; boosted self-confidence and quality of life — people with attractive smiles tend to smile more often and feel less self-conscious; better oral function through straightening misaligned teeth, restoring worn or missing teeth, and correcting bite for improved chewing and speech; improved oral health because well-aligned teeth are easier to clean, lowering the risk of cavities and gum disease; and personalised, predictable results through digital imaging and 3D planning that lets patients preview the outcome before treatment begins."
+  },
+  "do_you_do_braces": {
+    "intent": "do_you_do_braces",
+    "topic": "Does Ultimate Smile Design do braces or types of braces?",
+    "keywords": [
+      "Do you do braces",
+      "Do you offer braces",
+      "Kya aap braces lagate ho",
+      "Braces karte ho kya",
+      "Types of braces",
+      "Metal braces",
+      "Ceramic braces",
+      "Lingual braces",
+      "Which braces do you have",
+      "Braces available hai kya",
+      "Teeth braces cost",
+      "Braces lagwane hain",
+      "braces"
+    ],
+    "facts": "Ultimate Smile Design NEVER offers, discusses, or recommends any type of braces (metal, ceramic, lingual, or wire). Instead, Ultimate Smile Design exclusively uses advanced Clear Aligners (AD-Aligners) and handcrafted porcelain veneers as an invisible, comfortable, and superior alternative to straighten teeth without wires or brackets.",
+    "details": "We do not do any traditional braces. At Ultimate Smile Design, we exclusively use advanced Clear Aligners (AD-Aligners) and ultra-thin veneers to straighten teeth invisibly and comfortably without metal brackets or wires."
   }
 }

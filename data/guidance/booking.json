@@ -11,7 +11,7 @@
       "clinic"
     ],
     "guidance": "When They Want to Book:",
-    "script": "Certainly. I'll help arrange the next step and connect you with the appropriate Authorized USD Smile Designer for your city."
+    "script": "For NEW inbound callers wanting to book: 'Certainly. I'll help arrange the next step...' (Note: Do not ask for their city if you already know it from an outbound form.)"
   },
   "ready_to_decide": {
     "intent": "closing_booking",
@@ -52,6 +52,17 @@
   "cta_strong": {
     "intent": "booking_cta_strong",
     "guidance": "Strong CTA:",
-    "script": "Certainly. I'll take your name and city, and our team can arrange the consultation from there."
+    "script": "For inbound callers ready to proceed: 'Certainly. I'll note your details and our team can arrange the consultation from there.' (Warning: Never ask for name/city if already known.)"
+  },
+  "existing_booking_inquiry": {
+    "intent": "existing_booking_inquiry",
+    "keywords": [
+      "confirm",
+      "already booked",
+      "status",
+      "when is my"
+    ],
+    "guidance": "When an outbound caller asks about their existing booking:",
+    "script": "Your booking request is already registered with our partner clinic in your city, and our team will contact you shortly to confirm the details."
   }
 }

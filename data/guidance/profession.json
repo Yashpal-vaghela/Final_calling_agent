@@ -1,0 +1,465 @@
+{
+  "receptionist": {
+    "intent": "profession_smile_connection_receptionist",
+    "keywords": [
+      "receptionist"
+    ],
+    "reframe": "As a receptionist, you meet new people almost every day, and your smile is often part of their first impression of you. You may already look confident and professional, but your smile should feel like it belongs with your personality too. Think of it as the welcome sign of a place—the first thing people notice. That's why we focus on creating a smile that feels natural to you.",
+    "guidance": "Smile = welcome sign / first impression"
+  },
+  "salesperson": {
+    "intent": "profession_smile_connection_salesperson",
+    "keywords": [
+      "salesperson"
+    ],
+    "reframe": "As a salesperson, you meet new people, build relationships and create first impressions every day. Your smile is part of that interaction. Think of it like your presentation—you want every part of your presentation to represent you naturally. That's why we design the smile around your face and personality, rather than simply making the teeth look good.",
+    "guidance": "Smile = presentation"
+  },
+  "teacher": {
+    "intent": "profession_smile_connection_teacher",
+    "keywords": [
+      "teacher"
+    ],
+    "reframe": "As a teacher, you spend your day speaking, explaining and connecting with people. Your expressions and smile naturally become part of how you communicate. Think of your smile as another part of your communication. We focus on making it feel natural with your face and personality, so it supports the way you naturally express yourself.",
+    "guidance": "Smile = communication"
+  },
+  "doctor": {
+    "intent": "profession_smile_connection_doctor",
+    "keywords": [
+      "doctor"
+    ],
+    "reframe": "As a doctor, people look to you for confidence, trust and reassurance. You communicate with patients face-to-face every day. Your smile is part of that first connection. We focus on creating something natural and balanced that complements your professional personality rather than simply creating perfect-looking teeth.",
+    "guidance": "Smile = trust and reassurance"
+  },
+  "lawyer": {
+    "intent": "profession_smile_connection_lawyer",
+    "keywords": [
+      "lawyer"
+    ],
+    "reframe": "As a lawyer, confidence and presence are important every time you meet a client or speak in front of people. Think of your smile as part of your professional presence. A personalised Smile Design can make sure your smile complements the confidence and personality you already carry.",
+    "guidance": "Smile = professional presence"
+  },
+  "business_owner": {
+    "intent": "profession_smile_connection_business_owner",
+    "keywords": [
+      "business owner"
+    ],
+    "reframe": "As a business owner, your personality often becomes part of your personal brand. You meet clients, partners and new people all the time. Your smile is part of that personal brand too. Think of it like your business identity—we don't want to copy someone else's; we want it to represent you.",
+    "guidance": "Smile = personal brand"
+  },
+  "real_estate_agent": {
+    "intent": "profession_smile_connection_real_estate_agent",
+    "keywords": [
+      "real estate agent"
+    ],
+    "reframe": "As a real estate agent, you meet new clients, show properties and build trust face-to-face. Think about showing someone a beautiful home—you notice how all the details work together. We take the same approach to your smile, making sure your teeth, gums and overall smile work naturally together.",
+    "guidance": "Smile = a beautiful property where every detail works together"
+  },
+  "hr_professional": {
+    "intent": "profession_smile_connection_hr_professional",
+    "keywords": [
+      "hr professional"
+    ],
+    "reframe": "As an HR professional, you meet and communicate with people every day. Creating a comfortable first connection is a big part of your role. Your smile naturally becomes part of that connection. We focus on creating a smile that complements your personality and helps your natural expression come through.",
+    "guidance": "Smile = human connection"
+  },
+  "flight_attendant": {
+    "intent": "profession_smile_connection_flight_attendant",
+    "keywords": [
+      "flight attendant"
+    ],
+    "reframe": "As a flight attendant, you meet hundreds of people and create a welcoming experience every day. Think of your smile like part of your uniform—it should look polished and professional, but still feel like you. That's the idea behind personalised Smile Design.",
+    "guidance": "Smile = part of the uniform"
+  },
+  "hospitality_professional": {
+    "intent": "profession_smile_connection_hospitality_professional",
+    "keywords": [
+      "hospitality professional",
+      "hospitality / hotel professional"
+    ],
+    "reframe": "In hospitality, you welcome people and create an experience from the moment they arrive. Think of a beautiful hotel—the experience isn't created by one detail, but by everything working together. We look at your smile in the same way, creating harmony between your teeth, gums, facial features and personality.",
+    "guidance": "Smile = complete guest experience"
+  },
+  "model": {
+    "intent": "profession_smile_connection_model",
+    "keywords": [
+      "model"
+    ],
+    "reframe": "As a model, your face is part of your profession, so even small details can influence your overall appearance. Think of your smile as the finishing detail of a photograph. It shouldn't overpower your face—it should complement it naturally. That's what personalised Smile Design focuses on.",
+    "guidance": "Smile = finishing detail in photography"
+  },
+  "actor": {
+    "intent": "profession_smile_connection_actor",
+    "keywords": [
+      "actor"
+    ],
+    "reframe": "As an actor, your face and expressions are part of how you tell a story. Your smile needs to work naturally with those expressions. That's why we don't simply focus on creating beautiful teeth—we focus on creating a smile that belongs to your face and personality.",
+    "guidance": "Smile = part of storytelling"
+  },
+  "influencer": {
+    "intent": "profession_smile_connection_influencer",
+    "keywords": [
+      "influencer"
+    ],
+    "reframe": "As an influencer, your face and smile are often part of your content and personal identity. Think of your smile like your visual signature. Just like your signature represents you, your smile should feel uniquely yours. That's the philosophy we follow at USD.",
+    "guidance": "Smile = visual signature"
+  },
+  "content_creator": {
+    "intent": "profession_smile_connection_content_creator",
+    "keywords": [
+      "content creator"
+    ],
+    "reframe": "As a content creator, you're constantly communicating through a camera, so your expressions and smile naturally become part of your identity. Think of your smile like part of your on-camera style. It should complement your face and personality instead of looking like something copied from someone else.",
+    "guidance": "Smile = on-camera identity"
+  },
+  "public_speaker": {
+    "intent": "profession_smile_connection_public_speaker",
+    "keywords": [
+      "public speaker"
+    ],
+    "reframe": "As a public speaker, people don't just hear your words—they see your expressions, confidence and presence. Your smile is part of that presence. We design it to work naturally with your face and expressions, so it supports your personality rather than distracting from it.",
+    "guidance": "Smile = stage presence"
+  },
+  "consultant": {
+    "intent": "profession_smile_connection_consultant",
+    "keywords": [
+      "consultant"
+    ],
+    "reframe": "As a consultant, you help people make important decisions, so confidence and trust are naturally part of your professional presence. Your smile is part of that first connection. We focus on designing one that feels natural to you and complements the personality you bring into the room.",
+    "guidance": "Smile = credibility and trust"
+  },
+  "sales_executive": {
+    "intent": "profession_smile_connection_sales_executive",
+    "keywords": [
+      "sales executive"
+    ],
+    "reframe": "As a sales executive, you meet new people and create relationships every day. Think of your smile as part of your first conversation—it speaks before you do. That's why we focus on a smile that feels natural, confident and aligned with your personality.",
+    "guidance": "Smile = first conversation"
+  },
+  "marketing_professional": {
+    "intent": "profession_smile_connection_marketing_professional",
+    "keywords": [
+      "marketing professional"
+    ],
+    "reframe": "In marketing, you know that presentation changes how people perceive something. Your smile is part of your own presentation too. But instead of following a standard design, we create one that complements your face, personality and natural expressions.",
+    "guidance": "Smile = personal presentation"
+  },
+  "banker_financial_advisor": {
+    "intent": "profession_smile_connection_banker_financial_advisor",
+    "keywords": [
+      "banker financial advisor",
+      "banker / financial advisor"
+    ],
+    "reframe": "When you're dealing with someone's finances, trust and confidence matter from the very first interaction. Your smile is part of that first impression. We focus on creating a natural smile that complements the professional confidence you already bring to your clients.",
+    "guidance": "Smile = trust"
+  },
+  "professor_lecturer": {
+    "intent": "profession_smile_connection_professor_lecturer",
+    "keywords": [
+      "professor lecturer",
+      "professor / lecturer"
+    ],
+    "reframe": "As a professor, you spend so much time speaking, explaining and engaging with people. Your expressions become part of how you communicate. We believe your smile should work naturally with those expressions and complement the personality people see when you teach.",
+    "guidance": "Smile = expression + communication"
+  },
+  "wedding_event_professional": {
+    "intent": "profession_smile_connection_wedding_event_professional",
+    "keywords": [
+      "wedding event professional",
+      "wedding / event professional"
+    ],
+    "reframe": "You spend your time creating beautiful experiences for other people, so you understand how much the small details matter. Your smile is one of those details in your own appearance. We look at the complete picture, creating harmony rather than focusing on just one tooth.",
+    "guidance": "Smile = details creating a complete experience"
+  },
+  "photographer": {
+    "intent": "profession_smile_connection_photographer",
+    "keywords": [
+      "photographer"
+    ],
+    "reframe": "As a photographer, you already know that lighting, angles and small details can completely change how someone looks. We look at your smile with the same attention to detail. It's not just about your teeth, but how your teeth, gums, smile line and facial features come together.",
+    "guidance": "Smile = photography composition"
+  },
+  "fashion_designer": {
+    "intent": "profession_smile_connection_fashion_designer",
+    "keywords": [
+      "fashion designer"
+    ],
+    "reframe": "As a fashion designer, you understand that something can look beautiful but still not be right for the person wearing it. Smile Design follows the same idea. We don't choose a standard smile—we design one that complements your face, personality and overall appearance.",
+    "guidance": "Smile = custom-designed clothing"
+  },
+  "architect": {
+    "intent": "profession_smile_connection_architect",
+    "keywords": [
+      "architect"
+    ],
+    "reframe": "As an architect, you know that great design isn't just about making something beautiful—proportion, balance and harmony matter. We apply that same thinking to your smile. We look at the proportions and relationship between your teeth, gums, smile and face to create something that feels naturally balanced.",
+    "guidance": "Smile = architecture / proportion + balance"
+  },
+  "interior_designer": {
+    "intent": "profession_smile_connection_interior_designer",
+    "keywords": [
+      "interior designer"
+    ],
+    "reframe": "As an interior designer, you know that one beautiful piece doesn't automatically make the whole room beautiful. The colours, proportions and details have to work together. We look at your smile the same way—your teeth, gums, colour, proportions and facial features should all work together naturally.",
+    "guidance": "Smile = interior design"
+  },
+  "engineer": {
+    "intent": "profession_smile_connection_engineer",
+    "keywords": [
+      "engineer"
+    ],
+    "reframe": "As an engineer, you know that precision matters. Even a small difference can affect how the whole system works. Smile Design is also about more than one tooth. We look at how the different elements of your smile work together to create overall balance and harmony.",
+    "guidance": "Smile = engineered system"
+  },
+  "software_developer": {
+    "intent": "profession_smile_connection_software_developer",
+    "keywords": [
+      "software developer",
+      "software developer / it professional"
+    ],
+    "reframe": "You know how a small change in one part of a system can affect the whole experience. A smile can work the same way. We don't look at just one tooth—we look at the complete smile and how every element works together to create a natural result.",
+    "guidance": "Smile = complete system"
+  },
+  "entrepreneur": {
+    "intent": "profession_smile_connection_entrepreneur",
+    "keywords": [
+      "entrepreneur"
+    ],
+    "reframe": "As an entrepreneur, your personality is often a big part of your identity and how people remember you. Think of your smile as part of your personal brand. It shouldn't look like everyone else's—it should complement the person behind the brand.",
+    "guidance": "Smile = personal identity / brand"
+  },
+  "real_estate_developer": {
+    "intent": "profession_smile_connection_real_estate_developer",
+    "keywords": [
+      "real estate developer"
+    ],
+    "reframe": "You understand better than most that great results come from planning the complete picture, not just one part. That's exactly how we approach Smile Design. We look at the complete smile and plan how the different elements should work together naturally.",
+    "guidance": "Smile = complete project planning"
+  },
+  "founder": {
+    "intent": "profession_smile_connection_founder",
+    "keywords": [
+      "founder"
+    ],
+    "reframe": "As a founder, people often connect with you before they connect with your company. Your personality becomes part of the brand. Your smile is part of that personal identity too, so we focus on creating something that feels naturally yours rather than copying someone else's smile.",
+    "guidance": "Smile = founder's personal brand"
+  },
+  "profession_meta": {
+    "intent": "profession_smile_connection_meta",
+    "title": "Profession and Smile Connection - Personalized Smile Design Philosophy",
+    "purpose": "When a user mentions their profession or says they work in a profession where appearance, communication, confidence, presentation, or meeting people is important, connect their profession naturally with their smile and explain how personalised Smile Design can complement their professional personality.\n",
+    "master_rules": [
+      "Never assume the user's smile is bad.",
+      "Never make the user feel insecure or judged.",
+      "Do not say they NEED treatment.",
+      "Make the connection personal, warm and conversational.",
+      "Use the profession-specific analogy.",
+      "Do not give every profession response unless that profession is relevant.",
+      "Do not simply mention the user's profession and immediately sell Smile Design.",
+      "First connect their profession to something they genuinely experience (\"Because of what you do every day, you already understand why this matters.\").",
+      "Profession is not the trigger to sell; profession is the bridge to make the Smile Design philosophy personally meaningful."
+    ],
+    "exploratory_prompt": {
+      "en": "By the way, what do you do for work?",
+      "hi": "वैसे, अगर मैं पूछ सकती हूँ, आप क्या काम करते हैं?",
+      "gu": "તેમ છતાં, જો હું પૂછી શકું, તમે શું કામ કરો છો?"
+    },
+    "keywords": [
+      "profession",
+      "job",
+      "work",
+      "what do you do",
+      "career",
+      "receptionist",
+      "sales",
+      "salesperson",
+      "teacher",
+      "doctor",
+      "lawyer",
+      "advocate",
+      "business owner",
+      "real estate",
+      "hr",
+      "flight attendant",
+      "cabin crew",
+      "hotel",
+      "hospitality",
+      "model",
+      "actor",
+      "actress",
+      "influencer",
+      "content creator",
+      "youtuber",
+      "public speaker",
+      "consultant",
+      "sales executive",
+      "marketing",
+      "banker",
+      "financial advisor",
+      "professor",
+      "lecturer",
+      "wedding planner",
+      "event manager",
+      "photographer",
+      "fashion designer",
+      "architect",
+      "interior designer",
+      "engineer",
+      "software engineer",
+      "developer",
+      "coder",
+      "it professional",
+      "entrepreneur",
+      "real estate developer",
+      "founder",
+      "freelancer",
+      "self-employed",
+      "politician",
+      "elected official",
+      "leader",
+      "mla",
+      "mp",
+      "journalist",
+      "tv anchor",
+      "news reporter",
+      "anchor",
+      "reporter",
+      "chef",
+      "restaurant owner",
+      "cook",
+      "culinary",
+      "athlete",
+      "sportsperson",
+      "player",
+      "sportsman",
+      "yoga instructor",
+      "life coach",
+      "coach",
+      "trainer",
+      "yoga teacher",
+      "ca",
+      "chartered accountant",
+      "accountant",
+      "c.a.",
+      "homemaker",
+      "housewife",
+      "student",
+      "college student",
+      "retired",
+      "senior citizen",
+      "retiree",
+      "nurse",
+      "paramedic",
+      "healthcare worker",
+      "sister"
+    ]
+  },
+  "politician": {
+    "intent": "profession_smile_connection_politician",
+    "keywords": [
+      "politician",
+      "elected official",
+      "leader",
+      "mla",
+      "mp"
+    ],
+    "reframe": "As a public figure, trust and approachability are essential. Your smile is often the first thing people connect with when they see you. We focus on creating a smile that feels naturally warm and trustworthy, complementing the confidence you bring to your role.",
+    "guidance": "Smile = public trust & approachability"
+  },
+  "journalist": {
+    "intent": "profession_smile_connection_journalist",
+    "keywords": [
+      "journalist",
+      "tv anchor",
+      "news reporter",
+      "anchor",
+      "reporter"
+    ],
+    "reframe": "Being on camera and communicating with the public means your expressions are always in focus. Think of your smile as a key part of your on-air presence. We want to design a smile that looks completely natural on camera and supports your professional credibility.",
+    "guidance": "Smile = on-air presence"
+  },
+  "chef": {
+    "intent": "profession_smile_connection_chef",
+    "keywords": [
+      "chef",
+      "restaurant owner",
+      "cook",
+      "culinary"
+    ],
+    "reframe": "As someone who creates beautiful culinary experiences, you know that the final presentation matters just as much as the ingredients. Your smile is like that final presentation. We look at the harmony of your face and teeth to create something that feels complete and naturally yours.",
+    "guidance": "Smile = the final presentation of a dish"
+  },
+  "athlete": {
+    "intent": "profession_smile_connection_athlete",
+    "keywords": [
+      "athlete",
+      "sportsperson",
+      "player",
+      "sportsman"
+    ],
+    "reframe": "As an athlete, performance and presence go hand-in-hand. Your smile is part of that championship presence, whether you're celebrating a win or meeting fans. We focus on a smile that matches your natural energy and confidence.",
+    "guidance": "Smile = performance & championship presence"
+  },
+  "yoga_instructor": {
+    "intent": "profession_smile_connection_yoga_instructor",
+    "keywords": [
+      "yoga instructor",
+      "life coach",
+      "coach",
+      "trainer",
+      "yoga teacher"
+    ],
+    "reframe": "You spend your time helping people find balance and calm. Your smile is often how that inner calm is externally expressed to your clients. We focus on creating a naturally balanced smile that complements your peaceful and positive energy.",
+    "guidance": "Smile = inner calm externally expressed"
+  },
+  "ca": {
+    "intent": "profession_smile_connection_ca",
+    "keywords": [
+      "ca",
+      "chartered accountant",
+      "accountant",
+      "c.a."
+    ],
+    "reframe": "In your profession, accuracy, trust, and professionalism are everything. When you meet clients, your smile is a big part of that professional connection. We focus on designing a smile that feels natural and complements the confidence people expect from you.",
+    "guidance": "Smile = accuracy + professionalism"
+  },
+  "homemaker": {
+    "intent": "profession_smile_connection_homemaker",
+    "keywords": [
+      "homemaker",
+      "housewife"
+    ],
+    "reframe": "As a homemaker, you are the heart of your family, and your smile brings warmth to everyone around you. Think of your smile as that natural warmth. We want to make sure your smile feels exactly like you—natural, comforting, and confident.",
+    "guidance": "Smile = the warmth of a home"
+  },
+  "student": {
+    "intent": "profession_smile_connection_student",
+    "keywords": [
+      "student",
+      "college student"
+    ],
+    "reframe": "As a student, you're building your future and preparing for new opportunities. Confidence is a big part of that journey, and your smile is often your first impression. We focus on a natural design that helps you feel completely confident as you step into your career.",
+    "guidance": "Smile = confidence in building your future"
+  },
+  "retired": {
+    "intent": "profession_smile_connection_retired",
+    "keywords": [
+      "retired",
+      "senior citizen",
+      "retiree"
+    ],
+    "reframe": "This chapter of your life is all about enjoying your time, your family, and your freedom. Your smile should reflect the joy of this stage. We focus on creating a comfortable, natural-looking smile that helps you feel youthful and confident every day.",
+    "guidance": "Smile = the joy of the next chapter"
+  },
+  "nurse": {
+    "intent": "profession_smile_connection_nurse",
+    "keywords": [
+      "nurse",
+      "paramedic",
+      "healthcare worker",
+      "sister"
+    ],
+    "reframe": "As a nurse, you provide care and comfort to people when they need it most. Your smile is often the first sign of human compassion they see. We want to design a smile that naturally complements the warmth and care you bring to your patients.",
+    "guidance": "Smile = frontline human compassion"
+  }
+}

@@ -192,8 +192,7 @@ def chat(messages: list, system_prompt: str, call_id: str, session: Any = None) 
 
     if last_message != "[START_CALL]":
         if session:
-            session.update_language_if_requested(last_message)
-            lang = session.preferred_language
+            lang = getattr(session, "preferred_language", "en")
             topic = session.last_discussed_topic
         else:
             lang = "en"

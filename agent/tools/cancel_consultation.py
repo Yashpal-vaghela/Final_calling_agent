@@ -2,8 +2,7 @@ import json
 import httpx
 from typing import Optional
 
-API_URL = "http://192.168.0.161:5252/api/consult-with-dentist/"
-
+API_URL = "http://192.168.0.161:5050/api/consult-with-dentist/"
 def cancel_consultation(
     lead_id: str, 
     reason: str = "",
@@ -19,7 +18,7 @@ def cancel_consultation(
     ONLY call this tool AFTER the user has explicitly insisted on canceling, 
     and AFTER you have first asked them why they want to cancel and attempted to help them.
     """
-    clean_lead_id = int(str(lead_id).strip()) if (lead_id and str(lead_id).strip().isdigit()) else ""
+    clean_lead_id = int(lead_id.strip()) if (lead_id and lead_id.strip().isdigit()) else ""
     
     if not clean_lead_id:
         return {

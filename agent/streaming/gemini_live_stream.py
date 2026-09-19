@@ -20,10 +20,84 @@ from backend.app.settings import settings
 logger = logging.getLogger(__name__)
 
 MANDATORY_TRANSCRIPTION_INSTRUCTION = (
-    "When generating text transcripts of the user's speech, always transcribe Hindi speech into native Devanagari script. "
-    "Always transcribe Gujarati speech into native Gujarati script. Never use English letters to spell out Hindi or Gujarati words. "
-    "Always reply in the exact language the user is speaking."
+    "TRANSCRIPTION POLICY — TRANSCRIPTION ONLY. "
+    "When Hindi speech is clearly recognized, transcribe it in Devanagari where practical. "
+    "When Gujarati speech is clearly recognized, transcribe it in Gujarati script where practical. "
+    "Do not use transcript script alone to determine the spoken response language. "
+    "Gujarati audio may sometimes be transcribed in Devanagari or imperfect English text. "
+    "Response-language selection is controlled only by the TURN LANGUAGE ROUTER."
 )
+
+TURN_LANGUAGE_ROUTER = """
+### TURN LANGUAGE ROUTER — HIGHEST PRIORITY CONVERSATIONAL RULE
+
+Before generating EVERY response, silently determine TURN_LANGUAGE
+from the caller's CURRENT raw spoken audio.
+
+- Clear English speech -> ENGLISH
+- Clear Hindi speech -> HINDI
+- Clear Gujarati speech -> GUJARATI
+- ONLY if the current utterance is genuinely language-neutral or acoustically unclear
+  -> preserve the language of the most recent CLEAR caller utterance.
+
+Recompute TURN_LANGUAGE independently on EVERY caller turn.
+
+The previous assistant language NEVER locks the current response.
+The previous caller language NEVER overrides a clear current utterance.
+The opening greeting language NEVER becomes a conversational default.
+The number of previous turns in another language is irrelevant.
+
+English dental vocabulary inside Hindi or Gujarati is language-neutral.
+Words such as appointment, doctor, dentist, treatment, braces, aligners,
+veneers, crown, implant, bridge, scan, cost, price, consultation,
+and smile design do NOT make a Hindi or Gujarati sentence ambiguous.
+
+Determine TURN_LANGUAGE from the COMPLETE spoken utterance:
+grammar, function words, pronunciation, cadence, and meaning.
+Do NOT use transcript script alone as the deciding signal.
+
+Examples:
+- "तो आज treatment हमारा करेगा कौन?" -> HINDI
+- "મારે braces કરાવવાના છે." -> GUJARATI
+- "Can you explain that again?" -> ENGLISH
+
+After deciding the language for THIS caller turn:
+
+RESPOND IN TURN_LANGUAGE.
+YOU MUST RESPOND UNMISTAKABLY IN TURN_LANGUAGE FOR THE ENTIRE RESPONSE.
+
+Do not mention TURN_LANGUAGE.
+Do not explain that a language switch occurred.
+Do not continue in the previous response language after a clear switch.
+
+This language lock applies ONLY to the CURRENT response.
+
+On the NEXT caller turn, discard the previous TURN_LANGUAGE decision
+and determine the language again from the new raw spoken audio.
+
+Tool results, JSON, CRM data, caller name, city, form metadata,
+opening greeting language, prompt examples, scripts, analogies,
+suggested phrasing, retrieved knowledge, and prior assistant wording
+NEVER determine TURN_LANGUAGE.
+
+### PROMPT-CONTENT LANGUAGE SAFETY
+
+Examples, scripts, quoted sample replies, analogies, persona examples,
+knowledge snippets, tool results, guidance text, and previous assistant wording
+are CONTENT REFERENCES ONLY.
+
+They NEVER determine TURN_LANGUAGE.
+
+If any example, analogy, script, retrieved fact, or suggested phrasing is written
+in a language different from TURN_LANGUAGE, preserve its meaning but translate
+and naturally express the ENTIRE spoken response in TURN_LANGUAGE.
+
+Proper names and brand names such as Rolex, Bentley, Cartier,
+Ultimate Smile Design, and Haresh Savani may remain unchanged.
+
+If any lower-priority instruction or example conflicts with TURN_LANGUAGE,
+TURN_LANGUAGE ALWAYS WINS.
+"""
 
 from agent.tools.check_city_coverage import check_city_coverage
 from agent.tools.capture_lead import capture_lead
@@ -87,6 +161,8 @@ class GeminiLiveStreamClient:
         caller_context: Optional[Dict[str, Any]] = None,
         opening_intent: Optional[str] = None,
         session: Optional[Any] = None,
+        resumption_handle: Optional[str] = None,
+        turn_complete_on_start: Optional[bool] = None,
     ):
         self.call_id = call_id or "live-session"
         self.session = session
@@ -96,6 +172,9 @@ class GeminiLiveStreamClient:
         self.opening_intent = opening_intent or self.caller_context.get("opening_intent")
         self.initial_greeting = initial_greeting
         self.initial_prompt = initial_prompt
+        self.turn_complete_on_start = turn_complete_on_start
+        self._resumption_handle: Optional[str] = resumption_handle
+        self._latest_valid_resumption_handle: Optional[str] = resumption_handle
         
         # Load credentials and configuration from settings with fallback to environment
         self.api_key = getattr(settings, "GEMINI_API_KEY", None) or os.environ.get("GEMINI_API_KEY")
@@ -138,70 +217,24 @@ class GeminiLiveStreamClient:
             )
 
         if system_instruction is not None:
-            self.system_instruction = f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n{intent_directive}{system_instruction}"
-        else:
-            base_prompt = build_system_prompt(self.opening_intent or "inbound")
             self.system_instruction = (
                 f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n"
+                f"{TURN_LANGUAGE_ROUTER}\n\n"
                 f"{intent_directive}"
-                "### ACTIVE LANGUAGE — HIGHEST PRIORITY (SPEECH-TO-SPEECH AUDIO RULES)\n\n"
+                f"{system_instruction}"
+            )
+        else:
+            base_prompt = build_system_prompt(self.opening_intent or "inbound")
 
-                "RULE 1 — AUDIO LOYALTY (MOST IMPORTANT):\n"
-                "This is a real-time bidirectional voice call. You receive the caller's raw audio directly. "
-                "You MUST determine language from the caller's spoken voice acoustics, phonetics, rhythm, "
-                "and colloquial expressions — NOT from the transcribed text alone. "
-                "If the caller's audio sounds Gujarati, respond in Gujarati. "
-                "If the caller's audio sounds Hindi, respond in Hindi. "
-                "If the caller's audio sounds English, respond in English. "
-                "Trust what you HEAR, not what the transcript text shows.\n\n"
-
-                "RULE 2 — GUJARATI vs HINDI STT CONFUSION (CRITICAL ANTI-DRIFT):\n"
-                "Speech-to-text systems frequently misrecognize Gujarati speech and produce output in "
-                "Devanagari script (Hindi script) or English-looking words, because Gujarati and Hindi "
-                "share similar phonetics. For example, the Gujarati word 'નહિ' (nahi) may appear in the "
-                "transcript as 'नहीं' (Hindi), or Gujarati speech may be transcribed as random English words. "
-                "ABSOLUTE RULE: If the audio phonetics, cadence, and regional accent sound Gujarati, "
-                "YOU MUST RESPOND IN GUJARATI — even if the transcript text looks like Hindi Devanagari "
-                "or garbled English. NEVER drift from Gujarati to Hindi based on a transcript alone. "
-                "Key Gujarati audio markers to recognize: words ending in -che, -chho, -chhu, -nathi, "
-                "expressions like 'kevu che', 'shu joie', 'thase', 'chhe', 'tamne', 'amne'.\n\n"
-
-                "RULE 3 — LANGUAGE SWITCH ONLY ON FULL SENTENCE:\n"
-                "ONLY switch language when the caller speaks a COMPLETE, FULL sentence in a genuinely "
-                "different language. NEVER switch on:\n"
-                "- Single words or very short phrases (ha, haan, okay, yes, no, theek hai, saru)\n"
-                "- English dental loanwords (appointment, veneers, smile design, clinic, consultation, "
-                "  dentist, cost, doctor, treatment, crown) — these appear in Gujarati and Hindi speech naturally\n"
-                "- Brief interruptions or audio fragments\n"
-                "- The caller's city name (a caller in Surat may speak Hindi or English)\n"
-                "- Tool result content (tools always return English internally — ignore for language detection)\n\n"
-
-                "RULE 4 — ESTABLISHED LANGUAGE LOYALTY:\n"
-                "Once you have identified the caller's language from their speech pattern across 2+ turns, "
-                "maintain that language firmly. Do not flip back and forth. "
-                "Information returned by tools may be in English internally — always translate and deliver "
-                "in the caller's current spoken language.\n\n"
-                "### FEMALE IDENTITY & GRAMMAR (STRICT)\n"
-                "You are Kiara, a female consultant. NEVER use masculine verbs for yourself:\n"
-                "- Hindi: Always use feminine endings ('बता सकती हूँ', 'देख रही हूँ', 'करूँगी', 'आपकी कंसल्टेंट'). Never say 'बता सकता हूँ'.\n"
-                "- Gujarati: Always use feminine endings (-ઈ): say 'હું તમારી કન્સલ્ટન્ટ છું' (tamari, never tamaro), 'હું સમજી ગઈ' / 'મને સમજાયું' (NEVER 'સમજી ગયો' or 'ગયો'), and 'જોઈ/કરી રહી છું' (NEVER 'રહ્યો છું').\n\n"
-                "### MANDATORY KNOWLEDGE BASE RETRIEVAL\n"
-                "Call the `get_faq` tool to answer questions about prices, procedures, or doctors. Never guess without calling the tool.\n\n"
-                "### STRICT DENTIST PRIVACY & VERIFICATION RULES (ZERO TOLERANCE):\n"
-                "- NEVER VOLUNTEER OR OFFER DENTIST NAMES: You are strictly forbidden from offering to tell, suggesting, or listing doctor names. NEVER say 'Should I tell you another doctor's name?' or 'કે પછી કોઈ બીજા ડોક્ટરનું નામ જણાવું?' or 'क्या मैं किसी दूसरे डॉक्टर का नाम बताऊँ?'. If the user asks who our doctors are or asks for doctor names, say: 'I cannot provide dentist names over the phone. You can explore all our authorized smile designers on ultimatesmiledesign.com.'\n"
-                "- MANDATORY CHECK ON CALLER-PROVIDED DENTIST NAME: If the caller mentions, asks about, or gives a doctor's name (e.g. 'Is Rajesh Patel your dentist?', 'Dr. Hetal Buch che Surat ma?'): You MUST call the `check_dentist` tool immediately with their name and city! NEVER answer 'Yes he is in [City]' or confirm a dentist without the tool result! If the tool returns is_authorized=False, you MUST tell the caller clearly that Dr. [Name] is NOT an authorized Ultimate Smile Design specialist in [City], and offer to proceed without specifying a doctor.\n\n"
-                "### MANDATORY TOOL EXECUTION FOR BOOKING (ZERO SPEECH-ONLY HALLUCINATIONS):\n"
-                "- Whenever you ask the caller: 'Shall I submit your consultation request?' (or 'શું તમે ચોક્કસ ડૉક્ટર વગર રિક્વેસ્ટ સબમિટ કરવા માંગો છો?' / 'Shall I proceed without a doctor?') AND the caller replies with 'હા', 'हां', 'yes', 'sure', 'go ahead', 'બુક કરો', 'કરો', 'appointment book karo':\n"
-                "  YOU MUST EMIT THE `book_consultation` TOOL CALL ON THAT VERY TURN!\n"
-                "- YOU CANNOT SUBMIT A BOOKING BY SPEAKING. If you do not execute the `book_consultation` tool, the booking DOES NOT EXIST in the admin panel!\n"
-                "- If `check_dentist` returned is_authorized=True (e.g. Dr. Viren K Savani in Surat), call `book_consultation(doctor_name='Dr. Viren K Savani', city='Surat')`.\n"
-                "- If the caller agrees to proceed without a doctor, call `book_consultation(doctor_name='', city='Surat')`.\n"
-                "- NEVER say 'તમારી વિગતો સબમિટ કરી દીધી છે' / 'I have submitted your booking' / 'એપોઇન્ટમેન્ટ બુક થઈ ગઈ છે' UNLESS `book_consultation` was actually called and returned status: 'success'!\n"
-                "- If the caller says they cannot see it in the admin panel ('admin panel par nathi dikhati') or says 'appointment book karo': If book_consultation was not executed yet, call `book_consultation` immediately!\n\n"
+            self.system_instruction = (
+                f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n"
+                f"{TURN_LANGUAGE_ROUTER}\n\n"
+                f"{intent_directive}"
                 f"{base_prompt}\n\n"
                 "---\n\n"
                 "## CURRENT SESSION (LIVE VOICE CALL)\n"
-                "DELIVERY: Speak warmly and concisely with a natural Indian cadence. Enunciate crisply. Answer standard questions directly in 2 to 3 elegant sentences without filler or repeating the caller's question. For comparisons and objections, use 3 to 4 sentences to clearly explain the distinction and include the luxury analogy. Never give abrupt 1-sentence answers, and never ask about budget or price range.\n"
+                "Speak warmly, naturally, and concisely. "
+                "Follow the style, business, tool, and safety rules from the loaded prompt files."
             )
 
         # Input queues and state flags
@@ -221,6 +254,13 @@ class GeminiLiveStreamClient:
         self._session_task: Optional[asyncio.Task] = None
         self._closed: bool = False
         self._is_connected: bool = False
+        self._ready_event: asyncio.Event = asyncio.Event()
+        self._diagnostic_model_started: bool = False
+
+    @property
+    def latest_valid_resumption_handle(self) -> Optional[str]:
+        """Returns the latest valid session resumption handle received from Gemini Live."""
+        return self._latest_valid_resumption_handle
 
     def _build_tool_declarations(self) -> genai_types.Tool:
         """Assembles native tool schemas matching project enterprise tools."""
@@ -259,9 +299,22 @@ class GeminiLiveStreamClient:
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
                 properties={
-                    "topic": genai_types.Schema(type=genai_types.Type.STRING, description="FAQ topic or question keyword: prices, procedures, doctors, course_price, dentist_partner_benefits, process, timeline, cities, cost, before_after, warranty"),
+                    "topic": genai_types.Schema(
+                        type=genai_types.Type.STRING,
+                        description="FAQ topic or question keyword: prices, procedures, doctors, course_price, dentist_partner_benefits, process, timeline, cities, cost, before_after, warranty",
+                    ),
+                    "language": genai_types.Schema(
+                        type=genai_types.Type.STRING,
+                        description=(
+                            "Language of the caller's CURRENT clear spoken turn. "
+                            "Must match TURN_LANGUAGE exactly: en for English, "
+                            "hi for Hindi, gu for Gujarati. "
+                            "Never use the previous conversational language "
+                            "when the caller clearly switches languages."
+                        ),
+                    ),
                 },
-                required=["topic"],
+                required=["topic", "language"],
             ),
         )
 
@@ -340,13 +393,46 @@ class GeminiLiveStreamClient:
             ),
         )
 
+        update_caller_profile_tool = genai_types.FunctionDeclaration(
+            name="update_caller_profile",
+            description=(
+                "Update or correct the caller's profile details (such as name or phone number). "
+                "ONLY use this tool when the caller explicitly provides or corrects their own identity or contact details. "
+                "NEVER invent a caller name. Never infer a caller name from unrelated words. "
+                "Never autocomplete names. Never translate names. "
+                "Never change a trusted form name unless the caller explicitly corrects it (e.g. 'My name isn't Kunal, it is Keval'). "
+                "If a spoken name is uncertain, ask the caller to repeat it rather than guessing. "
+                "It is better to omit the caller's name than use an uncertain or wrong name. "
+                "For phone number changes, pass the complete 10-digit number. "
+                "If the caller only provided a partial number, do NOT call this tool; ask them for the full 10-digit number. "
+                "If the caller has already confirmed the phone number change, pass confirm_phone=True."
+            ),
+            parameters=genai_types.Schema(
+                type=genai_types.Type.OBJECT,
+                properties={
+                    "name": genai_types.Schema(type=genai_types.Type.STRING, description="Caller's explicit full name or corrected name."),
+                    "phone": genai_types.Schema(type=genai_types.Type.STRING, description="Caller's explicit 10-digit phone number."),
+                    "confirm_phone": genai_types.Schema(type=genai_types.Type.BOOLEAN, description="Set to True ONLY if caller has explicitly confirmed the phone update."),
+                },
+                required=[],
+            ),
+        )
+
         return genai_types.Tool(
-            function_declarations=[check_city_tool, get_faq_tool, book_consultation_tool, check_dentist_tool, cancel_consultation_tool]
+            function_declarations=[
+                check_city_tool,
+                get_faq_tool,
+                book_consultation_tool,
+                check_dentist_tool,
+                cancel_consultation_tool,
+                update_caller_profile_tool
+            ]
         )
 
     def _build_default_tool_mapping(self) -> Dict[str, Callable]:
         """Maps schema names to callable execution wrappers supplying session parameters."""
         from agent.tools.check_dentist import check_dentist
+        from agent.tools.caller_profile import update_caller_profile
 
         def wrap_capture_lead(**kwargs):
             kwargs.setdefault("call_id", self.call_id)
@@ -361,19 +447,16 @@ class GeminiLiveStreamClient:
             kwargs.setdefault("call_id", self.call_id)
             return human_handoff(**kwargs)
 
-        def wrap_set_caller_language(**kwargs):
-            # This is a dummy wrapper, pipeline.py will override this with real session state logic
-            return {"status": "success", "language": kwargs.get("language")}
-
         return {
             "capture_lead": wrap_capture_lead,
             "check_city_coverage": check_city_coverage,
             "get_faq": wrap_get_faq,
             "human_handoff": wrap_handoff,
-            "set_caller_language": wrap_set_caller_language,
             "book_consultation": book_consultation,
             "cancel_consultation": cancel_consultation,
             "check_dentist": check_dentist,
+            "update_caller_profile": update_caller_profile,
+            "update_contact_details": update_caller_profile,
         }
 
     async def send_audio(self, audio_chunk: bytes) -> None:
@@ -401,6 +484,17 @@ class GeminiLiveStreamClient:
         setup_instruction = self.system_instruction
         if MANDATORY_TRANSCRIPTION_INSTRUCTION not in setup_instruction:
             setup_instruction = f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n{setup_instruction}"
+
+        # Session Resumption Config
+        if self._resumption_handle:
+            session_resumption_cfg = genai_types.SessionResumptionConfig(handle=self._resumption_handle)
+        else:
+            session_resumption_cfg = genai_types.SessionResumptionConfig()
+
+        # Context Window Compression Config (official SlidingWindow)
+        context_compression_cfg = genai_types.ContextWindowCompressionConfig(
+            sliding_window=genai_types.SlidingWindow()
+        )
 
         config = genai_types.LiveConnectConfig(
             response_modalities=[genai_types.Modality.AUDIO],
@@ -430,94 +524,105 @@ class GeminiLiveStreamClient:
             ),
             output_audio_transcription=genai_types.AudioTranscriptionConfig(),
             realtime_input_config=genai_types.RealtimeInputConfig(
-                turn_coverage="TURN_INCLUDES_ONLY_ACTIVITY",
+                turn_coverage=genai_types.TurnCoverage.TURN_INCLUDES_ONLY_ACTIVITY,
                 automatic_activity_detection=genai_types.AutomaticActivityDetection(
                     disabled=False,
                     prefix_padding_ms=500,
                     silence_duration_ms=650,
                 ),
             ),
+            session_resumption=session_resumption_cfg,
+            context_window_compression=context_compression_cfg,
             tools=self.tools if self.tools else None,
         )
 
-        print(f"[Gemini Live Stream] Connecting to Live API with model={self.model_name}, voice={self.voice_name}")
-        self._is_connected = True
+        print(f"[Gemini Live Stream] Connecting to Live API with model={self.model_name}, voice={self.voice_name}, resumption_handle_available={bool(self._resumption_handle)}")
 
         try:
             async with self.client.aio.live.connect(model=self.model_name, config=config) as session:
+                self._is_connected = True
+                self._ready_event.set()
                 print("[Gemini Live Stream] Session established successfully.")
 
-                # Solution C: Language-neutral anchor turn injected FIRST so Gemini
-                # enters the session in a listen-first state rather than pre-guessing
-                # the caller's language from any context clue.
-                turns = [
-                    genai_types.Content(
-                        parts=[genai_types.Part.from_text(
-                            text=(
-                                "[SESSION ANCHOR] You are starting a live phone call. "
-                                "Do NOT speak yet. Do NOT assume any language. "
-                                "Listen to the caller's first spoken words and immediately match "
-                                "their exact language: Gujarati if they speak Gujarati, "
-                                "Hindi if they speak Hindi, English if they speak English. "
-                                "The caller's city does NOT determine their language."
+                # Only inject anchor turns and caller context on FIRST connection.
+                # When resuming an existing session, the model already has conversational state.
+                if not self._resumption_handle:
+                    # Solution C: Language-neutral anchor turn injected FIRST so Gemini
+                    # enters the session in a listen-first state rather than pre-guessing
+                    # the caller's language from any context clue.
+                    turns: list[genai_types.Content | genai_types.ContentDict] = [
+                        genai_types.Content(
+                            parts=[genai_types.Part.from_text(
+                                text=(
+                                    "[SESSION ANCHOR] This is a live voice call. "
+                                    "Do not infer the caller's language from name, city, form data or metadata. "
+                                    "Listen to the caller's spoken audio. "
+                                    "Respond in the language of their current clear spoken sentence. "
+                                    "For short ambiguous turns, preserve the language from the recent conversation context."
+                                )
+                            )],
+                            role="user",
+                        ),
+                        genai_types.Content(
+                            parts=[genai_types.Part.from_text(
+                                text="Understood. I will listen to the caller's spoken audio and match the language of their current clear sentence, while preserving context on ambiguous turns."
+                            )],
+                            role="model",
+                        ),
+                    ]
+
+                    # Solution B: City is intentionally OMITTED from this context message.
+                    # The city is still available server-side in self.caller_context for tool
+                    # calls (book_consultation, check_city_coverage, check_dentist), but it
+                    # is NOT sent to Gemini here so it cannot bias Gemini's language choice.
+                    if self.caller_context:
+                        name = self.caller_context.get("name", "")
+                        phone = self.caller_context.get("phone", "")
+                        subject = self.caller_context.get("subject", "")
+                        message = self.caller_context.get("message") or self.caller_context.get("notes") or ""
+
+                        name_note = ""
+                        if name:
+                            name_note = f"Caller Name: {name} (Strict Rule: Pronounce caller's name exactly as '{name}'. Do not repeat the caller's name in every sentence).\n"
+
+                        context_msg = (
+                            "<caller_context>\n"
+                            f"Name: {name}\n"
+                            f"{name_note}"
+                            f"Phone: {phone}\n"
+                            f"Inquiry Subject: {subject}\n"
+                            "<caller_message>\n"
+                            f"{message}\n"
+                            "</caller_message>\n"
+                            "</caller_context>"
+                        )
+                        turns.append(
+                            genai_types.Content(
+                                parts=[genai_types.Part.from_text(text=context_msg)],
+                                role="user",
                             )
-                        )],
-                        role="user",
-                    ),
-                    genai_types.Content(
-                        parts=[genai_types.Part.from_text(
-                            text="Understood. I will listen to the caller first and match their spoken language exactly."
-                        )],
-                        role="model",
-                    ),
-                ]
-
-                # Solution B: City is intentionally OMITTED from this context message.
-                # The city is still available server-side in self.caller_context for tool
-                # calls (book_consultation, check_city_coverage, check_dentist), but it
-                # is NOT sent to Gemini here so it cannot bias Gemini's language choice.
-                if self.caller_context:
-                    name = self.caller_context.get("name", "")
-                    phone = self.caller_context.get("phone", "")
-                    subject = self.caller_context.get("subject", "")
-                    message = self.caller_context.get("message") or self.caller_context.get("notes") or ""
-
-                    name_note = ""
-                    if name:
-                        name_note = f"Caller Name: {name} (Strict Rule: Pronounce caller's name exactly as '{name}'. Do not repeat the caller's name in every sentence).\n"
-
-                    context_msg = (
-                        "<caller_context>\n"
-                        f"Name: {name}\n"
-                        f"{name_note}"
-                        f"Phone: {phone}\n"
-                        f"Inquiry Subject: {subject}\n"
-                        "<caller_message>\n"
-                        f"{message}\n"
-                        "</caller_message>\n"
-                        "</caller_context>"
-                    )
-                    turns.append(
-                        genai_types.Content(
-                            parts=[genai_types.Part.from_text(text=context_msg)],
-                            role="user",
                         )
-                    )
 
-                if getattr(self, "initial_prompt", None):
-                    turns.append(
-                        genai_types.Content(
-                            parts=[genai_types.Part.from_text(text=self.initial_prompt)],
-                            role="user",
+                    initial_prompt = getattr(self, "initial_prompt", None)
+                    if initial_prompt:
+                        turns.append(
+                            genai_types.Content(
+                                parts=[genai_types.Part.from_text(text=initial_prompt)],
+                                role="user",
+                            )
                         )
-                    )
 
-                if turns:
-                    turn_complete = True if getattr(self, "initial_prompt", None) else (False if self.initial_greeting else True)
-                    await session.send_client_content(
-                        turns=turns,
-                        turn_complete=turn_complete,
-                    )
+                    if turns:
+                        if self.turn_complete_on_start is not None:
+                            turn_complete = self.turn_complete_on_start
+                        else:
+                            turn_complete = True if initial_prompt else (False if self.initial_greeting else True)
+                        await session.send_client_content(
+                            turns=turns,
+                            turn_complete=turn_complete,
+                        )
+                else:
+                    print("[Gemini Resumption] Session resumed with existing handle; skipping anchor, context, and greeting injection.")
 
                 async def send_audio_loop():
                     try:
@@ -553,9 +658,32 @@ class GeminiLiveStreamClient:
                             if self._closed:
                                 break
                             async for response in session.receive():
-                                if getattr(response, "go_away", None):
-                                    print(f"[Gemini Live Stream Warning] Received GoAway notice: {response.go_away}")
-                                    await event_queue.put({"type": "go_away", "details": str(response.go_away)})
+                                # Capture session resumption update from server
+                                resumption_update = getattr(response, "session_resumption_update", None)
+                                if resumption_update:
+                                    resumable = getattr(resumption_update, "resumable", False)
+                                    new_h = getattr(resumption_update, "new_handle", None)
+                                    if resumable and new_h:
+                                        self._latest_valid_resumption_handle = new_h
+                                        print(f"[Gemini Resumption] Saved resumable handle (handle_available=True)")
+                                        await event_queue.put({
+                                            "type": "session_resumption_update",
+                                            "handle": new_h,
+                                            "resumable": True
+                                        })
+                                    else:
+                                        print(f"[Gemini Resumption] Non-resumable or empty update received; retaining previous handle: handle_available={bool(self._latest_valid_resumption_handle)}")
+
+                                # Capture go_away notice from server
+                                go_away = getattr(response, "go_away", None)
+                                if go_away:
+                                    time_left = getattr(go_away, "time_left", None)
+                                    print(f"[Gemini Live Stream Warning] Received GoAway notice: time_left={time_left}")
+                                    await event_queue.put({
+                                        "type": "go_away",
+                                        "time_left": time_left,
+                                        "details": str(go_away)
+                                    })
                                 
                                 server_content = getattr(response, "server_content", None)
                                 tool_call = getattr(response, "tool_call", None)
@@ -611,8 +739,6 @@ class GeminiLiveStreamClient:
                                     for fc in original_fcs:
                                         func_name = fc.name
                                         args = dict(fc.args) if fc.args else {}
-                                        if func_name == "get_faq":
-                                            args["language"] = "en"
                                         print(f"\n  [Gemini Live Tool Call] -> {func_name}({json.dumps(args, ensure_ascii=False)})")
                                         
                                         result_data = None
@@ -676,6 +802,7 @@ class GeminiLiveStreamClient:
             raise
         finally:
             self._is_connected = False
+            self._ready_event.clear()
             print("[Gemini Live Stream] Session closed.")
 
     async def connect(
@@ -709,11 +836,17 @@ class GeminiLiveStreamClient:
 
         self._session_task = asyncio.create_task(_runner())
 
+    async def wait_until_ready(self, timeout: float = 10.0) -> None:
+        """Waits until the Gemini Live session WebSocket connection is established and ready."""
+        await asyncio.wait_for(self._ready_event.wait(), timeout=timeout)
+
     async def finish(self) -> None:
         """Gracefully shuts down background tasks and closes GenAI SDK client resources."""
         if self._closed:
             return
         self._closed = True
+        self._is_connected = False
+        self._ready_event.clear()
         logger.debug("[Gemini Live Stream] Finishing client operations...")
         if self._session_task and not self._session_task.done():
             self._session_task.cancel()
@@ -724,14 +857,18 @@ class GeminiLiveStreamClient:
             self._session_task = None
 
         try:
-            if hasattr(self.client, "aio") and hasattr(self.client.aio, "close") and callable(self.client.aio.close):
-                res = self.client.aio.close()
+            aio_client = getattr(self.client, "aio", None)
+            aio_close = getattr(aio_client, "close", None) if aio_client else None
+            if callable(aio_close):
+                res = aio_close()
                 if inspect.isawaitable(res):
                     await res
-            elif hasattr(self.client, "close") and callable(self.client.close):
-                res = self.client.close()
-                if inspect.isawaitable(res):
-                    await res
+            else:
+                client_close = getattr(self.client, "close", None)
+                if callable(client_close):
+                    res = client_close()
+                    if inspect.isawaitable(res):
+                        await res
         except Exception as e:
             print(f"[Gemini Live Stream Error] Exception during GenAI client closure: {e}")
         print("[Gemini Live Stream] Client finished and resources cleanly released.")

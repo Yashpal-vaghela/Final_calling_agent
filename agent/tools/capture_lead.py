@@ -10,6 +10,8 @@ import os
 from datetime import datetime, timezone
 from typing import Optional
 
+from backend.app.services.caller_context import validate_phone_number
+
 # Phase 3: file-backed store. Phase 5 will swap this for a DB table.
 LEADS_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "data", "leads.json")
 
@@ -24,9 +26,9 @@ def _load_leads() -> list:
         except json.JSONDecodeError:
             return []
 
-def _save_leads(leads: list) -> None:
+def _save_leads(leads: list) -> bool:
     # Ephemeral mode: disk saving disabled to avoid storing user data
-    pass
+    return False
 
 def capture_lead(
     name: str,
@@ -39,27 +41,29 @@ def capture_lead(
 ) -> dict:
     """
     Persists caller lead details.
-
-    Args:
-        name:               Caller's full name.
-        phone:              Caller's phone number (with country code ideally).
-        city:               City where the caller wants dental services.
-        intent:             One of: consultation, find_dentist, warranty_verification, faq, other.
-        notes:              Any additional notes from the conversation.
-        preferred_language: Caller's language preference — en | hi | gu.
-        call_id:            The call ID this lead originates from (FK to calls table in Phase 5).
-
-    Returns:
-        A dict with the saved lead and a status message in the caller's language.
+    When persistence is disabled, returns an honest 'not_persisted' status without claiming
+    data was saved or promising a callback.
     """
     if preferred_language not in VALID_LANGUAGES:
         preferred_language = "en"
+
+    phone_res = validate_phone_number(phone)
+    if not phone_res["valid"]:
+        return {
+            "status": "invalid_phone",
+            "valid": False,
+            "code": phone_res["code"],
+            "received_digits": phone_res["received_digits"],
+            "expected_digits": 10,
+            "message": f"Invalid phone number. {phone_res['message']} Please provide a valid 10-digit mobile number."
+        }
+    norm_phone = phone_res["phone"]
 
     lead = {
         "id": str(uuid.uuid4()),
         "call_id": call_id,
         "name": name.strip(),
-        "phone": phone.strip(),
+        "phone": norm_phone,
         "city": city.strip(),
         "intent": intent.strip(),
         "notes": notes.strip() if notes else None,
@@ -69,27 +73,19 @@ def capture_lead(
 
     leads = _load_leads()
     leads.append(lead)
-    _save_leads(leads)
+    saved = _save_leads(leads)
 
-    # Confirmation messages in all three languages
-    confirmations = {
-        "en": (
-            f"Thank you, {name}! I've saved your details. "
-            f"Our team will call you back at {phone} shortly."
-        ),
-        "hi": (
-            f"धन्यवाद, {name}! आपकी जानकारी save कर ली गई है। "
-            f"हमारी team जल्द ही {phone} पर आपको callback करेगी।"
-        ),
-        "gu": (
-            f"આભાર, {name}! આपकी details save थई गई छे। "
-            f"અmāri team ṭhūṃk samay māṃ {phone} par āpne callback karśe."
-        ),
-    }
+    if not saved:
+        return {
+            "status": "not_persisted",
+            "lead_id": None,
+            "message": "Lead details received in memory, but persistent storage is currently disabled in this environment. No callback has been scheduled.",
+            "lead": lead
+        }
 
     return {
         "status": "success",
         "lead_id": lead["id"],
-        "message": confirmations[preferred_language],
+        "message": f"Details for {name} saved successfully.",
         "lead": lead,
     }

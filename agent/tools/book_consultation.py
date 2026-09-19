@@ -4,10 +4,12 @@ import re
 import httpx
 from typing import Optional
 
+from backend.app.services.caller_context import validate_phone_number
+
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 CITIES_FILE = os.path.join(DATA_DIR, "covered_cities.json")
 AUTH_DENTISTS_FILE = os.path.join(DATA_DIR, "authorized_dentists.json")
-API_URL = "http://192.168.0.161:5252/api/consult-with-dentist/"
+API_URL = "http://192.168.0.161:5050/api/consult-with-dentist/"
 
 def book_consultation(
     first_name: str = "",
@@ -24,6 +26,19 @@ def book_consultation(
     ONLY call this tool AFTER the user has explicitly confirmed they want to submit OR update the request. 
     You MUST summarize what will be submitted (city, doctor_name) and wait for their 'yes' before calling this tool.
     """
+    # 0. Validate phone number strictly (10 national digits)
+    phone_res = validate_phone_number(phone)
+    if not phone_res["valid"]:
+        return {
+            "status": "invalid_phone",
+            "valid": False,
+            "code": phone_res["code"],
+            "received_digits": phone_res["received_digits"],
+            "expected_digits": 10,
+            "message": f"I cannot proceed with the booking because the phone number provided is invalid. A complete 10-digit mobile number is required ({phone_res['message']}). Please provide a valid 10-digit mobile number."
+        }
+    validated_phone = phone_res["phone"]
+
     city_clean = city.strip()
     city_lower = city_clean.lower()
     
@@ -82,13 +97,13 @@ def book_consultation(
     # or an empty string for new bookings.
     # NEVER send UUID strings (like in-memory caller_context IDs) as they cause Django to crash with:
     # "Field 'id' expected a number but got '<UUID>'".
-    clean_lead_id = int(str(lead_id).strip()) if (lead_id and str(lead_id).strip().isdigit()) else ""
+    clean_lead_id = int(lead_id.strip()) if (lead_id and lead_id.strip().isdigit()) else ""
 
     payload = {
         "lead_id": clean_lead_id,
         "first_name": first_name.strip(),
         "last_name": clean_last,
-        "phone": phone.strip(),
+        "phone": validated_phone,
         "email": email.strip(),
         "city": matched_city,
         "message": message.strip(),
