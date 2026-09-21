@@ -1,5 +1,5 @@
 {
-  "usage_rule": "Everything in this file is a REFERENCE BANK, not a mandatory checklist. Use one short, relevant example when it genuinely clarifies the answer. Every example must be 1ΓÇô2 sentences and must be a statement, never an example question. Avoid repeating the same analogy in the same call.",
+  "usage_rule": "This file is the CANONICAL SOURCE of all approved conversational analogies for Kiara. Use one short, relevant analogy ONLY when it materially clarifies a complex concept, comparison, objection, or material difference. Do NOT use analogies for simple or direct factual questions. Maximum one analogy per response. Do not repeat the same analogy during the same call unless the caller specifically asks for the comparison again. Keep the complete answer within the normal 2-3 sentence / 10-15 second voice target. The factual answer always comes first. Do not invent new celebrity or brand comparisons; retrieve only from this file.",
   "emotional_reasons": {
     "intent": "emotional_reasons",
     "keywords": [
@@ -246,7 +246,7 @@
       "local dentist is cheaper",
       "discount"
     ],
-    "reframe": "That's fair, and different options serve different needs. The useful comparison is the planning, craftsmanship, materials and degree of personalisation behind each treatment."
+    "reframe": "We completely understand that cost is an important factor. The real distinction lies in our facial-driven smile planning, master ceramist handcrafting at Advance Dental Export, exclusive clinical protocols, and documented warranty with an Authentication Card. Scheduling a consultation with an authorized smile designer lets you see your personalized design and decide for yourself."
   },
   "elite_pain_points_reference": {
     "intent": "pain_points",
@@ -261,7 +261,8 @@
   },
   "craftsmanship_analogy_bank": {
     "intent": "craftsmanship_analogies",
-    "guidance": "Use one short comparison when it naturally clarifies craftsmanship.",
+    "keywords": ["craftsmanship", "why usd", "why choose", "what makes different", "worth it", "quality"],
+    "guidance": "Use one short comparison when it naturally clarifies craftsmanship, exclusivity, or why USD differs from a generic clinic. Use only one; do not stack multiple analogies.",
     "examples": [
       "It's rather like couture from designers like Manish Malhotra: the distinction comes from proportion, construction and finishing considered specifically for the individual.",
       "Fine watchmaking from brands like Patek Philippe is distinguished by details most people don't consciously notice. The same principle applies to refined smile craftsmanship.",
@@ -269,5 +270,53 @@
       "The finest hospitality at places like The Ritz-Carlton feels effortless because so much thought has gone into it beforehand. A considered smile follows a similar principle.",
       "Heritage jewellery from houses like Cartier is valued not simply for its materials, but for craftsmanship, proportion and the judgement behind every detail."
     ]
+  },
+  "emax_vs_zirconia": {
+    "intent": "material_comparison_emax_zirconia",
+    "keywords": [
+      "E.max vs zirconia",
+      "emax or zirconia",
+      "which material is better",
+      "difference between emax and zirconia",
+      "zirconia veneer",
+      "emax veneer",
+      "lithium disilicate",
+      "which is stronger",
+      "which looks more natural"
+    ],
+    "guidance": "When the caller asks about the difference between E.max and Zirconia, or asks which material is better or more natural-looking.",
+    "reframe": "Think of it like comparing a Bentley Continental to an armoured SUV. Zirconia is extraordinarily strong, like an armoured vehicle, and suited where maximum durability is the priority. E.max is the Bentley Continental — it combines genuine strength with a translucency and refinement that looks and feels closest to a natural tooth. For the front teeth that define your smile, that natural light transmission often makes all the difference.",
+    "follow_up": "Would you like to know which material your Smile Designer is likely to recommend for your case?"
+  },
+  "digital_smile_design_planning": {
+    "intent": "digital_smile_design_analogy",
+    "keywords": [
+      "digital smile design",
+      "how is the smile planned",
+      "how do you plan my smile",
+      "DSD",
+      "3D planning",
+      "design process",
+      "smile planning process",
+      "how does the process work"
+    ],
+    "guidance": "When the caller asks how the smile is designed or planned digitally before any treatment begins.",
+    "reframe": "It is closer to commissioning a home from a master architect than choosing something off the shelf. The proportions, vision and your personal goals are understood first; then the design is refined and previewed digitally before any physical work begins.",
+    "follow_up": "Would you like to understand what happens at your first consultation?"
+  },
+  "usd_vs_regular_dentist": {
+    "intent": "usd_vs_regular_dentist_analogy",
+    "keywords": [
+      "regular dentist",
+      "my dentist",
+      "family dentist",
+      "local dentist",
+      "cheaper dentist",
+      "why not my dentist",
+      "why usd over my dentist"
+    ],
+    "guidance": "When the caller asks why they should choose USD over their regular dentist.",
+    "reframe": "Your regular dentist may be perfectly suited to your everyday care. Smile design is a more specialised aesthetic discipline — much like the difference between altering a garment and commissioning it from scratch on Savile Row.",
+    "follow_up": null
   }
 }

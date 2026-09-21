@@ -24,7 +24,8 @@ MANDATORY_TRANSCRIPTION_INSTRUCTION = (
     "When Hindi speech is clearly recognized, transcribe it in Devanagari where practical. "
     "When Gujarati speech is clearly recognized, transcribe it in Gujarati script where practical. "
     "Do not use transcript script alone to determine the spoken response language. "
-    "Gujarati audio may sometimes be transcribed in Devanagari or imperfect English text. "
+    "Gujarati audio may sometimes be transcribed in Devanagari or imperfect English text (e.g. 'तमे जणावो ने पेला' is Gujarati in meaning despite Devanagari script). "
+    "However, genuine complete Hindi or English turns are real language switches. "
     "Response-language selection is controlled only by the TURN LANGUAGE ROUTER."
 )
 
@@ -46,6 +47,7 @@ The previous assistant language NEVER locks the current response.
 The previous caller language NEVER overrides a clear current utterance.
 The opening greeting language NEVER becomes a conversational default.
 The number of previous turns in another language is irrelevant.
+There is NO language loyalty after 2 turns, 5 turns, or 20 turns. A clear current-turn language ALWAYS wins.
 
 English dental vocabulary inside Hindi or Gujarati is language-neutral.
 Words such as appointment, doctor, dentist, treatment, braces, aligners,
@@ -53,8 +55,40 @@ veneers, crown, implant, bridge, scan, cost, price, consultation,
 and smile design do NOT make a Hindi or Gujarati sentence ambiguous.
 
 Determine TURN_LANGUAGE from the COMPLETE spoken utterance:
-grammar, function words, pronunciation, cadence, and meaning.
-Do NOT use transcript script alone as the deciding signal.
+meaning, grammar, sentence structure, function words, pronunciation, and cadence together.
+Do NOT determine language from transcript script alone.
+Do NOT switch languages based on isolated acknowledgement words alone (e.g. "yes", "haan", "okay", "good", "great").
+However, if an acknowledgement word is followed by any words, phrase, or question in another language (e.g. "Okay, what is the cost of veneers?" -> ENGLISH; "अच्छा, मुझे बताइए कि इसमें कितना खर्चा होगा?" -> HINDI; "હા, તો મને કહો કે કન્સલ્ટેશન ક્યારે થશે?" -> GUJARATI), you MUST switch to that new language IMMEDIATELY.
+
+CRITICAL DISTINCTIONS:
+- Phonetic Gujarati transcribed in Devanagari (e.g. "तमे जणावो ने पेला") has Gujarati linguistic meaning -> GUJARATI.
+- Genuine Hindi complete utterance (e.g. "तो आज treatment हमारा करेगा कौन?", "मुझे लगता है कि मेरे लिए विनियर्स सही रहेंगे...") has clear Hindi grammar and meaning -> HINDI immediately.
+- Sustained English complete utterance (e.g. "Can you explain that again?", "Can you tell me the medicine name for pain relief?") -> ENGLISH immediately.
+- Clear English questions of any length (e.g. "What is the cost?", "How long does it take?", "Is it painful?", "Who is the doctor?") -> ENGLISH immediately.
+- Explicit language requests ("Hindi mein bolo", "English please", "Gujarati ma vaat karo") OVERRIDE immediately.
+
+### MANDATORY MULTIDIRECTIONAL LANGUAGE SWITCHING (ZERO RESIDUAL LOCK):
+You MUST switch languages immediately on the turn the caller switches:
+1. SWITCHING AWAY FROM GUJARATI:
+   - When previous turns were in Gujarati, and the caller asks a question or speaks in Hindi:
+     YOU MUST SWITCH TO HINDI ON THIS EXACT TURN. Continuing in Gujarati is FORBIDDEN.
+   - When previous turns were in Gujarati, and the caller asks a question or speaks in English:
+     YOU MUST SWITCH TO ENGLISH ON THIS EXACT TURN. Continuing in Gujarati is FORBIDDEN.
+2. SWITCHING AWAY FROM HINDI:
+   - When previous turns were in Hindi, and the caller asks a question or speaks in Gujarati:
+     YOU MUST SWITCH TO GUJARATI ON THIS EXACT TURN. Continuing in Hindi is FORBIDDEN.
+   - When previous turns were in Hindi, and the caller asks a question or speaks in English:
+     YOU MUST SWITCH TO ENGLISH ON THIS EXACT TURN. Continuing in Hindi is FORBIDDEN.
+3. SWITCHING AWAY FROM ENGLISH:
+   - When previous turns were in English, and the caller asks a question or speaks in Gujarati:
+     YOU MUST SWITCH TO GUJARATI ON THIS EXACT TURN. Continuing in English is FORBIDDEN.
+   - When previous turns were in English, and the caller asks a question or speaks in Hindi:
+     YOU MUST SWITCH TO HINDI ON THIS EXACT TURN. Continuing in English is FORBIDDEN.
+
+A single turn in a new language is 100% sufficient to trigger an instant language switch.
+Never maintain conversational language inertia across caller turns.
+
+This language routing operates on EVERY turn, regardless of whether zero tools or multiple tools are called. Tool calls never determine, anchor, or lock the response language.
 
 Examples:
 - "तो आज treatment हमारा करेगा कौन?" -> HINDI
@@ -234,7 +268,14 @@ class GeminiLiveStreamClient:
                 "---\n\n"
                 "## CURRENT SESSION (LIVE VOICE CALL)\n"
                 "Speak warmly, naturally, and concisely. "
-                "Follow the style, business, tool, and safety rules from the loaded prompt files."
+                "Follow the style, business, tool, and safety rules from the loaded prompt files.\n\n"
+                "### FINAL PER-TURN SPOKEN LANGUAGE REMINDER\n"
+                "Before every response, determine the caller's spoken language from the complete latest caller turn. "
+                "Respond in that language. A clear current-turn language overrides the previous conversation language. "
+                "CRITICAL: If the caller changes language (e.g. Gujarati to Hindi/English, Hindi to Gujarati/English, or English to Hindi/Gujarati), YOU MUST SWITCH IMMEDIATELY. Never remain stuck in the previous conversational language. "
+                "Do not switch languages based only on script or isolated acknowledgement words.\n\n"
+                "### STRICT NO MEDICAL DISCLAIMERS REMINDER\n"
+                "CRITICAL: NEVER append automatic medical, legal, or informational disclaimers (e.g., 'not a medical diagnosis', 'advice is for informational purposes only', 'અમારી સલાહ મેડિકલ સલાહ કે નિદાન નથી', 'हमारी सलाह मेडिकल सलाह नहीं है') at the end of answers. Keep all responses natural, clean, and conversational."
             )
 
         # Input queues and state flags
@@ -295,13 +336,36 @@ class GeminiLiveStreamClient:
 
         get_faq_tool = genai_types.FunctionDeclaration(
             name="get_faq",
-            description="Retrieve authoritative FAQ answers about Ultimate Smile Design prices, procedures, doctors, course_price, dentist_partner_benefits, process, timeline, cities, cost, before_after, or warranty.",
+            description=(
+                "Retrieve authoritative answers and approved conversational guidance from the local knowledge base. "
+                "YOU MUST CALL THIS TOOL whenever the caller asks about ANY of the following topics:\n"
+                "DENTAL CONCERNS: gaps between teeth, yellow or stained teeth, crooked or uneven teeth, chipped teeth, gummy smile, missing teeth, tooth sensitivity, discoloration\n"
+                "TREATMENTS & PROCEDURES: veneers, crowns, clear aligners, AD-Aligners, implants, whitening, gum contouring, smile makeover, smile design, Ultimate Smile Design\n"
+                "MATERIALS & COMPARISONS: E.max, E.max vs zirconia, zirconia, lithium disilicate, veneer materials, which material is better, natural-looking materials\n"
+                "PROCESS & TIMELINE: digital smile design, DSD, 3D scanning, how the process works, how long it takes, steps in the treatment, planning process, digital preview\n"
+                "PRICING & VALUE: cost, price, investment, worth, starting price, consultation fee, payment\n"
+                "COMPANY & AUTHORITY: Ultimate Smile Design, Advance Dental Export, Haresh Savani, master ceramist, how many cases, 120000 cases, cities covered, authorized dentists\n"
+                "COMPARISONS & OBJECTIONS: USD vs regular dentist, why choose USD, what makes USD different, local dentist comparison\n"
+                "COMFORT & SAFETY: pain, discomfort, scared, safe, anaesthesia, procedure comfort, aftercare\n"
+                "AI SMILE PREVIEW: virtual smile try-on, digital simulation, preview, before and after, how results look\n"
+                "PROFESSION GUIDANCE: profession-based smile personalization (pass topic as 'profession_<profession>', e.g. 'profession_teacher', 'profession_lawyer')\n"
+                "ANALOGIES: when an approved analogy is needed to clarify craftsmanship, materials, or a comparison (pass topic as 'analogy' or 'emax_vs_zirconia' or 'digital_smile_design_planning' etc.)\n"
+                "OTHER TOPICS: warranty, authentication, dentist partnership, training courses, privacy, booking guidance\n"
+                "Always call this tool before answering factual dental or company questions. Never answer from memory alone."
+            ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
                 properties={
                     "topic": genai_types.Schema(
                         type=genai_types.Type.STRING,
-                        description="FAQ topic or question keyword: prices, procedures, doctors, course_price, dentist_partner_benefits, process, timeline, cities, cost, before_after, warranty",
+                        description=(
+                            "Topic or keyword query. Examples: 'veneers', 'cost_value', 'emax_vs_zirconia', "
+                            "'digital_smile_design_planning', 'whitening', 'implants', 'about_ade_haresh_savani', "
+                            "'local_dentist_vs_usd', 'process_timeline', 'cities_coverage', 'warranty', "
+                            "'profession_teacher', 'profession_lawyer', 'analogy', 'ai_smile_preview', "
+                            "'aftercare_comfort', 'safety_quality_materials', 'privacy_busy_schedule', "
+                            "'dentist_partner_benefits', 'course_price'"
+                        ),
                     ),
                     "language": genai_types.Schema(
                         type=genai_types.Type.STRING,
@@ -335,13 +399,26 @@ class GeminiLiveStreamClient:
             name="book_consultation",
             description=(
                 "Book an in-call consultation with an authorized dentist in the specified city. "
-                "MANDATORY EXECUTION: Whenever the caller confirms or agrees to submit/book an appointment "
-                "(e.g., caller says 'Yes', 'Go ahead', 'Haan', 'હા', 'हां', 'બુક કરો', 'હા કરો', 'કન્ફર્મ કરો', 'appointment book karo', or agrees to proceed without a doctor): "
-                "YOU MUST EMIT THIS TOOL CALL IMMEDIATELY ON THAT EXACT TURN. "
-                "NEVER say 'I have submitted your request' or 'મેં તમારી વિગતો સબમિટ કરી દીધી છે' in voice without calling this tool! "
-                "Speech alone DOES NOT submit the booking to the backend database. "
-                "If the caller agreed to proceed without specifying a doctor, call this tool with doctor_name=''. "
-                "If the caller confirmed with an authorized doctor, pass doctor_name."
+                "Submit the booking to the backend database. Speech alone does NOT save the booking.\n\n"
+                "WHEN TO CALL THIS TOOL (MANDATORY — one of these conditions must be true):\n"
+                "1. EXPLICIT BOOKING COMMAND: The caller gives a clear, unambiguous instruction to book, such as:\n"
+                "   'Book my appointment', 'Schedule a consultation', 'Book kar do', 'Appointment book karo', "
+                "   'મારી એપોઇન્ટમેન્ટ બુક કરો', 'Book karo', 'Consultation book kar do', 'হ্যাঁ বুক করুন'\n"
+                "2. FINAL CONFIRMATION after Kiara has summarized full details (Doctor, City, Message) and asked "
+                "   'Shall I go ahead and submit your consultation?': Caller says 'Yes', 'Go ahead', 'Haan', 'Ha', "
+                "   'हां', 'हाँ कीजिए', 'હા', 'હા કરો', 'Confirm', 'Submit it', 'Yes go ahead'\n\n"
+                "⚠ WHEN NOT TO CALL THIS TOOL:\n"
+                "- CASUAL CONVERSATIONAL AFFIRMATIONS: Words like 'yes', 'okay', 'haan', 'good', 'great', 'perfect', "
+                "'sure', 'fine' said in response to a FACTUAL QUESTION or GENERAL RESPONSE do NOT trigger booking.\n"
+                "- INFORMATION QUESTIONS: Do not call if caller only says 'yes I understand', 'okay tell me more', "
+                "'haan that sounds good' in context of learning about treatments, prices, or processes.\n"
+                "- BOOKING NEVER ALREADY CONFIRMED: Do not call again if booking is already confirmed in this session.\n\n"
+                "CONTEXT TEST: Before calling, verify the caller's response is to Kiara's explicit booking summary "
+                "question ('Shall I go ahead and submit your consultation?'), not to a general conversational exchange.\n\n"
+                "NEVER say 'I have submitted your request' or 'Your appointment is booked' without calling this tool!\n\n"
+                "STRICT NEGATIVE CONSTRAINTS:\n"
+                "- NEVER ask the caller for preferred appointment date, day, or time! Consultations are scheduled directly by our clinical coordinator who contacts the patient. You ONLY collect City, Doctor preference (optional), and Message (optional).\n"
+                "- NEVER tell the caller to visit ultimatesmiledesign.com to book or schedule an appointment — you book it directly on this call!"
             ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
@@ -558,14 +635,15 @@ class GeminiLiveStreamClient:
                                     "Do not infer the caller's language from name, city, form data or metadata. "
                                     "Listen to the caller's spoken audio. "
                                     "Respond in the language of their current clear spoken sentence. "
-                                    "For short ambiguous turns, preserve the language from the recent conversation context."
+                                    "Whenever the caller switches between English, Hindi, or Gujarati, switch your response language IMMEDIATELY to match. "
+                                    "For isolated single-word acknowledgments alone (like just 'yes' or 'okay'), preserve the recent context, but any statement or question in a new language switches immediately."
                                 )
                             )],
                             role="user",
                         ),
                         genai_types.Content(
                             parts=[genai_types.Part.from_text(
-                                text="Understood. I will listen to the caller's spoken audio and match the language of their current clear sentence, while preserving context on ambiguous turns."
+                                text="Understood. I will listen to the caller's spoken audio and match the language of their current sentence. If the caller switches between English, Hindi, or Gujarati, I will switch my response language immediately."
                             )],
                             role="model",
                         ),
@@ -754,6 +832,15 @@ class GeminiLiveStreamClient:
                                                 result_data = {"error": f"Execution failed for {func_name}: {str(e)}"}
                                         else:
                                             result_data = {"error": f"Unknown tool: {func_name}"}
+
+                                        if isinstance(result_data, dict):
+                                            result_data.setdefault(
+                                                "instruction",
+                                                "Respond entirely in the language of the caller's CURRENT spoken turn. "
+                                                "If the caller switched languages (e.g. from Gujarati to Hindi or English, "
+                                                "or from Hindi to English or Gujarati), you MUST respond in their NEW language. "
+                                                "Do not let the language of this tool result determine or lock the response language."
+                                            )
 
                                         print(f"  [Gemini Live Tool Result] <- {json.dumps(result_data, ensure_ascii=False, default=str)}\n")
                                         

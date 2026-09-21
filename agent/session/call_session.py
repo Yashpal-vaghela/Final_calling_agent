@@ -25,7 +25,29 @@ class CallSession:
         # Deprecated compatibility field (Gemini Live now natively handles conversational language)
         self.preferred_language: str = preferred_language
         self.last_discussed_topic: Optional[str] = None
-        self.booking_stage: str = "booking_confirmed" if opening_intent == "outbound_booking_form" else "greeting"  # e.g., greeting, discovery, consultation_proposed, lead_captured, handoff, booking_confirmed
+
+        # Booking stage: greeting, discovery, booking_offered, booking_declined,
+        # booking_in_progress, booking_confirmed, booking_cancelled, lead_captured, handoff
+        # For outbound booking form callers, start at booking_confirmed so we never re-push booking.
+        self.booking_stage: str = "booking_confirmed" if opening_intent == "outbound_booking_form" else "greeting"
+
+        # --- Independent lightweight conversational flags ---
+        # These are independent booleans to prevent repetition without creating a rigid state machine.
+        # Gemini reads these from get_session_context_prompt() on every turn.
+
+        # Profession discovery
+        self.profession: str = ""           # Caller's stated profession once collected
+        self.profession_asked: bool = False  # True once Kiara has asked; prevents re-asking
+
+        # AI Smile Preview tracking
+        self.preview_mentioned: bool = False  # True once Kiara has introduced AI Smile Preview
+
+        # Booking state — independent of booking_stage for precise control
+        self.booking_offered: bool = False     # Kiara proactively offered a consultation
+        self.booking_declined: bool = False    # Caller explicitly declined / postponed (not just asked another Q)
+        self.booking_in_progress: bool = False # 3-step booking flow has started (details being collected)
+        self.booking_confirmed: bool = (opening_intent == "outbound_booking_form")  # Booking already complete
+
         self.collected_user_info: dict[str, str] = {
             "name": "",
             "phone": "",
@@ -41,6 +63,46 @@ class CallSession:
         
         # Turn tracking for future barge-in cancellation guards
         self.current_turn_id: int = 0
+
+    # --- Booking State Helpers ---
+
+    def mark_booking_offered(self) -> None:
+        """Called when Kiara proactively offers a consultation."""
+        self.booking_offered = True
+        if self.booking_stage in ("greeting", "discovery"):
+            self.booking_stage = "booking_offered"
+
+    def mark_booking_declined(self) -> None:
+        """Called when caller explicitly declines/postpones booking."""
+        self.booking_declined = True
+        self.booking_in_progress = False
+        self.booking_stage = "booking_declined"
+
+    def mark_booking_in_progress(self) -> None:
+        """Called when 3-step booking flow has started (details being collected)."""
+        self.booking_in_progress = True
+        self.booking_declined = False
+        self.booking_stage = "booking_in_progress"
+
+    def mark_booking_confirmed(self) -> None:
+        """Called when book_consultation tool returns status: success."""
+        self.booking_confirmed = True
+        self.booking_in_progress = False
+        self.booking_offered = True
+        self.booking_stage = "booking_confirmed"
+
+    def mark_booking_cancelled(self) -> None:
+        """Called when cancel_consultation tool returns status: success."""
+        self.booking_confirmed = False
+        self.booking_in_progress = False
+        self.booking_stage = "booking_cancelled"
+
+    def reopen_booking(self) -> None:
+        """Called when caller independently shows readiness after a prior decline."""
+        self.booking_declined = False
+        self.booking_stage = "discovery"
+
+
 
     def set_preferred_language(self, lang: str) -> None:
         """Deprecated compatibility method: mutates preferred_language attribute."""
@@ -58,7 +120,12 @@ class CallSession:
                 self.booking_stage = "discovery"
 
     def update_user_info(self, name: Optional[str] = None, phone: Optional[str] = None, email: Optional[str] = None, city: Optional[str] = None, subject: Optional[str] = None, intent: Optional[str] = None, notes: Optional[str] = None) -> None:
-        """Updates collected user entities across conversational turns."""
+        """Updates collected user entities across conversational turns.
+        
+        IMPORTANT: Does NOT overwrite active booking stages. If booking has been
+        offered, declined, is in progress, or is confirmed, this method does not
+        reset that state back to 'lead_captured'.
+        """
         if name: self.collected_user_info["name"] = name
         if phone: self.collected_user_info["phone"] = phone
         if email: self.collected_user_info["email"] = email
@@ -67,13 +134,24 @@ class CallSession:
         if intent: self.collected_user_info["intent"] = intent
         if notes: self.collected_user_info["notes"] = notes
         
-        if self.collected_user_info["name"] and self.collected_user_info["phone"]:
+        # Only advance to lead_captured from early stages.
+        # Do NOT overwrite meaningful booking stages already in progress.
+        _PROTECTED_STAGES = {
+            "booking_offered", "booking_declined", "booking_in_progress",
+            "booking_confirmed", "booking_cancelled"
+        }
+        if (
+            self.collected_user_info["name"]
+            and self.collected_user_info["phone"]
+            and self.booking_stage not in _PROTECTED_STAGES
+        ):
             self.booking_stage = "lead_captured"
 
     def get_session_context_prompt(self) -> str:
         """
         Returns a formatted memory context block representing Python-managed session state.
         Gemini consumes this state dynamically without owning it.
+        All conversational flags are exposed here so Gemini can prevent repetition.
         """
         info_str = ", ".join([f"{k}: {v}" for k, v in self.collected_user_info.items() if v]) or "None"
         
@@ -85,14 +163,37 @@ class CallSession:
         elif self.opening_intent == "outbound_contact_form":
             outbound_note = "\n- Completed Action: The caller ALREADY submitted their enquiry via contact form. NEVER tell them to fill out the contact form again."
 
+        # Booking state summary for Gemini
+        booking_flags = (
+            f"\n- Booking Offered: {'Yes — do not push again unless caller shows new readiness' if self.booking_offered else 'No'}"
+            f"\n- Booking Declined/Postponed: {'Yes — do not push booking again until caller independently shows readiness' if self.booking_declined else 'No'}"
+            f"\n- Booking In Progress: {'Yes — 3-step booking flow active' if self.booking_in_progress else 'No'}"
+            f"\n- Booking Confirmed: {'Yes — NEVER offer booking again' if self.booking_confirmed else 'No'}"
+        )
+
+        # Profession state summary
+        profession_note = (
+            f"\n- Caller Profession: {self.profession if self.profession else 'Not yet collected'}"
+            f"\n- Profession Already Asked: {'Yes — do NOT ask again' if self.profession_asked else 'No — may ask once at a natural discovery moment (after answering their question)'}"
+        )
+
+        # AI Smile Preview tracking
+        preview_note = (
+            f"\n- AI Smile Preview Already Mentioned: {'Yes — do not bring it up again unless caller asks' if self.preview_mentioned else 'No — may introduce when contextually relevant'}"
+        )
+
         return (
             f"[PYTHON SESSION MEMORY & STATE]\n"
             f"- Active Topic in Discussion: {self.last_discussed_topic or 'General Inquiry'}\n"
             f"- Current Booking Stage: {self.booking_stage}\n"
-            f"- Collected User Info: {info_str}\n"
-            f"- Turn History Count: {len(self.conversation_history)}"
+            f"- Collected User Info: {info_str}"
+            f"{booking_flags}"
+            f"{profession_note}"
+            f"{preview_note}"
+            f"\n- Turn History Count: {len(self.conversation_history)}"
             f"{outbound_note}"
         )
+
 
     def transition_state(self, new_state: str) -> None:
         """Transitions the call state machine and logs the change."""

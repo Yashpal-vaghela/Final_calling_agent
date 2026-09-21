@@ -30,7 +30,12 @@ SUPPORTED_TOPICS = [
     "process", "timeline", "cities", "cost", "before_after",
     "join_usd", "for_dentists", "join_team", "partner_dentist",
     "course_price", "dentist_course", "dentist_partner_benefits",
-    "local_dentist_vs_usd", "profession_guidance"
+    "local_dentist_vs_usd", "profession_guidance",
+    # Guidance-layer topics
+    "analogy", "analogies", "craftsmanship", "emax_vs_zirconia",
+    "digital_smile_design_planning", "usd_vs_regular_dentist",
+    "navigation", "booking_guidance", "authentication",
+    "smile_results", "privacy_assurance", "pain_fear", "trust_uncertainty",
 ]
 
 
@@ -54,6 +59,30 @@ TOPIC_ALIASES = {
     "local_dentist_comparison": "local_dentist_vs_usd",
     "dentist_comparison": "local_dentist_vs_usd",
     "other_dentist": "local_dentist_vs_usd",
+    # Analogy / guidance routes
+    "analogy": "craftsmanship_analogy_bank",
+    "analogies": "craftsmanship_analogy_bank",
+    "craftsmanship": "craftsmanship_analogy_bank",
+    "emax vs zirconia": "emax_vs_zirconia",
+    "emax or zirconia": "emax_vs_zirconia",
+    "material comparison": "emax_vs_zirconia",
+    "digital smile design": "digital_smile_design_planning",
+    "dsd": "digital_smile_design_planning",
+    "smile planning": "digital_smile_design_planning",
+    "why usd": "usd_vs_regular_dentist",
+    "regular dentist": "usd_vs_regular_dentist",
+    # Navigation and booking guidance routes
+    "navigation": "website_navigation_preview",
+    "website navigation": "website_navigation_preview",
+    "find dentist": "website_navigation_find_dentist",
+    "booking_guidance": "booking_request",
+    "booking guidance": "booking_request",
+    "authentication": "treatment_authentication",
+    "genuine": "treatment_authentication",
+    "warranty": "treatment_warranties",
+    "treatment_warranty": "treatment_warranties",
+    "treatment_warranties": "treatment_warranties",
+    "guarantee": "treatment_warranties",
 }
 
 
@@ -81,15 +110,32 @@ def get_faq(topic: str, language: str = "en") -> Dict[str, Any]:
     lang = language.strip().lower() if language.strip().lower() in ("en", "hi", "gu") else "en"
     clean_target = target_topic.lower()
     
-    # 1. Check if the query is explicitly guidance, profession, or objection related
+    # 1. Check if the query is explicitly guidance, profession, objection, analogy, navigation, or booking related.
+    # GuidanceRetriever covers: data/guidance/analogies.json, navigation.json, booking.json, profession.json
+    _GUIDANCE_PREFIXES = ("profession", "guidance", "objection", "reframe", "analogy", "navigation", "booking")
+    _GUIDANCE_EXACT = {
+        "profession_guidance", "objection_handling", "privacy_framing", "conversation_coaching",
+        # Analogy routes
+        "craftsmanship_analogy_bank", "emax_vs_zirconia", "digital_smile_design_planning",
+        "usd_vs_regular_dentist", "regular_dentist_preference",
+        # Navigation routes
+        "website_navigation_preview", "website_navigation_find_dentist",
+        "treatment_authentication", "smile_results",
+        # Booking guidance routes
+        "booking_request", "ready_to_decide", "private_booking",
+        "cta_soft", "cta_medium", "cta_strong", "existing_booking_inquiry",
+        # Analogy/reframe entries
+        "emotional_reasons", "ai_and_human_expertise", "usd_protocols", "smile_confidence",
+        "privacy_assurance", "pain_fear", "trust_uncertainty", "no_time",
+        "price_objection", "hesitation_think_about_it",
+    }
     is_guidance_query = (
-        clean_target.startswith("profession")
-        or clean_target.startswith("guidance")
-        or clean_target.startswith("objection")
-        or clean_target.startswith("reframe")
+        any(clean_target.startswith(p) for p in _GUIDANCE_PREFIXES)
         or "profession" in clean_target
         or "objection" in clean_target
-        or clean_target in ("profession_guidance", "objection_handling", "privacy_framing", "conversation_coaching")
+        or "analogy" in clean_target
+        or "craftsmanship" in clean_target
+        or clean_target in _GUIDANCE_EXACT
     )
 
     # PATH A: Explicit Guidance / Behavioral Path

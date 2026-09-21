@@ -9,7 +9,7 @@ from backend.app.services.caller_context import validate_phone_number
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 CITIES_FILE = os.path.join(DATA_DIR, "covered_cities.json")
 AUTH_DENTISTS_FILE = os.path.join(DATA_DIR, "authorized_dentists.json")
-API_URL = "http://192.168.0.161:5050/api/consult-with-dentist/"
+API_URL = "https://ultimatesmiledesign.com/api/consult-with-dentist/"
 
 def book_consultation(
     first_name: str = "",
@@ -35,7 +35,8 @@ def book_consultation(
             "code": phone_res["code"],
             "received_digits": phone_res["received_digits"],
             "expected_digits": 10,
-            "message": f"I cannot proceed with the booking because the phone number provided is invalid. A complete 10-digit mobile number is required ({phone_res['message']}). Please provide a valid 10-digit mobile number."
+            "message": f"I cannot proceed with the booking because the phone number provided is invalid. A complete 10-digit mobile number is required ({phone_res['message']}). Please provide a valid 10-digit mobile number.",
+            "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
     validated_phone = phone_res["phone"]
 
@@ -60,7 +61,8 @@ def book_consultation(
     if not matched_city:
         return {
             "status": "city_not_covered",
-            "message": f"I'm sorry, but Ultimate Smile Design does not currently have authorized clinics in {city_clean}. I cannot submit the consultation request."
+            "message": f"I'm sorry, but Ultimate Smile Design does not currently have authorized clinics in {city_clean}. I cannot submit the consultation request.",
+            "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
         
     # 2. Check authorized dentist if doctor_name is provided
@@ -85,7 +87,8 @@ def book_consultation(
                 "status": "not_authorized",
                 "doctor_requested": doctor_name,
                 "city": matched_city,
-                "message": f"The requested dentist is not an authorized smile designer in {matched_city}. You may proceed without specifying a dentist and our coordinator will assign the appropriate specialist."
+                "message": f"The requested dentist is not an authorized smile designer in {matched_city}. You may proceed without specifying a dentist and our coordinator will assign the appropriate specialist.",
+                "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
             }
             
     # 3. Build API payload
@@ -148,13 +151,15 @@ def book_consultation(
         print("="*70 + "\n")
         return {
             "status": "error",
-            "message": f"An error occurred while submitting the consultation request: {str(e)}"
+            "message": f"An error occurred while submitting the consultation request: {str(e)}",
+            "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
         
     # 5. Return success
     return {
         "status": "success",
         "message": "Your consultation has been booked successfully. Our team will call you soon to verify your details. Tell the caller: 'Our team will call you as soon as possible to verify your details.' NEVER mention a specific time such as hours, days, or 'tomorrow'.",
-        "lead_id": returned_lead_id
+        "lead_id": returned_lead_id,
+        "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
     }
 

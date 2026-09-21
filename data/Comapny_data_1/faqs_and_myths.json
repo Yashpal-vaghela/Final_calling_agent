@@ -95,7 +95,7 @@
       "Smile design mehenga hai kya"
     ],
     "facts": "Treatments through Ultimate Smile Design start at ₹25,000 per unit, with the total investment depending on the customised treatment plan, number of units, materials, and clinical complexity. The cost varies based on the specific procedures included — whether veneers, crowns, whitening, aligners, implants, or gum contouring — and the complexity of the individual case.",
-    "details": "The total investment depends on several factors: the type of treatment selected, number of teeth being treated, materials chosen, complexity of the smile design, need for preliminary dental treatment, digital planning requirements, and the expertise of the dentist. Always ask for a complete treatment quotation rather than comparing only the advertised price per tooth. A written breakdown should show the treatment costs, included services, and any additional charges. Tell them to visit ultimatesmiledesign.com and book an appointment so they have a clear idea of the customized pricing."
+    "details": "The total investment depends on several factors: the type of treatment selected, number of teeth being treated, materials chosen, complexity of the smile design, need for preliminary dental treatment, digital planning requirements, and the expertise of the dentist. Always ask for a complete treatment quotation rather than comparing only the advertised price per tooth. A written breakdown should show the treatment costs, included services, and any additional charges. Our consultant can arrange a personalized consultation directly on this call."
   },
   "consultation_checkup_fees": {
     "intent": "consultation_checkup_fees",
@@ -112,8 +112,8 @@
       "Pehla checkup no kharch",
       "Shu pehla checkup mate atla badha paisa aapva padse"
     ],
-    "facts": "Consultation and initial checkup fees are not fixed. They depend on the specific dentist that you choose to book through our website ultimatesmiledesign.com.",
-    "details": "The ₹25,000 per unit starting price is for the dental treatment itself, not for the initial consultation. Consultation and checkup fees vary by dentist. We recommend visiting ultimatesmiledesign.com to select your preferred authorised smile designer."
+    "facts": "Consultation and initial checkup fees are not fixed. They depend on the specific authorized smile designer and clinic for your visit. Our consultant can arrange your consultation directly on this call.",
+    "details": "The ₹25,000 per unit starting price is for the dental treatment itself, not for the initial consultation. Consultation and checkup fees vary by dentist and clinic. Our consultant can arrange your consultation right here on this call."
   },
   "how_to_join_ultimate_smile_design": {
     "intent": "how_to_join_ultimate_smile_design",
@@ -207,7 +207,24 @@
       "authentication card nahi dega bas",
       "mara family dentist sasta ma kari apse"
     ],
-    "facts": "An Authorized Smile Designer provides specialized aesthetic expertise. If asked repeatedly about cheaper alternatives from other dentists who just don't give the authentication card, you must state: 'Our Authorized Smile Designers strictly follow the exclusive USD protocol taught directly by Master Ceramist Haresh Savani. They have also taken the advanced USD clinical course from Haresh Savani to ensure world-class aesthetic precision, which standard clinics cannot provide.'",
-    "details": "General dentists are excellent for routine health, but smile makeovers require advanced aesthetic training. The Authentication Card guarantees that the case was crafted in Advance Dental Export's lab under the strict USD protocol and aesthetic standards taught by Haresh Savani. Cheaper alternatives usually compromise on material quality, lab expertise, and the specialized USD clinical training that our Authorized Smile Designers possess."
+    "facts": "When a caller mentions that another dentist or family dentist is cheaper, do not validate the competitor or suggest going with them. Explain that Ultimate Smile Design provides specialized facial-driven planning, master ceramist craftsmanship from Advance Dental Export, exclusive clinical protocols taught by Haresh Savani, and an official Authentication Card with applicable documented warranty. Invite them to schedule a consultation with an authorized smile designer to see their personalized smile design firsthand.",
+    "details": "General dentists handle routine oral health, but a lasting aesthetic transformation requires specialized smile design training. Our Authorized Smile Designers follow strict USD protocols and partner with Advance Dental Export to provide handcrafted, ultra-precise restorations backed by an official Authentication Card and documented warranty. Rather than compromising on materials or clinical protocols, we recommend having a consultation with an authorized smile designer so you can evaluate the smile plan and see the difference for yourself."
+  },
+  "treatment_warranty_and_authentication": {
+    "intent": "treatment_warranty_and_authentication",
+    "topic": "Treatment Warranty and Authentication Card Details",
+    "keywords": [
+      "warranty",
+      "treatment warranty",
+      "guarantee",
+      "how long is warranty",
+      "warranty duration",
+      "authentication card",
+      "warranty card",
+      "guarantee card",
+      "treatment guarantee"
+    ],
+    "facts": "Eligible Ultimate Smile Design treatments and custom restorations come with an applicable documented warranty and an official Authentication Card from Advance Dental Export. Warranty coverage (including 10-year, 20-year, 25-year, or Lifetime) varies depending on the specific restoration type, material, and individualized treatment plan. We do not guess warranty durations over the phone; specific terms are documented directly on your Authentication Card.",
+    "details": "Every genuine Ultimate Smile Design restoration is handcrafted by master ceramists at Advance Dental Export and backed by an official Authentication Card and applicable documented warranty. Coverage tiers (including 10-year, 20-year, 25-year, and Lifetime warranties) depend on the restoration type, material, and clinical treatment plan recommended by your authorized smile designer. We do not make unverified claims or guess durations over the phone—your exact warranty duration is confirmed during your clinical consultation and verified through your Authentication Card."
   }
 }

@@ -38,12 +38,14 @@ def check_city_coverage(city: str) -> dict:
         return {
             "covered": True,
             "city": matched_city,
-            "result": f"Coverage Confirmed. Ultimate Smile Design has certified partner clinics in {matched_city}. Do not list doctor names; direct the caller to ultimatesmiledesign.com to find their nearest authorized smile designer."
+            "result": f"Coverage Confirmed. Ultimate Smile Design has certified partner clinics in {matched_city}. Do not list doctor names. If the caller wants a consultation, you can book it for them directly in {matched_city} right now using book_consultation.",
+            "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
     else:
         covered_summary = ", ".join(covered_cities[:8]) + " and 15 other cities" if covered_cities else "Surat, Ahmedabad, Mumbai, Pune, Delhi, Bangalore"
         return {
             "covered": False,
             "city": city_clean,
-            "result": f"Coverage Not Found. Ultimate Smile Design does NOT currently have authorized clinics or dentists in '{city_clean}'. We are currently present only in 23 selected Indian cities (including {covered_summary}). Inform the caller clearly that we do not have clinics in {city_clean} and recommend visiting their nearest center or checking ultimatesmiledesign.com."
+            "result": f"Coverage Not Found. Ultimate Smile Design does NOT currently have authorized clinics or dentists in '{city_clean}'. We are currently present only in 23 selected Indian cities (including {covered_summary}). Inform the caller clearly that we do not have clinics in {city_clean} and recommend visiting their nearest center or checking ultimatesmiledesign.com.",
+            "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }

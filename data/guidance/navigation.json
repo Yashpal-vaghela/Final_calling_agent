@@ -9,7 +9,7 @@
       "Is there any guarantee?"
     ],
     "emotion": "reassuring",
-    "voice_response": "Every genuine Ultimate Smile Design treatment follows the authorised process and is handcrafted through Advance Dental Export. Your Authentication Card provides case-related information that can be verified through the official website.",
+    "voice_response": "Every genuine Ultimate Smile Design treatment is handcrafted by Advance Dental Export and comes with an official Authentication Card and applicable documented warranty based on your restoration type and treatment plan. You can verify your case details anytime on our official website.",
     "follow_up": "Would you like me to explain what makes Ultimate Smile Design different?",
     "keywords": [
       "authentication",
@@ -58,7 +58,7 @@
       "list of doctors",
       "where is the clinic"
     ],
-    "guidance": "When inbound callers want to find a doctor:",
-    "script": "You can use the 'Find Dentist' tool on ultimatesmiledesign.com to explore all our authorized smile designers in your city."
+    "guidance": "When inbound callers explicitly want to browse our doctor directory online (Note: If they want to book an appointment, book it directly on this call instead of sending them to the website):",
+    "script": "If you'd like to browse our verified doctor directory, you can view all our authorized smile designers on ultimatesmiledesign.com. I can also help arrange your consultation right now if you are ready."
   }
 }

@@ -47,6 +47,11 @@ def capture_lead(
     if preferred_language not in VALID_LANGUAGES:
         preferred_language = "en"
 
+    _INSTRUCTION = (
+        "Respond entirely in the language of the caller's CURRENT spoken turn. "
+        "If the caller switched languages, respond in that new language immediately. "
+        "Do not let the language of this tool result determine the response language."
+    )
     phone_res = validate_phone_number(phone)
     if not phone_res["valid"]:
         return {
@@ -55,7 +60,8 @@ def capture_lead(
             "code": phone_res["code"],
             "received_digits": phone_res["received_digits"],
             "expected_digits": 10,
-            "message": f"Invalid phone number. {phone_res['message']} Please provide a valid 10-digit mobile number."
+            "message": f"Invalid phone number. {phone_res['message']} Please provide a valid 10-digit mobile number.",
+            "instruction": _INSTRUCTION
         }
     norm_phone = phone_res["phone"]
 
@@ -80,7 +86,8 @@ def capture_lead(
             "status": "not_persisted",
             "lead_id": None,
             "message": "Lead details received in memory, but persistent storage is currently disabled in this environment. No callback has been scheduled.",
-            "lead": lead
+            "lead": lead,
+            "instruction": _INSTRUCTION
         }
 
     return {
@@ -88,4 +95,5 @@ def capture_lead(
         "lead_id": lead["id"],
         "message": f"Details for {name} saved successfully.",
         "lead": lead,
+        "instruction": _INSTRUCTION
     }

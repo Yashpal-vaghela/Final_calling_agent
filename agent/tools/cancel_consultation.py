@@ -2,7 +2,7 @@ import json
 import httpx
 from typing import Optional
 
-API_URL = "http://192.168.0.161:5050/api/consult-with-dentist/"
+API_URL = "https://ultimatesmiledesign.com/api/consult-with-dentist/"
 def cancel_consultation(
     lead_id: str, 
     reason: str = "",
@@ -23,7 +23,8 @@ def cancel_consultation(
     if not clean_lead_id:
         return {
             "status": "error",
-            "message": "Cannot cancel the appointment because no valid lead_id was found. Please inform the user."
+            "message": "Cannot cancel the appointment because no valid lead_id was found. Please inform the user.",
+            "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
 
     payload = {
@@ -63,10 +64,12 @@ def cancel_consultation(
         print("="*70 + "\n")
         return {
             "status": "error",
-            "message": f"An error occurred while canceling the consultation: {str(e)}"
+            "message": f"An error occurred while canceling the consultation: {str(e)}",
+            "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
         
     return {
         "status": "success",
-        "message": "The consultation has been successfully canceled in the system."
+        "message": "The consultation has been successfully canceled in the system.",
+        "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
     }

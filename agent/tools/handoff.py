@@ -73,5 +73,6 @@ def human_handoff(reason: str, phone_number: Optional[str] = None, call_id: Opti
     return {
         "status": "success",
         "message": "Handoff details recorded successfully. Tell the caller exactly: 'You can reach our patient care team directly by calling the number on ultimatesmiledesign.com.', and then politely end the call.",
-        "action": "end_call"
+        "action": "end_call",
+        "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
     }

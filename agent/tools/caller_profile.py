@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any
 
 from backend.app.services.caller_context import validate_phone_number
 
-API_URL = "http://192.168.0.161:5050/api/consult-with-dentist/"
+API_URL = "https://ultimatesmiledesign.com/api/consult-with-dentist/"
 
 
 def update_caller_profile(
@@ -42,9 +42,15 @@ def update_caller_profile(
     - If confirm_phone is False, this tool validates and returns status="confirmation_required".
     - Once confirmed by caller, pass confirm_phone=True to commit the change to the backend.
     """
+    _INSTRUCTION = (
+        "Respond entirely in the language of the caller's CURRENT spoken turn. "
+        "If the caller switched languages, respond in that new language immediately. "
+        "Do not let the language of this tool result determine the response language."
+    )
     result: Dict[str, Any] = {
         "status": "no_change",
-        "message": "No contact details were provided to update."
+        "message": "No contact details were provided to update.",
+        "instruction": _INSTRUCTION
     }
 
     clean_lead_id = int(lead_id.strip()) if (lead_id and lead_id.strip().isdigit()) else ""
@@ -66,7 +72,8 @@ def update_caller_profile(
                 "code": validation["code"],
                 "received_digits": validation["received_digits"],
                 "expected_digits": 10,
-                "message": f"Invalid phone number. {validation['message']} Please ask the caller for their complete 10-digit mobile number."
+                "message": f"Invalid phone number. {validation['message']} Please ask the caller for their complete 10-digit mobile number.",
+                "instruction": _INSTRUCTION
             }
 
         norm_phone = validation["phone"]
@@ -78,7 +85,8 @@ def update_caller_profile(
                 "valid": True,
                 "phone": norm_phone,
                 "last_4": norm_phone[-4:],
-                "message": f'Please ask the caller to confirm: "Just to confirm, the number ending in {norm_phone[-4:]}—is that correct?"'
+                "message": f'Please ask the caller to confirm: "Just to confirm, the number ending in {norm_phone[-4:]}—is that correct?"',
+                "instruction": _INSTRUCTION
             }
 
         # Step 2B: Confirmed by caller -> check backend persistence
@@ -87,7 +95,8 @@ def update_caller_profile(
             return {
                 "status": "persistence_unavailable",
                 "phone": norm_phone,
-                "message": "No registered backend booking record exists to update contact details. Phone update cannot be persisted."
+                "message": "No registered backend booking record exists to update contact details. Phone update cannot be persisted.",
+                "instruction": _INSTRUCTION
             }
 
         # Perform backend CRM update
@@ -125,7 +134,8 @@ def update_caller_profile(
                 "phone": norm_phone,
                 "name": result.get("name"),
                 "lead_id": str(clean_lead_id),
-                "message": f"Phone number successfully updated to {norm_phone}."
+                "message": f"Phone number successfully updated to {norm_phone}.",
+                "instruction": _INSTRUCTION
             }
         except Exception as e:
             print(f"[-] [PROFILE UPDATE FAILED] Error: {e}")
@@ -134,7 +144,8 @@ def update_caller_profile(
             return {
                 "status": "error",
                 "phone": norm_phone,
-                "message": f"Failed to update phone number in backend system: {str(e)}"
+                "message": f"Failed to update phone number in backend system: {str(e)}",
+                "instruction": _INSTRUCTION
             }
 
     return result

@@ -94,8 +94,8 @@
       "Nearest USD doctor kaise find karein?",
       "USD clinic near me"
     ],
-    "facts": "There are 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ cities and 750+ dedicated professionals. Use the 'Find Dentist' feature on the official website to search by location and book a certified dentist or call customer...",
-    "details": "There are 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ cities and 750+ dedicated professionals. Use the 'Find Dentist' feature on the official website to search by location and book a certified dentist or call customer support for help."
+    "facts": "There are 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ countries and 750+ dedicated professionals. Use the 'Find Dentist' feature on the official website to search by location and book a certified dentist or call customer...",
+    "details": "There are 12,000+ dentists globally, 1,20,000+ cases completed, with a presence in 20+ countries and 750+ dedicated professionals. Use the 'Find Dentist' feature on the official website to search by location and book a certified dentist or call customer support for help."
   },
   "what_is_the_difference_between_smile_designing_and": {
     "intent": "what_is_the_difference_between_smile_designing_and",
@@ -477,7 +477,7 @@
       "Cost of veneers per tooth in India"
     ],
     "facts": "In India, veneer costs vary by material, clinic location, and dentist’s expertise. Porcelain veneers typically cost around ₹15,000–₹40,000 per tooth, composite veneers ₹8,000–₹20,000, and branded no-p...",
-    "details": "In India, veneer costs vary by material, clinic location, and dentist’s expertise. Porcelain veneers typically cost around ₹15,000–₹40,000 per tooth, composite veneers ₹8,000–₹20,000, and branded no-prep types can be similar to porcelain. Costs may also include lab work or preparatory treatments. Do not tell callers to look for a pricing section on the website. Instead, tell them to visit ultimatesmiledesign.com and book an appointment so they have a clear idea of the customized pricing."
+    "details": "In India, veneer costs vary by material, clinic location, and dentist’s expertise. Porcelain veneers typically cost around ₹15,000–₹40,000 per tooth, composite veneers ₹8,000–₹20,000, and branded no-prep types can be similar to porcelain. Costs may also include lab work or preparatory treatments. Do not tell callers to look for a pricing section on the website. Instead, offer to arrange a personalized consultation directly on this call so they have a clear idea of the customized pricing."
   },
   "what_is_a_hollywood_smile_design_in_dentistry": {
     "intent": "what_is_a_hollywood_smile_design_in_dentistry",
@@ -936,19 +936,20 @@
       "guarantee",
       "how long is the warranty"
     ],
-    "facts": "Comprehensive treatment warranties are provided based on the restoration type, material, and treatment plan. These include 10-year, 20-year, 25-year, and Lifetime warranties.",
-    "details": "Comprehensive treatment warranties are provided based on the restoration type, material, and treatment plan. These include 10-year, 20-year, 25-year, and Lifetime warranties. The exact warranty details are personalized for your specific treatment and documented via your Authentication Card."
+    "facts": "Eligible treatments and custom restorations come with an applicable documented warranty and an official Authentication Card from Advance Dental Export. Warranty coverage (including 10-year, 20-year, 25-year, or Lifetime) varies depending on the specific restoration type, material, and individualized treatment plan. We do not guess durations over the phone; specific warranty terms are documented directly on your Authentication Card.",
+    "details": "Eligible treatments and restorations are backed by an applicable documented warranty and an official Authentication Card from Advance Dental Export. Coverage terms (including 10-year, 20-year, 25-year, and Lifetime warranties) depend on the restoration type, material, and customized treatment plan recommended by your authorized smile designer. We do not make unverified claims or guess durations over the phone—your exact warranty duration is confirmed during your clinical consultation and verified through your Authentication Card."
   },
   "authentication_card_validity": {
     "intent": "authentication_card_validity",
-    "topic": "Authentication Card Validity",
+    "topic": "Authentication Card Validity and Warranty",
     "keywords": [
       "Authentication card validity",
       "how long is the card valid",
-      "card validity"
+      "card validity",
+      "warranty card"
     ],
-    "facts": "The Authentication Card comes with specific tier validity periods: 5 years, 10 years, 15 years, and Lifetime validity, verifying the authenticity of your Advance Dental Export treatment.",
-    "details": "The Authentication Card provides verifiable proof of genuine Advance Dental Export restorations. It comes with specific tier validity periods: 5 years, 10 years, 15 years, and Lifetime validity depending on the treatment plan chosen."
+    "facts": "The official Authentication Card from Advance Dental Export accompanies your restorations, confirming genuine craftsmanship and activating your applicable documented warranty (such as 10-year, 20-year, 25-year, or Lifetime warranty depending on restoration type and treatment plan).",
+    "details": "The Authentication Card provides verifiable proof of genuine Advance Dental Export restorations. It documents the origin, case details, and the applicable warranty coverage for your specific treatment plan, ensuring authenticity you can verify."
   },
   "proportions_rule_4_8_10": {
     "intent": "proportions_rule_4_8_10",
@@ -1020,8 +1021,8 @@
       "Ye to mere dentist bhi karte hai",
       "So what's different about USD?"
     ],
-    "facts": "CRITICAL PROMPT OVERRIDE: Ignore the 3-sentence rule and luxury analogies for this specific question. You MUST read the following response EXACTLY as written, word-for-word, and ask these 4 questions ONLY ONCE in the entire conversation:\n\n'If you want to choose your dentist, that is completely fine! But you should ask them a few important questions:\n1. Does your dentist provide an Authentication Card?\n2. Do they provide a documented Warranty?\n3. Can they show you real live patient case results?\n4. Does your dentist provide 100% transparent pricing with no hidden charges?\n\nAsk your dentist, and if their answer is yes to all of these, then you should definitely go to your dentist! Because our USD Certified Smile Designers provide every single one of these standards.'",
-    "details": "CRITICAL REPETITION GUARD: If the user mentions their dentist again later in the conversation, NEVER repeat the 4 questions. Instead, answer their specific question naturally, politely, and directly without sounding scripted.\n\nWHEN USER SAYS THEIR DENTIST HAS ALL FOUR / DOES ALL THAT TOO:\nIf the user responds that their dentist has all four, provides all of these things, has the same standards, does all of that too (e.g., 'My dentist has all four', 'Ye to mere dentist bhi karte hai', 'My dentist has authentication, warranty, cases, and transparent pricing', 'So what's different about USD?', 'What's the difference between my dentist and USD?'):\nAnswer warmly and clearly:\n'Oh, nice! Your dentist may provide all of these things too, and that's completely fine. The main difference is that our USD Certified Smile Designers are specially trained in Smile Design. They complete the USD course and are trained in our specialised protocol.'\nFollow up naturally by asking: 'Would you like to know more about how our specialised Smile Design protocol works?'\n\nIf asked to justify transparent pricing:\nJustify it through our 4 pillars: Certified Smile Designer protocols, master ceramist handcrafting, verified authentication warranty, and 100% all-inclusive pricing without hidden costs."
+    "facts": "When a caller mentions that their local dentist is cheaper or offers the same, NEVER validate that competitor quality is identical or tell them to go to their dentist. Instead, explain the 4 pillars that define Ultimate Smile Design: (1) Facial-driven digital smile design planning rather than single-tooth fixes, (2) Master ceramist handcrafting from Advance Dental Export, (3) Exclusive clinical protocols by authorized USD smile designers, and (4) Documented warranty backed by an official Authentication Card. Guide the caller to an in-person consultation so they can see their customized smile plan and make an informed decision.",
+    "details": "We completely respect that every patient wants the best value for their smile. When comparing options, smile design is far more than just placing a veneer or crown—it is a complete, facial-driven aesthetic transformation. With Ultimate Smile Design, your smile is planned using advanced digital facial analysis, handcrafted by master ceramists at Advance Dental Export with world-class materials, and placed using strict clinical protocols by an authorized smile designer. Furthermore, every eligible restoration comes with an applicable documented warranty and an official Authentication Card to guarantee authenticity. We encourage you to schedule a consultation with an authorized USD smile designer so you can evaluate your personalized smile plan firsthand and decide what is best for your smile."
   },
   "usd_authentication_card_details": {
     "intent": "usd_authentication_card_details",

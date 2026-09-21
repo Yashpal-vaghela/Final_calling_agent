@@ -97,8 +97,9 @@ class VoicePipelineOrchestrator:
                 if not clean_first_name:
                     clean_first_name = "the customer"
                 self.greeting = (
-                    f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. I see you just tried out your AI Smile Preview! "
-                    f"How did you like your new smile, and would you like to book an appointment with our authorized smile designer{city_str}?"
+                    f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. "
+                    f"I saw that you recently tried our Virtual AI Smile Preview — I hope you got a sense of what a difference it could make! "
+                    f"How did the simulation look to you, or is there anything about your smile makeover you would like to understand better?"
                 )
             elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 self.greeting = (
@@ -121,8 +122,9 @@ class VoicePipelineOrchestrator:
             elif self.opening_intent == "outbound_smile_preview":
                 city_str = f" in {self.lead_city}" if self.lead_city else ""
                 self.greeting = (
-                    f"Hello! This is Kiara from Ultimate Smile Design. I see you just tried out your AI Smile Preview online! "
-                    f"How did you like your new smile, and would you like to book an appointment with our authorized smile designer{city_str}?"
+                    f"Hello! This is Kiara from Ultimate Smile Design. "
+                    f"I saw that you recently tried our Virtual AI Smile Preview{city_str} — I hope you got a sense of what a difference it could make! "
+                    f"How did the simulation look to you, or is there anything about your smile makeover you would like to understand better?"
                 )
             elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 city_str = f" {self.lead_city}" if self.lead_city else ""
@@ -179,6 +181,7 @@ class VoicePipelineOrchestrator:
         self._waiting_for_user_since: Optional[float] = None
         self._silence_state: str = "active"
         self._silence_monitor_task: Optional[asyncio.Task] = None
+        self._last_detected_caller_language: Optional[str] = None
         
         # Session resumption and safe rotation state
         self._current_resumption_handle: Optional[str] = None
@@ -489,6 +492,40 @@ class VoicePipelineOrchestrator:
             except Exception as e:
                 print(f"[Orchestrator Warning] Failed to send clear event during live interruption: {e}")
 
+    @staticmethod
+    def _detect_turn_language(text: str) -> Optional[str]:
+        """Detect language of caller turn from live STT transcription."""
+        text_clean = text.strip()
+        if not text_clean:
+            return None
+        # 1. Gujarati script: U+0A80 to U+0AFF
+        if any("\u0A80" <= ch <= "\u0AFF" for ch in text_clean):
+            return "gu"
+        # 2. Devanagari script: U+0900 to U+097F
+        if any("\u0900" <= ch <= "\u097F" for ch in text_clean):
+            clean_words = set(re.findall(r"[\u0900-\u097F]+", text_clean))
+            gu_markers = {"तमे", "मने", "मारे", "छे", "नथी", "कहो", "आपो", "केम", "शु", "थशे", "पहेला", "पेला", "जणावो"}
+            if clean_words.intersection(gu_markers):
+                return "gu"
+            return "hi"
+        # 3. English / Latin script
+        words = re.findall(r"[a-zA-Z]+", text_clean.lower())
+        if not words:
+            return None
+        # Isolated acknowledgements alone should not switch language
+        if len(words) == 1 and words[0] in {"yes", "yeah", "okay", "ok", "haan", "ha", "hmm", "good", "sure", "fine"}:
+            return None
+        en_markers = {
+            "what", "how", "when", "where", "who", "why", "can", "could", "will", "would",
+            "is", "are", "am", "do", "does", "did", "tell", "me", "cost", "price", "pain",
+            "teeth", "doctor", "appointment", "explain", "please", "treatment", "veneers",
+            "many", "much", "about", "available", "procedure", "take", "days", "time",
+            "hello", "hi", "thank", "thanks", "want", "need", "like"
+        }
+        if any(w in en_markers for w in words) or len(words) >= 2:
+            return "en"
+        return None
+
     async def _on_live_event(self, event: dict) -> None:
         """Callback for general Gemini Live events (transcripts, turn completions, tool calls)."""
         if not event or not isinstance(event, dict):
@@ -502,6 +539,10 @@ class VoicePipelineOrchestrator:
             if text:
                 print(f"[Live STT Transcript] User: '{text}'")
                 self.session.add_transcript(text, role="user")
+                detected = self._detect_turn_language(text)
+                if detected:
+                    self._last_detected_caller_language = detected
+                    print(f"[Language Tracking] Caller turn language detected: {detected}")
         elif event_type == "gemini":
             text = event.get("text", "").strip()
             if text:
@@ -562,8 +603,9 @@ class VoicePipelineOrchestrator:
             return res
 
         def live_get_faq(**kwargs):
-            # Phase A: don't inject preferred_language — let get_faq use default
-            # and instruction is now language-neutral (Gemini decides from caller voice)
+            latest_lang = getattr(self, "_last_detected_caller_language", None)
+            if latest_lang:
+                kwargs["language"] = latest_lang
             res = get_faq(**kwargs)
             if kwargs.get("topic"):
                 self.session.update_topic(kwargs.get("topic"))
@@ -613,6 +655,9 @@ class VoicePipelineOrchestrator:
             if res.get("status") == "success":
                 self._consultation_booked = False
                 self._cancellation_save_attempted = False  # allow cancel guard to reset for safety
+                # Sync session state so Gemini sees booking_cancelled on next turn
+                if hasattr(self, "session") and self.session:
+                    self.session.mark_booking_cancelled()
             return res
 
         def live_update_caller_profile(**kwargs):
@@ -687,6 +732,9 @@ class VoicePipelineOrchestrator:
                 # If the backend returned a newly generated lead_id, save it for future updates in this call
                 if res.get("lead_id"):
                     self.lead_id = res.get("lead_id")
+                # Sync session state so Gemini sees booking_confirmed on next turn
+                if hasattr(self, "session") and self.session:
+                    self.session.mark_booking_confirmed()
                     
             return res
 
@@ -733,7 +781,9 @@ class VoicePipelineOrchestrator:
                 f"CRITICAL: You already know the caller's Name and City ({city_display}) because they just completed the AI Smile Preview online. "
                 f"DO NOT ask for their name or city again. "
                 "STRICT RULE: The user ALREADY completed the AI Smile Preview. NEVER tell them to try the AI Smile Preview, upload a photo, or fill out the preview form again! "
-                f"Open the call by acknowledging they saw their AI smile and ask if they want to book a consultation with our authorized designer in {city_display}. {location_rule}"
+                f"Open by asking how they felt about the simulation, or what they would like to understand about their smile makeover. "
+                f"Answer their questions first using local knowledge before introducing a consultation. "
+                f"Offer a consultation naturally only when the caller shows genuine interest or readiness — do NOT push booking on the opening turn. {location_rule}"
             )
         elif self.opening_intent == "outbound_contact_form":
             crucial_instruction = (

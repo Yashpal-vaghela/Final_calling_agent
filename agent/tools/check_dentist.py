@@ -128,7 +128,8 @@ def check_dentist(doctor_name: str, city: str = "") -> Dict[str, Any]:
             "is_authorized": True,
             "doctor_name": matched_doctor,
             "city": matched_city,
-            "message": f"{matched_doctor} is an authorized Ultimate Smile Design specialist in {matched_city}."
+            "message": f"{matched_doctor} is an authorized Ultimate Smile Design specialist in {matched_city}.",
+            "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
 
     # 2. Check if authorized in another city
@@ -140,7 +141,8 @@ def check_dentist(doctor_name: str, city: str = "") -> Dict[str, Any]:
                 "doctor_name": other_match,
                 "city": matched_city or city_clean,
                 "actual_city": other_city,
-                "message": f"{other_match} is an authorized specialist in {other_city}, but NOT in {matched_city or city_clean}."
+                "message": f"{other_match} is an authorized specialist in {other_city}, but NOT in {matched_city or city_clean}. Do NOT tell the caller to visit ultimatesmiledesign.com. Ask if they would like to arrange their consultation in {matched_city or city_clean} with an assigned specialist, or in {other_city} with {other_match}.",
+                "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
             }
 
     # 3. Not authorized in any city
@@ -148,5 +150,6 @@ def check_dentist(doctor_name: str, city: str = "") -> Dict[str, Any]:
         "is_authorized": False,
         "doctor_name": doc_clean,
         "city": matched_city or city_clean,
-        "message": f"{doc_clean} is not an authorized Ultimate Smile Design specialist."
+        "message": f"{doc_clean} is not an authorized Ultimate Smile Design specialist.",
+        "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
     }

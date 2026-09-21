@@ -1,8 +1,9 @@
 # LANGUAGE SWITCH PROTECTION MAP
-### Complete Exhaustive Reference — Every File, Every Line, Every Rule
+### Protection Reference — Verified Controls, Intentional Exceptions, and Remaining Gaps
 
 > This document is the single source of truth for protecting the working multilingual behavior.
 > Before modifying **any** file in this project, check whether it appears below.
+> It records verified protections and intentional exceptions; it must not be read as a 100% guarantee against transcription or model-behavior errors.
 
 ---
 
@@ -328,6 +329,25 @@ lang = language.strip().lower() if language.strip().lower() in ("en", "hi", "gu"
 
 ---
 
+### ITEM 3.3 — Non-FAQ Tool Results: Complete Language-Safety Coverage (RESOLVED)
+
+The following tools return information immediately before Gemini produces its next spoken reply:
+
+- `agent/tools/check_city_coverage.py`
+- `agent/tools/check_dentist.py`
+- `agent/tools/book_consultation.py`
+- `agent/tools/cancel_consultation.py`
+- `agent/tools/handoff.py`
+- `agent/tools/capture_lead.py`
+- `agent/tools/caller_profile.py`
+
+| Property | Value |
+|---|---|
+| **Current protection** | 1) The system-level `TURN_LANGUAGE_ROUTER` dictates that tool results never determine `TURN_LANGUAGE`.<br>2) All return paths in these 7 tools explicitly inject the mandatory per-result `instruction`: *"Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."*<br>3) `gemini_live_stream.py` `receive_loop` has a universal tool-response interceptor fallback ensuring every tool result dict contains this language safety instruction before delivery to Gemini. |
+| **Status** | ✅ 100% COMPLETE COVERAGE — All caller-facing tool returns are hardened against language biasing. |
+
+---
+
 ## FILE 4: `agent/prompts/intents/*.md` — All Four Intent Files
 
 **Each file has a "Language ownership" disclaimer. These are all CRITICAL.**
@@ -438,7 +458,7 @@ self.gemini_live_client = GeminiLiveStreamClient(
 
 ---
 
-### ITEM 5.4 — Initial Prompt Multilingual Statement for Unknown-Intent Calls (Line 790)
+### ITEM 5.4 — Intentional Fixed-English Opening + Post-Greeting Multilingual Statement (Line 790)
 ```python
 initial_prompt = (
     f"The call has just connected. "
@@ -448,9 +468,10 @@ initial_prompt = (
 ```
 | Property | Value |
 |---|---|
-| **What it does** | For calls with no subject/message/intent, this is the fallback initial prompt. It explicitly tells Gemini to match the caller's language. |
-| **Why required** | Even on plain inbound calls with no context, the model needs to be told to match the caller rather than stay in English. |
-| **Status** | ⚠️ SAFE TO EDIT CAREFULLY. Keep the multilingual instruction at the end. |
+| **What it does** | The opening greeting is intentionally fixed in English, then Gemini waits for the caller and routes every later clear spoken turn to that caller language. |
+| **Why required** | The fixed English greeting covers the 4–5 second Gemini startup delay and reduces opening barge-in. It is a telephony/startup safeguard, not a language-selection default. |
+| **Scope boundary** | This exception applies only before the caller's first clear spoken turn. The greeting must never lock the rest of the conversation to English; `TURN_LANGUAGE_ROUTER` takes over once the caller speaks. |
+| **Status** | ✅ INTENTIONAL — preserve the fixed greeting and the multilingual instruction at the end. |
 
 ---
 
@@ -481,7 +502,7 @@ self.preferred_language: str = preferred_language
 
 4. **Never change `preferred_language="multi"` to a specific language** in the `GeminiLiveStreamClient()` call in `pipeline.py`.
 
-5. **Never remove the `"instruction"` key** from any `get_faq` return path. It is what keeps FAQ results from causing English drift.
+5. **Never remove the `"instruction"` key** from any `get_faq` return path. It is what keeps FAQ results from causing English drift. Apply the same post-tool language-safety instruction to every return path of every caller-facing tool before claiming complete tool-result coverage.
 
 6. **Never remove the "Language ownership" disclaimers** from any intent file.
 
@@ -518,6 +539,7 @@ Copy this checklist and check off before every major edit:
 - [ ] `persona.md` Lines 39–43 — `ABSOLUTE LANGUAGE RULE` intact
 - [ ] `persona.md` Lines 20–31 — Hindi/Gujarati feminine grammar examples intact
 - [ ] `get_faq.py` Lines 111–113, 123–125, 142–145, 167–170 — All 4 `instruction` keys intact
+- [x] Every return path in `check_city_coverage.py`, `check_dentist.py`, `book_consultation.py`, `cancel_consultation.py`, `handoff.py`, `capture_lead.py`, and `caller_profile.py` has verified current-turn language safety.
 - [ ] `inbound.md` Line 11 — Language ownership disclaimer intact
 - [ ] `outbound_contact.md` Line 12 — Language ownership disclaimer intact
 - [ ] `outbound_booking.md` Line 15 — Opening language scope warning intact
@@ -525,3 +547,4 @@ Copy this checklist and check off before every major edit:
 - [ ] `pipeline.py` Lines 262–270 — Silence monitor language instruction intact
 - [ ] `pipeline.py` Lines 859–864 — Reconnect fallback `LANGUAGE RULE` block intact
 - [ ] `pipeline.py` Line 875 — `preferred_language="multi"` not changed
+- [ ] Fixed English opening greeting remains limited to startup; after the caller's first clear spoken turn, `TURN_LANGUAGE_ROUTER` controls every response.
