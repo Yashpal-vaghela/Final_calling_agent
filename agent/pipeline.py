@@ -606,13 +606,11 @@ class VoicePipelineOrchestrator:
                 doctor_name=doctor
             )
 
-            # --- RE-BOOKING FIX ---
-            # After a successful cancellation, clear the lead_id so that if the
-            # user decides to re-book in the same call, book_consultation will
-            # send lead_id="" to the CRM, which creates a BRAND NEW booking
-            # record instead of trying to "update" the already-cancelled record.
+            # --- SAME-CALL RE-BOOKING & UN-CANCEL ---
+            # After cancellation, keep self.lead_id so that if the caller decides to
+            # re-book in the same call, book_consultation updates and un-cancels (is_cancel: False)
+            # that existing appointment instead of creating an orphaned duplicate record.
             if res.get("status") == "success":
-                self.lead_id = ""
                 self._consultation_booked = False
                 self._cancellation_save_attempted = False  # allow cancel guard to reset for safety
             return res
@@ -623,6 +621,19 @@ class VoicePipelineOrchestrator:
             kwargs.setdefault("lead_id", lead_id_val)
             if kwargs.get("confirm_phone") and not kwargs.get("phone") and getattr(self, "_pending_phone", None):
                 kwargs["phone"] = self._pending_phone
+
+            if not kwargs.get("name"):
+                name_val = self.caller_context.get("name") or self.lead_name or ""
+                if name_val:
+                    kwargs["name"] = name_val
+            if not kwargs.get("city"):
+                city_val = self.caller_context.get("city") or ""
+                if city_val:
+                    kwargs["city"] = city_val
+            if not kwargs.get("email"):
+                email_val = self.caller_context.get("email") or ""
+                if email_val:
+                    kwargs["email"] = email_val
 
             res = update_caller_profile(**kwargs)
             if res.get("status") == "confirmation_required":
@@ -671,6 +682,8 @@ class VoicePipelineOrchestrator:
             if res.get("status") == "success":
                 self._consultation_booked = True
                 self._consultation_doctor = (kwargs.get("doctor_name") or "").strip()
+                if requested_city:
+                    self.update_canonical_identity(city=requested_city)
                 # If the backend returned a newly generated lead_id, save it for future updates in this call
                 if res.get("lead_id"):
                     self.lead_id = res.get("lead_id")

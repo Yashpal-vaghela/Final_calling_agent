@@ -94,7 +94,10 @@ def update_caller_profile(
         payload = {
             "lead_id": clean_lead_id,
             "phone": norm_phone,
-            "source": "calling_agent"
+            "source": "calling_agent",
+            "first_name": "Caller",
+            "last_name": ".",
+            "city": city.strip() if (city and city.strip()) else "Ahmedabad"
         }
         if name and name.strip():
             parts = name.strip().split(maxsplit=1)
@@ -102,8 +105,6 @@ def update_caller_profile(
             payload["last_name"] = parts[1] if len(parts) > 1 else "."
         if email and email.strip():
             payload["email"] = email.strip()
-        if city and city.strip():
-            payload["city"] = city.strip()
         if doctor_name and doctor_name.strip():
             payload["doctor_name"] = doctor_name.strip()
         if message and message.strip():
@@ -128,6 +129,8 @@ def update_caller_profile(
             }
         except Exception as e:
             print(f"[-] [PROFILE UPDATE FAILED] Error: {e}")
+            if hasattr(e, "response") and e.response is not None:
+                print(f"API Error Body: {e.response.text}")
             return {
                 "status": "error",
                 "phone": norm_phone,

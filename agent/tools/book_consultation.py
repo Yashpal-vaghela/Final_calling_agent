@@ -107,6 +107,7 @@ def book_consultation(
         "email": email.strip(),
         "city": matched_city,
         "message": message.strip(),
+        "is_cancel": False,
         "source": "calling_agent"
     }
 
