@@ -1,12 +1,31 @@
 """
-Audio codec utilities for μ-law <-> PCM16 conversion and resampling.
+Audio codec utilities for μ-law <-> PCM16 conversion and high-fidelity resampling.
 
-This module uses `audioop` (provided by the `audioop-lts` package in Python 3.13+)
-for high-performance, C-level audio conversions without heavyweight dependencies 
-like scipy or numpy.
+Supports both:
+1. `soxr` (libsoxr 64-bit bandlimited sinc interpolation with steep anti-aliasing)
+   for crystal-clear telephony audio without high-frequency attenuation.
+2. `audioop` (provided by `audioop-lts` in Python 3.13+) as lightweight C fallback.
 """
-import audioop
-from typing import Tuple, Optional
+import os
+from typing import Tuple, Optional, Any
+
+try:
+    import audioop
+except ImportError as exc:
+    raise ImportError(
+        "audioop is required for audio conversions. "
+        "On Python 3.13+, install 'audioop-lts' (which provides the 'audioop' module)."
+    ) from exc
+
+try:
+    import soxr
+    import numpy as np
+    HAS_SOXR = True
+except ImportError:
+    HAS_SOXR = False
+    soxr = None
+    np = None
+
 
 def mulaw_to_pcm16(mulaw_bytes: bytes) -> bytes:
     """
@@ -20,6 +39,7 @@ def mulaw_to_pcm16(mulaw_bytes: bytes) -> bytes:
     """
     return audioop.ulaw2lin(mulaw_bytes, 2)
 
+
 def pcm16_to_mulaw(pcm_bytes: bytes) -> bytes:
     """
     Converts 16-bit PCM audio to μ-law.
@@ -32,25 +52,73 @@ def pcm16_to_mulaw(pcm_bytes: bytes) -> bytes:
     """
     return audioop.lin2ulaw(pcm_bytes, 2)
 
-import math
-import numpy as np
-from scipy.signal import resample_poly
+
+def soxr_resample_pcm16(
+    pcm_bytes: bytes,
+    in_rate: int,
+    out_rate: int,
+    state: Optional[Any] = None,
+    quality: str = "HQ"
+) -> Tuple[bytes, Optional[Any]]:
+    """
+    High-fidelity stateful resampling for 16-bit mono linear PCM using libsoxr (64-bit bandlimited sinc).
+    Maintains overlap filter state across streaming chunks to eliminate boundary phase clicks while
+    preserving crisp high frequencies (1.5 kHz - 3.8 kHz) for speech clarity.
+    
+    Args:
+        pcm_bytes (bytes): 16-bit PCM mono audio bytes.
+        in_rate (int): Input sample rate (e.g., 24000 or 8000).
+        out_rate (int): Output sample rate (e.g., 8000 or 16000).
+        state (tuple, optional): State tuple carrying overlap samples from previous chunk.
+        quality (str): Quality setting ('QQ', 'LQ', 'MQ', 'HQ', 'VHQ').
+        
+    Returns:
+        Tuple[bytes, tuple]: Resampled audio bytes and new state for continuous streaming.
+    """
+    if in_rate == out_rate:
+        return pcm_bytes, state
+    if not pcm_bytes:
+        return b"", state
+
+    in_arr = np.frombuffer(pcm_bytes, dtype=np.int16)
+    
+    # 48 input samples (~2ms at 24kHz, 6ms at 8kHz) gives seamless overlap-save across frames
+    overlap_in = 48
+    if state is not None and isinstance(state, tuple) and len(state) >= 1 and isinstance(state[0], np.ndarray):
+        history = state[0]
+        extended = np.concatenate([history, in_arr])
+        out_arr = soxr.resample(extended, in_rate, out_rate, quality=quality).astype(np.int16)
+        out_overlap = int(round(len(history) * (out_rate / in_rate)))
+        out_valid = out_arr[out_overlap:]
+    else:
+        out_valid = soxr.resample(in_arr, in_rate, out_rate, quality=quality).astype(np.int16)
+
+    keep_len = min(len(in_arr), overlap_in)
+    new_state = (in_arr[-keep_len:], None)
+    return out_valid.tobytes(), new_state
+
 
 def resample_pcm16(
     pcm_bytes: bytes, 
     in_rate: int, 
     out_rate: int, 
-    state: Optional[tuple] = None
-) -> Tuple[bytes, Optional[tuple]]:
+    state: Optional[Any] = None,
+    engine: Optional[str] = None
+) -> Tuple[bytes, Optional[Any]]:
     """
-    Resamples 16-bit PCM audio using high-quality Polyphase FIR filtering.
-    Maintains streaming state across chunks to prevent boundary clicks.
+    Resamples 16-bit mono linear PCM audio.
+    
+    When HAS_SOXR is available and engine is not explicitly 'audioop', uses libsoxr for
+    high-fidelity bandlimited sinc interpolation with steep anti-aliasing to eliminate
+    muffled/muddy telephone audio.
+    Falls back gracefully to audioop.ratecv.
     
     Args:
-        pcm_bytes (bytes): 16-bit PCM audio.
-        in_rate (int): Original sample rate (e.g., 24000).
-        out_rate (int): Target sample rate (e.g., 8000).
-        state (tuple, optional): (zi,) State from previous call for continuous streaming.
+        pcm_bytes (bytes): 16-bit PCM mono audio bytes.
+        in_rate (int): Original sample rate (e.g., 24000 or 8000).
+        out_rate (int): Target sample rate (e.g., 8000 or 16000).
+        state (tuple, optional): State from previous call for continuous streaming.
+        engine (str, optional): 'soxr' or 'audioop'. Defaults to AUDIO_RESAMPLE_ENGINE env or 'soxr'.
         
     Returns:
         Tuple[bytes, tuple]: Resampled audio bytes and the new state for the next chunk.
@@ -58,44 +126,18 @@ def resample_pcm16(
     if in_rate == out_rate:
         return pcm_bytes, state
         
-    pcm_array = np.frombuffer(pcm_bytes, dtype=np.int16)
-    if len(pcm_array) == 0:
+    if not pcm_bytes:
         return b"", state
-        
-    gcd = math.gcd(in_rate, out_rate)
-    up = out_rate // gcd
-    down = in_rate // gcd
-    
-    # Calculate the filter half-length to determine overlap needed for continuity
-    # resample_poly uses a kaiser window with half_len = 10 * max(up, down)
-    half_len = 10 * max(up, down)
-    overlap_samples = 2 * half_len + 1
-    
-    prev_overlap = state[0] if state is not None else np.array([], dtype=np.int16)
-    
-    # Concatenate previous overlap with current chunk
-    combined = np.concatenate([prev_overlap, pcm_array])
-    
-    # Resample the combined block
-    resampled = resample_poly(
-        combined, 
-        up, 
-        down, 
-        window=('kaiser', 5.0), 
-        padtype='constant'
-    )
-    
-    # Discard the output corresponding to the prepended overlap
-    if len(prev_overlap) > 0:
-        skip_out_samples = math.ceil(len(prev_overlap) * up / down)
-    else:
-        skip_out_samples = 0
-        
-    valid_resampled = resampled[skip_out_samples:]
-    
-    # Save the tail of the current array for the next overlap
-    next_overlap = combined[-overlap_samples:] if len(combined) > overlap_samples else combined
-    
-    # Clip and convert back to int16 bytes
-    resampled_int16 = np.clip(np.round(valid_resampled), -32768, 32767).astype(np.int16)
-    return resampled_int16.tobytes(), (next_overlap,)
+
+    active_engine = engine or os.getenv("AUDIO_RESAMPLE_ENGINE", "soxr" if HAS_SOXR else "audioop")
+    if active_engine == "soxr" and HAS_SOXR:
+        return soxr_resample_pcm16(pcm_bytes, in_rate, out_rate, state)
+
+    # If state was from soxr, reset it to None for audioop to avoid TypeError
+    if state is not None and isinstance(state, tuple) and len(state) >= 1 and isinstance(state[0], np.ndarray if np else ()):
+        state = None
+
+    # audioop.ratecv arguments: (fragment, width, nchannels, inrate, outrate, state[, weightA[, weightB]])
+    # For 16-bit mono PCM: width=2, nchannels=1
+    resampled_bytes, new_state = audioop.ratecv(pcm_bytes, 2, 1, in_rate, out_rate, state)
+    return resampled_bytes, new_state

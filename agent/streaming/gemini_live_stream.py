@@ -324,11 +324,21 @@ class GeminiLiveStreamClient:
 
         check_city_tool = genai_types.FunctionDeclaration(
             name="check_city_coverage",
-            description="Check if Ultimate Smile Design services are available in a specific Indian city. ONLY call this if the user explicitly asks about a city or asks if you are available in their location.",
+            description=(
+                "Check if Ultimate Smile Design services are available in a specific Indian city, "
+                "or find the nearest authorized city and authorized dentists from the 51-dentist API. "
+                "If the caller rejects a previously suggested city (e.g. 'I do not want to go to Rajkot', 'Rajkot nahi jana'), "
+                "pass that city in exclude_cities to automatically receive the next closest authorized city and dentist names."
+            ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
                 properties={
-                    "city": genai_types.Schema(type=genai_types.Type.STRING, description="City name to check coverage for"),
+                    "city": genai_types.Schema(type=genai_types.Type.STRING, description="City name to check coverage for (e.g. 'Amreli', 'Surat')"),
+                    "exclude_cities": genai_types.Schema(
+                        type=genai_types.Type.ARRAY,
+                        items=genai_types.Schema(type=genai_types.Type.STRING),
+                        description="Optional. Cities rejected by the caller or to be excluded (e.g. ['Rajkot'])"
+                    ),
                 },
                 required=["city"],
             ),
@@ -430,6 +440,7 @@ class GeminiLiveStreamClient:
                     "last_name": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
                     "phone": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
                     "email": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
+                    "pincode": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. The 6-digit area pincode if mentioned by caller, or empty string ''."),
                 },
                 required=[],
             ),
@@ -495,6 +506,34 @@ class GeminiLiveStreamClient:
             ),
         )
 
+        get_nearest_dentists_tool = genai_types.FunctionDeclaration(
+            name="get_nearest_dentists",
+            description=(
+                "Fetch the nearest authorized smile designers (dentists) for the caller based on PIN code. "
+                "Use this when the caller is interested in booking a consultation or asks about available dentists. "
+                "Strict instructions:\n"
+                "1. DO NOT say 'in your closest area' or 'in your nearest area'.\n"
+                "2. Present the names: 'We have Dr. [1], Dr. [2], and Dr. [3] in [city]. Should I confirm your appointment with your nearest dentist, Dr. [1]?'\n"
+                "3. If the caller asks for more names or other options, call with page=2.\n"
+                "4. If the caller asks which dentist is best, great, more experienced, or cannot decide: DO NOT say coordinator assigns. NEVER claim one dentist is better than another. Reassure them: 'All of our dentists are equally experienced and great because all of them are our authorized smile designers. Since Dr. [top_recommended_doctor] is your nearest dentist in [city], should I confirm your appointment with Dr. [top_recommended_doctor]?'\n"
+                "5. Speak ONLY doctor names. NEVER speak clinic addresses, clinic names, or PIN codes over the phone."
+            ),
+            parameters=genai_types.Schema(
+                type=genai_types.Type.OBJECT,
+                properties={
+                    "pincode": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. The 6-digit area PIN code if mentioned or available, or empty string ''."),
+                    "city": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. The caller's city."),
+                    "page": genai_types.Schema(type=genai_types.Type.INTEGER, description="Batch page: 1 for first 3 doctors, 2 for next batch."),
+                    "exclude_cities": genai_types.Schema(
+                        type=genai_types.Type.ARRAY,
+                        items=genai_types.Schema(type=genai_types.Type.STRING),
+                        description="Optional. Cities rejected by the caller to exclude when determining nearest dentists (e.g. ['Rajkot'])"
+                    ),
+                },
+                required=[],
+            ),
+        )
+
         return genai_types.Tool(
             function_declarations=[
                 check_city_tool,
@@ -502,7 +541,8 @@ class GeminiLiveStreamClient:
                 book_consultation_tool,
                 check_dentist_tool,
                 cancel_consultation_tool,
-                update_caller_profile_tool
+                update_caller_profile_tool,
+                get_nearest_dentists_tool,
             ]
         )
 
@@ -510,6 +550,7 @@ class GeminiLiveStreamClient:
         """Maps schema names to callable execution wrappers supplying session parameters."""
         from agent.tools.check_dentist import check_dentist
         from agent.tools.caller_profile import update_caller_profile
+        from agent.tools.get_nearest_dentists import async_get_nearest_dentists
 
         def wrap_capture_lead(**kwargs):
             kwargs.setdefault("call_id", self.call_id)
@@ -534,6 +575,7 @@ class GeminiLiveStreamClient:
             "check_dentist": check_dentist,
             "update_caller_profile": update_caller_profile,
             "update_contact_details": update_caller_profile,
+            "get_nearest_dentists": async_get_nearest_dentists,
         }
 
     async def send_audio(self, audio_chunk: bytes) -> None:
@@ -658,10 +700,18 @@ class GeminiLiveStreamClient:
                         phone = self.caller_context.get("phone", "")
                         subject = self.caller_context.get("subject", "")
                         message = self.caller_context.get("message") or self.caller_context.get("notes") or ""
+                        smile_diff = self.caller_context.get("smile_diff")
 
                         name_note = ""
                         if name:
                             name_note = f"Caller Name: {name} (Strict Rule: Pronounce caller's name exactly as '{name}'. Do not repeat the caller's name in every sentence).\n"
+
+                        smile_analysis_block = ""
+                        if smile_diff and isinstance(smile_diff, dict):
+                            from agent.utils.smile_diff import format_smile_diff_for_prompt
+                            formatted_diff = format_smile_diff_for_prompt(smile_diff)
+                            if formatted_diff:
+                                smile_analysis_block = f"{formatted_diff}\n"
 
                         context_msg = (
                             "<caller_context>\n"
@@ -672,6 +722,7 @@ class GeminiLiveStreamClient:
                             "<caller_message>\n"
                             f"{message}\n"
                             "</caller_message>\n"
+                            f"{smile_analysis_block}"
                             "</caller_context>"
                         )
                         turns.append(

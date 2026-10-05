@@ -1,10 +1,12 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-import os
 
 from backend.app.routes import smartflo_voice, contact_form, internal_callback, booking_form, cities, smile_preview
 from backend.app.services.caller_context import ACTIVE_CALLER_CONTEXTS
+
 
 app = FastAPI(title="USD Calling Agent")
 
@@ -51,3 +53,5 @@ def debug_environment():
         "knowledge_files_found": kb_files,
         "active_contexts_count": len(ACTIVE_CALLER_CONTEXTS)
     }
+
+

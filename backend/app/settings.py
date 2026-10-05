@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-3.5-flash-lite"
     GEMINI_LIVE_MODEL: str = "gemini-3.1-flash-live-preview"
     GEMINI_LIVE_VOICE: str = "Aoede"
+    SMILE_MEDIA_BASE_URL: str = "https://ultimatesmiledesign.com/media/"
 
     INTERNAL_KEY: str = "default_internal_secret_key"
     ALLOWED_NUMBERS: str = ""

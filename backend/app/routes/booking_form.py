@@ -8,9 +8,10 @@ from pydantic import BaseModel, Field
 
 from backend.app.services.smartflo_service import smartflo_client
 from backend.app.services.caller_context import register_caller_context
-from backend.app.services.city_service import is_city_covered
+from backend.app.services.city_service import is_city_covered, is_city_supported, validate_city_pincode_match_async
 
 router = APIRouter()
+
 
 class BookingFormSubmission(BaseModel):
     first_name: str = Field(..., min_length=1, description="Caller first name")
@@ -18,6 +19,7 @@ class BookingFormSubmission(BaseModel):
     email: str = Field(..., min_length=3, description="Caller email address")
     phone: str = Field(..., min_length=5, description="Caller phone number")
     city: str = Field(..., min_length=1, description="Caller city")
+    pincode: str = Field(..., min_length=6, max_length=6, description="Caller 6-digit area pincode")
     message: str = Field(default="", description="Enquiry details or notes")
 
 @router.get("/booking-form", response_class=HTMLResponse)
@@ -37,8 +39,13 @@ async def submit_booking_form(form_data: BookingFormSubmission):
     Receives submitted booking appointment form details, caches context, logs lead,
     and initiates outbound Click-to-Call via Tata Smartflo.
     """
-    if not is_city_covered(form_data.city):
+    if not is_city_supported(form_data.city):
         raise HTTPException(status_code=400, detail=f"City '{form_data.city}' is not covered. Please select a valid city.")
+
+    is_valid_pin, pin_err = await validate_city_pincode_match_async(form_data.city, form_data.pincode)
+    if not is_valid_pin:
+        raise HTTPException(status_code=400, detail=pin_err)
+
 
     lead_id = str(uuid.uuid4())
     full_name = f"{form_data.first_name.strip()} {form_data.last_name.strip()}"
@@ -51,6 +58,7 @@ async def submit_booking_form(form_data: BookingFormSubmission):
         "phone": form_data.phone.strip(),
         "email": form_data.email.strip(),
         "city": form_data.city.strip(),
+        "pincode": form_data.pincode.strip(),
         "notes": form_data.message.strip() if form_data.message else "",
         "message": form_data.message.strip() if form_data.message else "",
         "intent": "outbound_booking_form",
@@ -66,7 +74,8 @@ async def submit_booking_form(form_data: BookingFormSubmission):
         "lead_id": lead_id,
         "opening_intent": "outbound_booking_form",
         "first_name": form_data.first_name.strip(),
-        "city": form_data.city.strip()
+        "city": form_data.city.strip(),
+        "pincode": form_data.pincode.strip()
     }
 
     result = await smartflo_client.initiate_click_to_call(

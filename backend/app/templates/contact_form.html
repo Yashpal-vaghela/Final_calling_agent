@@ -360,14 +360,20 @@
           </div>
 
           <div class="form-group">
-            <label for="city">City <span class="required-badge">*</span></label>
-            <input type="text" id="city" name="city" list="cities-datalist" placeholder="e.g. Surat, Mumbai, Ahmedabad" autocomplete="off" required>
-            <datalist id="cities-datalist"></datalist>
-          </div>
-
-          <div class="form-group full-width">
             <label for="subject">Subject / Consultation Topic</label>
             <input type="text" id="subject" name="subject" placeholder="e.g. Smile Transformation with Master Ceramists">
+          </div>
+
+          <div class="form-group" id="pincodeGroup">
+            <label for="pincode">Area Pincode <span class="required-badge">*</span></label>
+            <input type="text" id="pincode" name="pincode" placeholder="e.g. 395007" pattern="[0-9]{6}" maxlength="6" autocomplete="postal-code" required>
+          </div>
+
+          <div class="form-group" id="cityGroup">
+            <label for="city">City Name <span class="required-badge">*</span></label>
+            <input type="text" id="city" name="city" list="cities-datalist" placeholder="Auto-fetched from PIN code (or select)" autocomplete="off" required>
+            <datalist id="cities-datalist"></datalist>
+            <div id="cityHint" style="font-size: 11.5px; margin-top: 4px; display: none;"></div>
           </div>
 
           <div class="form-group full-width">
@@ -413,6 +419,62 @@
     const statusBanner = document.getElementById('statusBanner');
     const statusTitle = document.getElementById('statusTitle');
     const statusDetails = document.getElementById('statusDetails');
+    const pincodeInput = document.getElementById('pincode');
+    const cityInput = document.getElementById('city');
+    const cityHint = document.getElementById('cityHint');
+
+    // Auto-fetch city from Postal API when PIN code is entered
+    let pincodeDebounce = null;
+    async function autoFetchCityFromPostalApi(pin) {
+      if (!pin || pin.length !== 6) {
+        if (cityHint) cityHint.style.display = 'none';
+        return;
+      }
+      if (cityHint) {
+        cityHint.style.display = 'block';
+        cityHint.style.color = '#ECC85B';
+        cityHint.innerHTML = '⏳ Fetching city from Postal API...';
+      }
+      try {
+        const resp = await fetch(`/api/pincode-lookup/${pin}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.success && data.city) {
+            cityInput.value = data.city;
+            if (cityHint) {
+              cityHint.style.display = 'block';
+              cityHint.style.color = '#10B981';
+              cityHint.innerHTML = `📍 Auto-fetched from Postal API: <strong>${data.city}</strong> (you can also edit/select)`;
+            }
+            return;
+          }
+        }
+        if (cityHint) {
+          cityHint.style.color = '#94A3B8';
+          cityHint.innerHTML = 'ℹ️ Postal API: Please select city from list';
+        }
+      } catch (err) {
+        if (cityHint) {
+          cityHint.style.color = '#94A3B8';
+          cityHint.innerHTML = 'ℹ️ Please select or enter your city';
+        }
+      }
+    }
+
+    pincodeInput.addEventListener('input', () => {
+      const clean = pincodeInput.value.replace(/\D/g, '').slice(0, 6);
+      pincodeInput.value = clean;
+      clearTimeout(pincodeDebounce);
+      if (clean.length === 6) {
+        pincodeDebounce = setTimeout(() => autoFetchCityFromPostalApi(clean), 100);
+      } else {
+        if (cityHint) cityHint.style.display = 'none';
+      }
+    });
+
+    if (pincodeInput.value && pincodeInput.value.replace(/\D/g, '').length === 6) {
+      autoFetchCityFromPostalApi(pincodeInput.value.replace(/\D/g, ''));
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -421,18 +483,37 @@
       const email = document.getElementById('email').value.trim();
       const phone = phoneInput.value.trim();
       const city = document.getElementById('city').value.trim();
+      const pincode = document.getElementById('pincode').value.trim();
       const subject = document.getElementById('subject').value.trim();
       const message = document.getElementById('message').value.trim();
 
-      if (!name || !email || !phone || !city) {
-        showStatus('error', 'Incomplete Form', 'Please fill in all required fields (Name, Email, Phone, City).');
+      if (!pincode || !/^\d{6}$/.test(pincode)) {
+        showStatus('error', 'Invalid Pincode', 'Please enter a valid 6-digit area pincode (e.g. 395007).');
         return;
       }
 
-      if (typeof validateCity === 'function' && !validateCity(city)) {
-        showStatus('error', 'Invalid City', 'The selected city is not currently covered. Please choose a valid city from the list.');
+      if (!name || !email || !phone || !city) {
+        showStatus('error', 'Incomplete Form', 'Please fill in all required fields (Name, Email, Phone, Pincode, City).');
         return;
       }
+
+      // Validate geographic consistency between pincode and city using Postal API
+      try {
+        const res = await fetch('/api/validate-city-pincode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ city: city, pincode: pincode })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.valid) {
+            showStatus('error', 'Location Mismatch', data.message || 'The entered PIN code does not match the selected city.');
+            return;
+          }
+        }
+      } catch (err) {}
+
+
 
       // Set loading state
       submitBtn.disabled = true;
@@ -451,6 +532,7 @@
             email: email,
             phone: phone,
             city: city,
+            pincode: pincode,
             subject: subject,
             message: message
           })
@@ -494,6 +576,6 @@
       statusBanner.style.display = 'none';
     }
   </script>
-  <script src="/static/js/city-autocomplete.js"></script>
+  <script src="/static/js/city-autocomplete.js?v=3.0"></script>
 </body>
 </html>

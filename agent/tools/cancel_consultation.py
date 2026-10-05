@@ -1,8 +1,9 @@
 import json
 import httpx
 from typing import Optional
+from backend.app.services.city_service import get_default_pincode_for_city
 
-API_URL = "https://ultimatesmiledesign.com/api/consult-with-dentist/"
+API_URL = "http://192.168.0.161:1020/api/consult-with-dentist/"
 def cancel_consultation(
     lead_id: str, 
     reason: str = "",
@@ -11,7 +12,8 @@ def cancel_consultation(
     phone: str = "",
     email: str = "",
     city: str = "",
-    doctor_name: str = ""
+    doctor_name: str = "",
+    pincode: str = ""
 ) -> dict:
     """
     Cancel an existing in-call consultation via the backend API.
@@ -27,19 +29,22 @@ def cancel_consultation(
             "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
 
+    clean_city = city.strip() if city.strip() else "Ahmedabad"
+    clean_pincode = pincode.strip() if pincode.strip() else get_default_pincode_for_city(clean_city)
+
     payload = {
         "lead_id": clean_lead_id,
         "first_name": first_name.strip(),
         "last_name": last_name.strip() or ".",
         "phone": phone.strip(),
         "email": email.strip(),
+        "city": clean_city,
+        "pincode": clean_pincode,
         "is_cancel": True,
         "message": f"CANCELLATION REASON: {reason}".strip() if reason else "CANCELLED",
         "source": "calling_agent"
     }
     
-    if city.strip():
-        payload["city"] = city.strip()
     if doctor_name.strip():
         payload["doctor_name"] = doctor_name.strip()
 

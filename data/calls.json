@@ -1,1 +1,326 @@
-{}
+{
+  "CAGE3-T6-1790249478.1652393": {
+    "call_id": "CAGE3-T6-1790249478.1652393",
+    "summary": {
+      "summary": "Keval Kalariya inquired about smile design treatments for a broken tooth and crooked teeth. The conversation was conducted in Gujarati, and while he was interested, he was currently driving and requested a follow-up call at 5:00 PM tomorrow, which the AI assistant clarified she could not do, advising him to call back or visit the website.",
+      "key_concerns": [
+        "Broken tooth",
+        "Crooked teeth",
+        "Interest in smile design treatment"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "neutral",
+      "language_used": "Gujarati",
+      "next_actions": [
+        "Call Keval Kalariya back tomorrow at 5:00 PM from the clinic front desk to schedule an in-clinic consultation in Surat.",
+        "Send a WhatsApp message with information about clear aligners and veneers for a broken and crooked tooth."
+      ]
+    },
+    "transcript_turn_count": 9
+  },
+  "CAGE3-T6-1790250222.1663237": {
+    "call_id": "CAGE3-T6-1790250222.1663237",
+    "summary": {
+      "summary": "Dream Patel inquired about the Ultimate Smile Design treatment to address a broken tooth and a misaligned tooth. The caller had to leave due to urgent work and requested a callback tomorrow at 10:00 AM.",
+      "key_concerns": [
+        "Broken tooth",
+        "Misaligned tooth",
+        "Understanding the Ultimate Smile Design procedure"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Schedule a reminder for Kiara or clinic staff to call Dream Patel tomorrow at 10:00 AM",
+        "Follow up on the smile consultation and discuss veneer or clear aligner options for the broken and misaligned teeth"
+      ]
+    },
+    "transcript_turn_count": 9
+  },
+  "CAGE3-T7-1790250942.1670759": {
+    "call_id": "CAGE3-T7-1790250942.1670759",
+    "summary": {
+      "summary": "Keval Kalariya inquired about treating a broken tooth and asked what smile design means in Gujarati and Hindi. He expressed a desire to complete the treatment within a week. Kiara explained that the treatment duration depends on the clinical evaluation by the smile designer and offered to book an appointment.",
+      "key_concerns": [
+        "Broken tooth",
+        "Crowns or veneers",
+        "Treatment timeline (wants it completed within one week)"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Keval via WhatsApp or phone call to confirm an appointment within his preferred one-week timeline",
+        "Connect him with the authorized smile designer in Junagadh for case evaluation regarding the broken tooth"
+      ]
+    },
+    "transcript_turn_count": 9
+  },
+  "CAGE6-T1-1790251458.569852": {
+    "call_id": "CAGE6-T1-1790251458.569852",
+    "summary": {
+      "summary": "The caller, a software developer from Ahmedabad, initially inquired about smile design in Gujarati and then switched to Hindi and English. He mentioned having tooth pain and a broken tooth, and requested to book an appointment in Ahmedabad rather than Surat. The call ended abruptly as the caller had urgent work and requested a callback for tomorrow.",
+      "key_concerns": [
+        "Tooth pain",
+        "Broken or damaged tooth",
+        "Smile design inquiry",
+        "Requesting an appointment in Ahmedabad"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with the caller tomorrow via phone call as requested",
+        "Coordinate an appointment booking for the Ahmedabad clinic location",
+        "Share dentist details or website link via WhatsApp"
+      ]
+    },
+    "transcript_turn_count": 23
+  },
+  "HYD16-T1-1790316247.69883": {
+    "call_id": "HYD16-T1-1790316247.69883",
+    "summary": {
+      "summary": "Keval Kalariya called to book a smile consultation with Dr. Hetal Bhuj, but inquired about various cities including Navsari and Junagadh. The call ended abruptly when the caller stated they were busy and requested a callback at 5:00 PM.",
+      "key_concerns": [
+        "Wants to book an appointment with Dr. Hetal Bhuj",
+        "Inquired about appointment availability in Navsari and Junagadh",
+        "Needs a callback at 5:00 PM"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Call Keval Kalariya back at 5:00 PM",
+        "Confirm the preferred location for the consultation",
+        "Clarify doctor availability and assign an authorized smile designer"
+      ]
+    },
+    "transcript_turn_count": 13
+  },
+  "CAGE6-T2-1790317645.787553": {
+    "call_id": "CAGE6-T2-1790317645.787553",
+    "summary": {
+      "summary": "The caller, Kalariya Keval from Junagadh, inquired about smile design and requested an appointment with Dr. Jay Patel in Surat due to a broken tooth. Although he expressed concern about not seeing the booking in his backend portal and requested a follow-up callback in a couple of hours, the AI assistant noted the details for the team to verify and finalize.",
+      "key_concerns": [
+        "Broken tooth",
+        "Smile design consultation",
+        "Request for specific doctor (Dr. Jay Patel in Surat)",
+        "Apprehension regarding appointment visibility in backend"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Verify and finalize the appointment with Dr. Jay Patel in Surat for the broken tooth",
+        "Call the customer back in one to two hours as requested",
+        "Confirm booking status with the customer via WhatsApp/call to resolve backend visibility concerns"
+      ]
+    },
+    "transcript_turn_count": 21
+  },
+  "CAGE3-T7-1790423279.2507592": {
+    "call_id": "CAGE3-T7-1790423279.2507592",
+    "summary": {
+      "summary": "Keval Kalariya inquired about a smile consultation and expressed interest in getting dental veneers. He requested to book an appointment with Dr. Jay Patel in Surat, and the booking was successfully completed.",
+      "key_concerns": [
+        "Dental veneers",
+        "Cosmetic smile improvement",
+        "Consultation booking"
+      ],
+      "booking_status": "booked",
+      "customer_sentiment": "positive",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Call Keval Kalariya to verify consultation details",
+        "Confirm appointment schedule with Dr. Jay Patel",
+        "Send appointment confirmation on WhatsApp"
+      ]
+    },
+    "transcript_turn_count": 15
+  },
+  "HYD16-T1-1790424912.283831": {
+    "call_id": "HYD16-T1-1790424912.283831",
+    "summary": {
+      "summary": "The caller, KK, inquired about smile design and reported a broken, decayed, and painful tooth. After initially discussing an appointment in Surat, the caller requested to switch the location to Ahmedabad due to travel plans, but then expressed confusion about the clinic locations and dentists. The booking remains in progress as the conversation was paused before final confirmation of the Ahmedabad appointment.",
+      "key_concerns": [
+        "Broken tooth",
+        "Severe tooth pain",
+        "Decayed tooth",
+        "Location change from Surat to Ahmedabad"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Call the customer back to finalize the appointment location (Surat vs. Ahmedabad)",
+        "Confirm the preferred dentist (Dr. Jay Patel, Dr. Parita Shah, or Dr. Priyanka Kathiriya)",
+        "Note the details about the broken and decayed tooth for the attending doctor"
+      ]
+    },
+    "transcript_turn_count": 33
+  },
+  "CAGE6-T1-1790428767.1453149": {
+    "call_id": "CAGE6-T1-1790428767.1453149",
+    "summary": {
+      "summary": "Keval answered the outbound call from the clinic regarding his smile consultation inquiry. Kiara explained the smile design process in Gujarati, and the conversation ended before a consultation could be scheduled.",
+      "key_concerns": [
+        "Smile makeover",
+        "Understanding the smile design process"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Keval via WhatsApp or phone call to complete the consultation booking",
+        "Send informational materials regarding smile design and aligners"
+      ]
+    },
+    "transcript_turn_count": 3
+  },
+  "CAGE3-T9-1790429086.2595139": {
+    "call_id": "CAGE3-T9-1790429086.2595139",
+    "summary": {
+      "summary": "Keval answered the outbound call from Ultimate Smile Design regarding his smile consultation inquiry. The AI assistant provided an explanation of smile design in Gujarati, but the caller's response was unclear, and an appointment was not discussed.",
+      "key_concerns": [
+        "Smile consultation inquiry"
+      ],
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Keval via WhatsApp to clarify his dental interests and offer an appointment booking."
+      ]
+    },
+    "transcript_turn_count": 3
+  },
+  "HYD16-T1-1790670262.221065": {
+    "call_id": "HYD16-T1-1790670262.221065",
+    "summary": {
+      "summary": "Keval Kalariya inquired about a smile makeover to fix broken teeth. After discussing options across Surat and Ahmedabad, he requested an appointment with Dr. Janu Shah in Ahmedabad, but due to a scheduling difficulty, he decided to postpone the booking for later.",
+      "key_concerns": [
+        "Broken teeth",
+        "Smile makeover"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Keval via WhatsApp or phone later to complete the appointment booking with Dr. Janu Shah in Ahmedabad"
+      ]
+    },
+    "transcript_turn_count": 21
+  },
+  "H2-D6-1790670862.229152": {
+    "call_id": "H2-D6-1790670862.229152",
+    "summary": {
+      "summary": "Kalariya Keval expressed interest in a smile design consultation and requested an appointment with Dr. Jay Patel in Surat, despite initially inquiring from Junagadh. The AI assistant successfully scheduled the appointment in Surat and informed the caller that the team will follow up to verify details.",
+      "key_concerns": [
+        "Smile design consultation",
+        "Teeth treatment and alignment"
+      ],
+      "booking_status": "booked",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Contact the customer to verify appointment details and logistics for visiting the Surat clinic",
+        "Share appointment confirmation via WhatsApp and email",
+        "Inform Dr. Jay Patel's team regarding the new booking and patient notes"
+      ]
+    },
+    "transcript_turn_count": 13
+  },
+  "CAGE6-T2-1790678242.687013": {
+    "call_id": "CAGE6-T2-1790678242.687013",
+    "summary": {
+      "summary": "Keval Kalariya expressed interest in understanding the exact differences between his current smile and the AI-generated preview. Kiara explained the improvements in tooth shade, shape symmetry, and overall smile balance.",
+      "key_concerns": [
+        "Understanding the differences between current smile and AI preview",
+        "Tooth shade brightness",
+        "Tooth shape and smile line symmetry"
+      ],
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Gujarati",
+      "next_actions": [
+        "Follow up via WhatsApp to explain the smile makeover details further",
+        "Offer an in-clinic or virtual consultation booking"
+      ]
+    },
+    "transcript_turn_count": 3
+  },
+  "CAGE3-T10-1790737844.869158": {
+    "call_id": "CAGE3-T10-1790737844.869158",
+    "summary": {
+      "summary": "Keval Ka inquired about smile design treatments and discussed having broken teeth that need evaluation. Despite mixing various languages and phrases during the conversation, the caller ultimately confirmed wanting an appointment with Dr. Pagisha Sojitra on the 25th of this month in Rajkot.",
+      "key_concerns": [
+        "Broken teeth",
+        "Uncertainty about which specific treatment (veneers, crowns, or implants) is needed",
+        "Selecting a specific dentist in Rajkot"
+      ],
+      "booking_status": "booked",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Verify details with the customer via phone or WhatsApp",
+        "Confirm the appointment with Dr. Pagisha Sojitra for the 25th of this month",
+        "Send appointment confirmation and clinic location details in Rajkot"
+      ]
+    },
+    "transcript_turn_count": 21
+  },
+  "CAGE3-T10-1790767941.1090425": {
+    "call_id": "CAGE3-T10-1790767941.1090425",
+    "summary": {
+      "summary": "KK inquired about smile consultation services in Surat. Kiara explained the smile design treatments including veneers and clear aligners, initiating the conversation in Gujarati after the caller's initial brief response.",
+      "key_concerns": [
+        "Smile design consultation",
+        "Interest in veneers or clear aligners"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with KK via phone or WhatsApp to continue the consultation discussion",
+        "Provide information on clear aligners and veneers pricing",
+        "Attempt to schedule an in-clinic consultation in Surat"
+      ]
+    },
+    "transcript_turn_count": 3
+  },
+  "HYD16-T1-1790774264.272183": {
+    "call_id": "HYD16-T1-1790774264.272183",
+    "summary": {
+      "summary": "Kiara followed up on Kalariya Keval's smile consultation inquiry in Surat. The caller responded briefly in Gujarati mentioning Maldives, and the AI explained Ultimate Smile Design's premium approach to facial and dental aesthetics.",
+      "key_concerns": [
+        "Smile consultation inquiry follow-up"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "neutral",
+      "language_used": "Gujarati",
+      "next_actions": [
+        "Review call transcript and follow up with the customer via WhatsApp or phone call",
+        "Attempt to reconnect regarding the smile consultation in Surat"
+      ]
+    },
+    "transcript_turn_count": 3
+  },
+  "CAGE3-T8-1790830900.1171233": {
+    "call_id": "CAGE3-T8-1790830900.1171233",
+    "summary": {
+      "summary": "Keval Kalariya expressed interest in the AI Smile Preview that showed the closure of his front gap and straightening of his upper teeth. During the call, he requested communication in Gujarati and Hindi, and asked for a detailed explanation of the consultation process and treatment journey.",
+      "key_concerns": [
+        "Front gap closure",
+        "Upper teeth alignment",
+        "Understanding the consultation process and treatment steps"
+      ],
+      "booking_status": "in_progress",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with a WhatsApp message explaining the 3D scan and smile design process in Gujarati or Hindi",
+        "Call back to assist in scheduling an in-clinic consultation with an authorized dentist"
+      ]
+    },
+    "transcript_turn_count": 7
+  }
+}

@@ -16,6 +16,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+import sys
+if sys.platform == "win32":
+    try:
+        import ctypes
+        ctypes.windll.winmm.timeBeginPeriod(1)
+    except Exception:
+        pass
+
 import numpy as np
 try:
     from agent.audio.silero import SileroVAD
@@ -28,7 +36,19 @@ from agent.session.call_session import CallSession
 from agent.audio.codecs import resample_pcm16
 
 ENABLE_LOCAL_VAD = False
-ENABLE_NOISE_GATE = False
+# Keep the noise gate enabled by default to suppress phone speaker acoustic echo bleed
+# while preserving real caller barge-in during AI speech turns.
+ENABLE_NOISE_GATE = os.getenv("ENABLE_NOISE_GATE", "true").lower() in ("1", "true", "yes")
+
+
+def _safe_print(msg: str) -> None:
+    """Print message safely on platforms with restricted terminal encodings (e.g. Windows CP1252)."""
+    try:
+        print(msg)
+    except UnicodeEncodeError:
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+        safe_msg = msg.encode(encoding, errors="backslashreplace").decode(encoding, errors="replace")
+        print(safe_msg)
 
 
 class VoicePipelineOrchestrator:
@@ -48,6 +68,7 @@ class VoicePipelineOrchestrator:
         lead_email: Optional[str] = None,
         lead_subject: Optional[str] = None,
         lead_message: Optional[str] = None,
+        lead_pincode: Optional[str] = None,
         caller_context: Optional[dict] = None
     ):
         self.websocket = websocket
@@ -61,6 +82,7 @@ class VoicePipelineOrchestrator:
         self.lead_email = lead_email
         self.lead_subject = lead_subject
         self.lead_message = lead_message
+        self.lead_pincode = lead_pincode
 
         # Assemble full caller context dictionary
         self.caller_context = caller_context or {}
@@ -70,6 +92,7 @@ class VoicePipelineOrchestrator:
         if self.lead_email: self.caller_context.setdefault("email", self.lead_email)
         if self.lead_subject: self.caller_context.setdefault("subject", self.lead_subject)
         if self.lead_message: self.caller_context.setdefault("message", self.lead_message)
+        if self.lead_pincode: self.caller_context.setdefault("pincode", self.lead_pincode)
 
         self.lead_name = self.lead_name or self.caller_context.get("name")
         self.lead_city = self.lead_city or self.caller_context.get("city")
@@ -77,6 +100,14 @@ class VoicePipelineOrchestrator:
         self.lead_email = self.lead_email or self.caller_context.get("email")
         self.lead_subject = self.lead_subject or self.caller_context.get("subject")
         self.lead_message = self.lead_message or self.caller_context.get("message")
+        self.lead_pincode = self.lead_pincode or self.caller_context.get("pincode")
+        self.smile_diff = self.caller_context.get("smile_diff") if isinstance(self.caller_context.get("smile_diff"), dict) else None
+
+        smile_highlight = ""
+        if self.smile_diff and self.smile_diff.get("has_valid_comparison"):
+            raw_highlight = (self.smile_diff.get("opening_highlight_sentence") or "").strip().rstrip(".!?")
+            if raw_highlight:
+                smile_highlight = raw_highlight
 
         # Determine greeting based on call intent and whether caller name is already known
         if self.lead_name and self.lead_name.lower() not in ("there", "none", ""):
@@ -96,10 +127,14 @@ class VoicePipelineOrchestrator:
                 clean_first_name = re.sub(r"[\x00-\x1F<>\"\\{}]", "", first_name).strip()[:50]
                 if not clean_first_name:
                     clean_first_name = "the customer"
+                if smile_highlight:
+                    preview_clause = f"{smile_highlight}. It naturally suits your face and matches your personality"
+                else:
+                    preview_clause = "It naturally suits your face and matches your personality"
                 self.greeting = (
                     f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. "
-                    f"I saw that you recently tried our Virtual AI Smile Preview — I hope you got a sense of what a difference it could make! "
-                    f"How did the simulation look to you, or is there anything about your smile makeover you would like to understand better?"
+                    f"I saw your AI Smile Preview, {preview_clause}! "
+                    f"How did the simulation look to you?"
                 )
             elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 self.greeting = (
@@ -121,10 +156,14 @@ class VoicePipelineOrchestrator:
                 )
             elif self.opening_intent == "outbound_smile_preview":
                 city_str = f" in {self.lead_city}" if self.lead_city else ""
+                if smile_highlight:
+                    preview_clause = f"{smile_highlight}. It naturally suits your face and matches your personality"
+                else:
+                    preview_clause = "It naturally suits your face and matches your personality"
                 self.greeting = (
                     f"Hello! This is Kiara from Ultimate Smile Design. "
-                    f"I saw that you recently tried our Virtual AI Smile Preview{city_str} — I hope you got a sense of what a difference it could make! "
-                    f"How did the simulation look to you, or is there anything about your smile makeover you would like to understand better?"
+                    f"I saw your AI Smile Preview{city_str}, {preview_clause}! "
+                    f"How did the simulation look to you?"
                 )
             elif self.opening_intent in ("follow-up", "outbound_contact_form"):
                 city_str = f" {self.lead_city}" if self.lead_city else ""
@@ -141,6 +180,7 @@ class VoicePipelineOrchestrator:
         # Initialize session and Gemini Live client
         initial_lang = self.caller_context.get("preferred_language", "en") if self.caller_context else "en"
         self.session = CallSession(call_id=call_id, opening_intent=opening_intent, lead_id=lead_id, preferred_language=initial_lang)
+        self.session.smile_diff = self.smile_diff
         
         # Seed known caller information from trusted context into session immediately
         self.session.update_user_info(
@@ -148,6 +188,7 @@ class VoicePipelineOrchestrator:
             phone=self.lead_phone or self.caller_context.get("phone"),
             email=self.lead_email or self.caller_context.get("email"),
             city=self.lead_city or self.caller_context.get("city"),
+            pincode=self.lead_pincode or self.caller_context.get("pincode"),
             subject=self.lead_subject or self.caller_context.get("subject"),
             intent=self.lead_subject or self.caller_context.get("subject") or opening_intent,
             notes=self.lead_message or self.caller_context.get("message") or self.caller_context.get("notes")
@@ -158,7 +199,7 @@ class VoicePipelineOrchestrator:
         self.gemini_live_client = None
         self.tts_provider_name = "Gemini Live"
         self.mulaw_frame_size = 160
-        self.prebuffer_threshold = 480  # 60ms jitter buffer (optimized for immediate greeting)
+        self.prebuffer_threshold = int(os.getenv("PREBUFFER_THRESHOLD_BYTES", "3200"))  # 300ms jitter buffer (absorbs WAN jitter without perceptible delay)
         self.output_buffer = bytearray()
         self._initial_greeting_complete = False
         self._timings = {}
@@ -205,7 +246,8 @@ class VoicePipelineOrchestrator:
         name: Optional[str] = None,
         phone: Optional[str] = None,
         city: Optional[str] = None,
-        email: Optional[str] = None
+        email: Optional[str] = None,
+        pincode: Optional[str] = None
     ) -> None:
         """Maintains strict synchronization of canonical identity across all layers."""
         if name:
@@ -235,6 +277,12 @@ class VoicePipelineOrchestrator:
             self.caller_context["email"] = clean_email
             if hasattr(self, "session") and self.session:
                 self.session.update_user_info(email=clean_email)
+        if pincode:
+            clean_pincode = pincode.strip()
+            self.lead_pincode = clean_pincode
+            self.caller_context["pincode"] = clean_pincode
+            if hasattr(self, "session") and self.session:
+                self.session.update_user_info(pincode=clean_pincode)
 
     async def _silence_monitor(self) -> None:
         """Hybrid background task to monitor for user silence. Acts as a safety net if no VAD/events trigger for 15s."""
@@ -299,23 +347,34 @@ class VoicePipelineOrchestrator:
 
     async def _send_buffered_live_audio(self) -> None:
         """Send buffered audio to WebSocket in Smartflo-compliant chunk sizes (multiples of 160 bytes)."""
-        CHUNK_MULTIPLIER = 2  # 320 bytes (40ms) - reduces WS frame overhead and matches carrier buffers
+        CHUNK_MULTIPLIER = 2 # 800 bytes (100ms) - matches Smartflo native 100ms packet cadence
         target_chunk_size = getattr(self, "mulaw_frame_size", 160) * CHUNK_MULTIPLIER
-        FRAME_DURATION = 0.02 * CHUNK_MULTIPLIER
+        FRAME_DURATION = 0.02 * CHUNK_MULTIPLIER  # 100ms = 0.10s
+        recovery_threshold = target_chunk_size  # 200ms hysteresis recovery  # 200ms hysteresis recovery (1600 bytes)
         
         try:
             next_send_at = time.monotonic()
             starved_time = None
+            is_starved = False
 
             while self._is_running and not self._stopped:
                 now = time.monotonic()
+                is_turn_complete = getattr(self, "_assistant_turn_complete", False)
                 
+                can_send = False
                 if len(self.output_buffer) >= target_chunk_size:
-                    if starved_time is not None:
-                        # Buffer was starved, reset timing to prevent bursting chunks
-                        next_send_at = now
-                        starved_time = None
+                    if is_starved:
+                        # In starvation: resume only if turn completed (no more incoming audio expected)
+                        # or if buffer has rebuilt adequate headroom (hysteresis recovery threshold)
+                        if is_turn_complete or len(self.output_buffer) >= recovery_threshold:
+                            is_starved = False
+                            starved_time = None
+                            next_send_at = now
+                            can_send = True
+                    else:
+                        can_send = True
 
+                if can_send:
                     if now >= next_send_at:
                         chunk_data = bytes(self.output_buffer[:target_chunk_size])
                         del self.output_buffer[:target_chunk_size]
@@ -335,6 +394,7 @@ class VoicePipelineOrchestrator:
                                 if 'first_telephony_audio_tx' not in getattr(self, '_timings', {}):
                                     self._timings['first_telephony_audio_tx'] = time.monotonic()
                                 await self.websocket.send_text(json.dumps(media_message))
+                                self._last_spoke_at = time.monotonic()
                             except Exception as e:
                                 print(f"[Orchestrator Warning] Failed to send buffered live audio: {e}")
                                 break
@@ -352,13 +412,14 @@ class VoicePipelineOrchestrator:
                         sleep_for = max(0.001, next_send_at - now)
                         await asyncio.sleep(sleep_for)
                 else:
-                    # Buffer has less than target_chunk_size
-                    if starved_time is None:
+                    # Buffer has less than target_chunk_size OR is starved waiting for hysteresis recovery
+                    if not is_starved or starved_time is None:
+                        is_starved = True
                         starved_time = now
-                    
-                    # Check if turn is complete based on Gemini's explicit signal or a long timeout (fallback)
-                    is_turn_complete = getattr(self, "_assistant_turn_complete", False)
-                    is_timeout = (now - starved_time) > 2.0
+
+                    # Check if turn is complete based on Gemini's explicit signal or a fallback timeout
+                    # Extended playout starvation timeout from 2.0s to 4.0s
+                    is_timeout = starved_time is not None and (now - starved_time) > 4.0
 
                     if is_turn_complete or is_timeout:
                         if len(self.output_buffer) > 0:
@@ -385,6 +446,10 @@ class VoicePipelineOrchestrator:
                                     if 'first_telephony_audio_tx' not in getattr(self, '_timings', {}):
                                         self._timings['first_telephony_audio_tx'] = time.monotonic()
                                     await self.websocket.send_text(json.dumps(media_message))
+                                    self._last_spoke_at = time.monotonic()
+                                    # Wait for the trailing chunk duration before signaling mark completion
+                                    trailing_duration = len(trailing) / 8000.0
+                                    await asyncio.sleep(trailing_duration)
                                 except Exception:
                                     pass
                         break
@@ -457,9 +522,9 @@ class VoicePipelineOrchestrator:
             if getattr(self, "_silence_state", "") != "stage_1_prompting":
                 self._waiting_for_user_since = None
             
-            # Kick off playback task once jitter buffer threshold is satisfied or if sender task is active
+            # Kick off playback task once jitter buffer threshold is satisfied or if turn is completed with audio pending
             if self._send_audio_task is None or self._send_audio_task.done():
-                if len(self.output_buffer) >= getattr(self, "prebuffer_threshold", 800):
+                if len(self.output_buffer) >= getattr(self, "prebuffer_threshold", 2400) or getattr(self, "_assistant_turn_complete", False):
                     self._send_audio_task = asyncio.create_task(self._send_buffered_live_audio())
         except Exception as e:
             print(f"[Orchestrator Error] Error sending live audio to WebSocket: {e}")
@@ -537,7 +602,7 @@ class VoicePipelineOrchestrator:
             self._silence_state = "active"
             text = event.get("text", "").strip()
             if text:
-                print(f"[Live STT Transcript] User: '{text}'")
+                _safe_print(f"[Live STT Transcript] User: '{text}'")
                 self.session.add_transcript(text, role="user")
                 detected = self._detect_turn_language(text)
                 if detected:
@@ -546,11 +611,13 @@ class VoicePipelineOrchestrator:
         elif event_type == "gemini":
             text = event.get("text", "").strip()
             if text:
-                print(f"[Live Output Transcript] Assistant: '{text}'")
+                _safe_print(f"[Live Output Transcript] Assistant: '{text}'")
                 self.session.add_transcript(text, role="assistant")
         elif event_type == "turn_complete":
             print("[Orchestrator] Live turn complete; output buffer draining to caller.")
             self._assistant_turn_complete = True
+            if len(self.output_buffer) > 0 and (self._send_audio_task is None or self._send_audio_task.done()):
+                self._send_audio_task = asyncio.create_task(self._send_buffered_live_audio())
         elif event_type == "session_resumption_update":
             handle = event.get("handle")
             resumable = event.get("resumable", False)
@@ -597,9 +664,18 @@ class VoicePipelineOrchestrator:
             return res
 
         def live_check_city(**kwargs):
+            exclude_cities = kwargs.get("exclude_cities") or []
+            if hasattr(self, "session") and self.session:
+                for ec in exclude_cities:
+                    self.session.record_rejected_city(ec)
+                merged_excludes = list(dict.fromkeys(exclude_cities + self.session.rejected_cities))
+                kwargs["exclude_cities"] = merged_excludes
+
             res = check_city_coverage(**kwargs)
-            if kwargs.get("city"):
-                self.session.update_user_info(city=kwargs.get("city"))
+            if hasattr(self, "session") and self.session:
+                nearest = res.get("nearest_city") or res.get("city")
+                if nearest:
+                    self.session.record_suggested_city(nearest)
             return res
 
         def live_get_faq(**kwargs):
@@ -635,6 +711,7 @@ class VoicePipelineOrchestrator:
             phone      = self.caller_context.get("phone", "")
             email      = self.caller_context.get("email", "")
             city       = self.caller_context.get("city", "")
+            pincode    = self.caller_context.get("pincode") or getattr(self, "lead_pincode", "") or ""
             doctor     = getattr(self, "_consultation_doctor", None) or ""
 
             res = cancel_consultation(
@@ -645,7 +722,8 @@ class VoicePipelineOrchestrator:
                 phone=phone,
                 email=email,
                 city=city,
-                doctor_name=doctor
+                doctor_name=doctor,
+                pincode=pincode
             )
 
             # --- SAME-CALL RE-BOOKING & UN-CANCEL ---
@@ -679,6 +757,10 @@ class VoicePipelineOrchestrator:
                 email_val = self.caller_context.get("email") or ""
                 if email_val:
                     kwargs["email"] = email_val
+            if not kwargs.get("pincode"):
+                pincode_val = self.caller_context.get("pincode") or getattr(self, "lead_pincode", "") or ""
+                if pincode_val:
+                    kwargs["pincode"] = pincode_val
 
             res = update_caller_profile(**kwargs)
             if res.get("status") == "confirmation_required":
@@ -719,16 +801,16 @@ class VoicePipelineOrchestrator:
             kwargs["phone"]      = canonical_phone
             kwargs["email"]      = self.caller_context.get("email") or self.lead_email or (self.session.collected_user_info.get("email") if hasattr(self, "session") else "") or kwargs.get("email", "")
             
-            requested_city = kwargs.get("city", "").strip()
-            if not requested_city:
-                kwargs["city"] = self.caller_context.get("city", "")
+            canonical_city = self.caller_context.get("city") or self.lead_city or (self.session.collected_user_info.get("city") if hasattr(self, "session") else "") or kwargs.get("city", "").strip()
+            kwargs["city"] = canonical_city
+
+            canonical_pincode = self.caller_context.get("pincode") or getattr(self, "lead_pincode", "") or (self.session.collected_user_info.get("pincode") if hasattr(self, "session") else "") or kwargs.get("pincode", "").strip()
+            kwargs["pincode"] = canonical_pincode
             
             res = book_consultation(**kwargs)
             if res.get("status") == "success":
                 self._consultation_booked = True
                 self._consultation_doctor = (kwargs.get("doctor_name") or "").strip()
-                if requested_city:
-                    self.update_canonical_identity(city=requested_city)
                 # If the backend returned a newly generated lead_id, save it for future updates in this call
                 if res.get("lead_id"):
                     self.lead_id = res.get("lead_id")
@@ -736,6 +818,56 @@ class VoicePipelineOrchestrator:
                 if hasattr(self, "session") and self.session:
                     self.session.mark_booking_confirmed()
                     
+            return res
+
+        async def live_get_nearest_dentists(**kwargs):
+            from agent.tools.get_nearest_dentists import async_get_nearest_dentists
+            from backend.app.services.city_service import get_default_pincode_for_city
+
+            req_city = (kwargs.get("city") or "").strip()
+            context_city = (self.caller_context.get("city") or getattr(self, "lead_city", "") or "").strip()
+
+            # If caller explicitly asks for a different city, do NOT use their home city's PIN
+            if req_city and context_city and req_city.lower() != context_city.lower():
+                city = req_city
+                pincode = kwargs.get("pincode") or get_default_pincode_for_city(req_city)
+            else:
+                city = req_city or context_city or (self.session.collected_user_info.get("city") if hasattr(self, "session") else "") or ""
+                pincode = (
+                    kwargs.get("pincode")
+                    or self.caller_context.get("pincode")
+                    or getattr(self, "lead_pincode", "")
+                    or (self.session.collected_user_info.get("pincode") if hasattr(self, "session") else "")
+                    or ""
+                )
+            page = kwargs.get("page", 1)
+            limit = kwargs.get("limit", 3)
+            exclude_cities = kwargs.get("exclude_cities") or []
+
+            if hasattr(self, "session") and self.session:
+                for ec in exclude_cities:
+                    self.session.record_rejected_city(ec)
+                merged_excludes = list(dict.fromkeys(exclude_cities + self.session.rejected_cities))
+            else:
+                merged_excludes = exclude_cities
+
+            res = await async_get_nearest_dentists(
+                pincode=pincode,
+                city=city,
+                page=page,
+                limit=limit,
+                exclude_cities=merged_excludes
+            )
+
+            # Sync session tracking
+            if hasattr(self, "session") and self.session and res.get("status") == "success":
+                self.session.recommended_dentists = res.get("dentists", [])
+                self.session.dentist_page = res.get("page", 1)
+                self.session.top_recommended_doctor = res.get("top_recommended_doctor", "")
+                covered_res_city = res.get("nearest_covered_city") or res.get("city")
+                if covered_res_city:
+                    self.session.record_suggested_city(covered_res_city)
+
             return res
 
         return {
@@ -748,6 +880,7 @@ class VoicePipelineOrchestrator:
             "check_dentist": live_check_dentist,
             "update_caller_profile": live_update_caller_profile,
             "update_contact_details": live_update_caller_profile,
+            "get_nearest_dentists": live_get_nearest_dentists,
         }
 
     def _build_initial_prompt(self) -> str:
@@ -781,8 +914,7 @@ class VoicePipelineOrchestrator:
                 f"CRITICAL: You already know the caller's Name and City ({city_display}) because they just completed the AI Smile Preview online. "
                 f"DO NOT ask for their name or city again. "
                 "STRICT RULE: The user ALREADY completed the AI Smile Preview. NEVER tell them to try the AI Smile Preview, upload a photo, or fill out the preview form again! "
-                f"Open by asking how they felt about the simulation, or what they would like to understand about their smile makeover. "
-                f"Answer their questions first using local knowledge before introducing a consultation. "
+                f"Answer their questions first using local knowledge and the <smile_preview_analysis> context before introducing a consultation. "
                 f"Offer a consultation naturally only when the caller shows genuine interest or readiness — do NOT push booking on the opening turn. {location_rule}"
             )
         elif self.opening_intent == "outbound_contact_form":
@@ -1047,14 +1179,17 @@ class VoicePipelineOrchestrator:
             try:
                 pcm8k = audioop.ulaw2lin(audio_bytes, 2)
                 
-                # NOISE GATE — only active when ENABLE_NOISE_GATE is True
+                # NOISE GATE — active when ENABLE_NOISE_GATE is True
                 if ENABLE_NOISE_GATE:
+                    now = time.monotonic()
                     is_speaking = (
                         self.session.state == "speaking"
                         or len(self.output_buffer) > 0
                         or (self._send_audio_task is not None and not self._send_audio_task.done())
+                        or (now - getattr(self, "_last_spoke_at", 0) < 0.35)
                     )
-                    gate_threshold = 350 if is_speaking else 80
+                    # Use higher threshold during AI speech & trailing playback to suppress phone speaker acoustic echo
+                    gate_threshold = 1200 if is_speaking else 80
                     rms = audioop.rms(pcm8k, 2)
                     if rms < gate_threshold:
                         pcm8k = b"\x00" * len(pcm8k)
@@ -1088,8 +1223,16 @@ class VoicePipelineOrchestrator:
                                     print("🛑 [VAD] Local speech end detected.")
                         except Exception as e:
                             print(f"[Orchestrator Error] VAD inference failed: {e}")
-                
-                await self.gemini_live_client.send_audio(pcm16k)
+                # Slicing inbound 16kHz audio into standard 20ms frames (640 bytes = 320 samples)
+                # ensures Gemini Live's acoustic model receives smooth frames rather than 100ms bursts
+                FRAME_SIZE_16K = 640  # 20ms at 16kHz (320 samples * 2 bytes)
+                if len(pcm16k) > FRAME_SIZE_16K:
+                    for offset in range(0, len(pcm16k), FRAME_SIZE_16K):
+                        sub_chunk = pcm16k[offset:offset + FRAME_SIZE_16K]
+                        if sub_chunk:
+                            await self.gemini_live_client.send_audio(sub_chunk)
+                else:
+                    await self.gemini_live_client.send_audio(pcm16k)
             except Exception as e:
                 print(f"[Orchestrator Error] Failed to process and send live audio: {e}")
 

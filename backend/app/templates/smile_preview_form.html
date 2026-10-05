@@ -16,7 +16,7 @@
 
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
             font-family: 'Inter', sans-serif;
             background-color: var(--dark-bg);
             color: var(--text-light);
@@ -24,6 +24,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            box-sizing: border-box;
         }
 
         .modal {
@@ -32,7 +33,7 @@
             border-radius: 12px;
             padding: 40px;
             width: 100%;
-            max-width: 500px;
+            max-width: 520px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
             position: relative;
         }
@@ -49,13 +50,22 @@
         h2 {
             text-align: center;
             font-weight: 500;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             font-size: 20px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             position: relative;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 12px;
+            color: #bbb;
+            margin-bottom: 6px;
+            padding-left: 10px;
+            letter-spacing: 0.4px;
         }
 
         .form-row {
@@ -103,6 +113,38 @@
             padding-left: 70px;
         }
 
+        .preview-thumbs {
+            display: none;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .preview-card {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .preview-card span {
+            display: block;
+            font-size: 11px;
+            color: var(--primary-gold);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .preview-card img {
+            width: 100%;
+            max-height: 130px;
+            object-fit: cover;
+            border-radius: 6px;
+            display: block;
+        }
+
         button {
             width: 100%;
             padding: 14px;
@@ -130,6 +172,9 @@
             color: #aaa;
             font-size: 24px;
             cursor: pointer;
+            width: auto;
+            padding: 0;
+            margin: 0;
         }
 
         #status-message {
@@ -154,18 +199,45 @@
                 <input type="text" id="name" placeholder="Name" required>
             </div>
             
+            <div class="form-group phone-group">
+                <div class="country-code">🇮🇳 +91</div>
+                <input type="tel" id="phone" class="phone-input" placeholder="Contact" required pattern="[0-9]{10}">
+            </div>
+
             <div class="form-row">
-                <div class="form-group phone-group">
-                    <div class="country-code">🇮🇳 +91</div>
-                    <input type="tel" id="phone" class="phone-input" placeholder="Contact" required pattern="[0-9]{10}">
+                <div class="form-group" id="pincodeGroup">
+                    <input type="text" id="pincode" placeholder="6-digit Pincode" pattern="[0-9]{6}" maxlength="6" autocomplete="postal-code" required>
                 </div>
-                <div class="form-group">
-                    <input type="text" id="city" placeholder="City" required>
+                <div class="form-group" id="cityGroup">
+                    <input type="text" id="city" list="cities-datalist" placeholder="City (Auto-fetched from PIN code)" required>
+                    <datalist id="cities-datalist"></datalist>
+                    <div id="cityHint" style="font-size: 11.5px; margin-top: 4px; display: none;"></div>
                 </div>
             </div>
 
             <div class="form-group">
                 <input type="email" id="email" placeholder="Email" required>
+            </div>
+
+            <div class="form-group">
+                <label class="field-label" for="before_image">Before Image Path / URL (Optional)</label>
+                <input type="text" id="before_image" placeholder="e.g. smile_design/before/before_1790406333_871c47f961.jpg">
+            </div>
+
+            <div class="form-group">
+                <label class="field-label" for="after_image">After Image Path / URL (Optional)</label>
+                <input type="text" id="after_image" placeholder="e.g. smile_design/after/after_1790406333_871c47f961.jpg">
+            </div>
+
+            <div class="preview-thumbs" id="previewThumbs">
+                <div class="preview-card" id="beforeCard" style="display:none;">
+                    <span>Before</span>
+                    <img id="beforeImgPreview" alt="Before Smile Preview">
+                </div>
+                <div class="preview-card" id="afterCard" style="display:none;">
+                    <span>After (AI Preview)</span>
+                    <img id="afterImgPreview" alt="After Smile Preview">
+                </div>
             </div>
 
             <button type="submit" id="submitBtn">Talk to a Smile Designer</button>
@@ -175,21 +247,167 @@
     </div>
 
     <script>
+        const MEDIA_BASE_URL = "https://ultimatesmiledesign.com/media/";
+
+        function resolveMediaUrl(rawPath) {
+            if (!rawPath || !rawPath.trim()) return "";
+            let clean = rawPath.trim();
+            if (clean.startsWith("http://") || clean.startsWith("https://") || clean.startsWith("data:image/")) {
+                return clean;
+            }
+            clean = clean.replace(/^\/+/, "");
+            if (clean.toLowerCase().startsWith("media/")) {
+                clean = clean.slice(6).replace(/^\/+/, "");
+            }
+            return MEDIA_BASE_URL + clean;
+        }
+
+        function updateImagePreviews() {
+            const beforeVal = document.getElementById('before_image').value;
+            const afterVal = document.getElementById('after_image').value;
+            const beforeUrl = resolveMediaUrl(beforeVal);
+            const afterUrl = resolveMediaUrl(afterVal);
+
+            const thumbsContainer = document.getElementById('previewThumbs');
+            const beforeCard = document.getElementById('beforeCard');
+            const afterCard = document.getElementById('afterCard');
+            const beforeImg = document.getElementById('beforeImgPreview');
+            const afterImg = document.getElementById('afterImgPreview');
+
+            if (beforeUrl) {
+                beforeImg.src = beforeUrl;
+                beforeCard.style.display = "block";
+            } else {
+                beforeCard.style.display = "none";
+            }
+
+            if (afterUrl) {
+                afterImg.src = afterUrl;
+                afterCard.style.display = "block";
+            } else {
+                afterCard.style.display = "none";
+            }
+
+            thumbsContainer.style.display = (beforeUrl || afterUrl) ? "flex" : "none";
+        }
+
+        document.getElementById('before_image').addEventListener('input', updateImagePreviews);
+        document.getElementById('after_image').addEventListener('input', updateImagePreviews);
+
+        const pincodeInput = document.getElementById('pincode');
+        const cityInput = document.getElementById('city');
+        const cityHint = document.getElementById('cityHint');
+
+        let pincodeDebounce = null;
+        async function autoFetchCityFromPostalApi(pin) {
+            if (!pin || pin.length !== 6) {
+                if (cityHint) cityHint.style.display = 'none';
+                return;
+            }
+            if (cityHint) {
+                cityHint.style.display = 'block';
+                cityHint.style.color = '#e6c875';
+                cityHint.innerHTML = '⏳ Fetching city from Postal API...';
+            }
+            try {
+                const resp = await fetch(`/api/pincode-lookup/${pin}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.success && data.city) {
+                        cityInput.value = data.city;
+                        if (cityHint) {
+                            cityHint.style.display = 'block';
+                            cityHint.style.color = '#4CAF50';
+                            cityHint.innerHTML = `📍 Auto-fetched from Postal API: <strong>${data.city}</strong> (you can also edit/select)`;
+                        }
+                        return;
+                    }
+                }
+                if (cityHint) {
+                    cityHint.style.color = '#aaa';
+                    cityHint.innerHTML = 'ℹ️ Postal API: Please select city from list';
+                }
+            } catch (err) {
+                if (cityHint) {
+                    cityHint.style.color = '#aaa';
+                    cityHint.innerHTML = 'ℹ️ Please select or enter your city';
+                }
+            }
+        }
+
+        pincodeInput.addEventListener('input', () => {
+            const clean = pincodeInput.value.replace(/\D/g, '').slice(0, 6);
+            pincodeInput.value = clean;
+            clearTimeout(pincodeDebounce);
+            if (clean.length === 6) {
+                pincodeDebounce = setTimeout(() => autoFetchCityFromPostalApi(clean), 100);
+            } else {
+                if (cityHint) cityHint.style.display = 'none';
+            }
+        });
+
+        if (pincodeInput.value && pincodeInput.value.replace(/\D/g, '').length === 6) {
+            autoFetchCityFromPostalApi(pincodeInput.value.replace(/\D/g, ''));
+        }
+
         document.getElementById('smileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const btn = document.getElementById('submitBtn');
             const statusMsg = document.getElementById('status-message');
             
+            const nameVal = document.getElementById('name').value.trim();
+            const phoneVal = document.getElementById('phone').value.trim();
+            const cityVal = document.getElementById('city').value.trim();
+            const pincodeVal = document.getElementById('pincode').value.trim();
+            const emailVal = document.getElementById('email').value.trim();
+            const beforeImageVal = document.getElementById('before_image').value.trim();
+            const afterImageVal = document.getElementById('after_image').value.trim();
+
+            if (!nameVal || !phoneVal || !cityVal || !pincodeVal || !emailVal) {
+                statusMsg.textContent = "Please fill in all mandatory fields (Name, Contact, City, Pincode, Email).";
+                statusMsg.className = "error";
+                statusMsg.style.display = "block";
+                return;
+            }
+
+            if (!/^\d{6}$/.test(pincodeVal)) {
+                statusMsg.textContent = "Please enter a valid 6-digit area pincode (e.g. 395007).";
+                statusMsg.className = "error";
+                statusMsg.style.display = "block";
+                return;
+            }
+
+            if (!nameVal || !phoneVal || !cityVal || !emailVal) {
+                statusMsg.textContent = "Please fill in all mandatory fields (Name, Contact, City, Pincode, Email).";
+                statusMsg.className = "error";
+                statusMsg.style.display = "block";
+                return;
+            }
+
+            // Validate geographic consistency between pincode and city
+            if (typeof validateCityPincodeConsistency === 'function') {
+                const check = await validateCityPincodeConsistency(cityVal, pincodeVal);
+                if (!check.valid) {
+                    statusMsg.textContent = check.message || "Location Mismatch: Pincode does not match selected city.";
+                    statusMsg.className = "error";
+                    statusMsg.style.display = "block";
+                    return;
+                }
+            }
+
             btn.disabled = true;
-            btn.textContent = "Connecting...";
+            btn.textContent = "Analyzing Smile & Connecting...";
             statusMsg.style.display = "none";
             
             const payload = {
-                name: document.getElementById('name').value,
-                phone: "+91" + document.getElementById('phone').value,
-                city: document.getElementById('city').value,
-                email: document.getElementById('email').value
+                name: nameVal,
+                phone: "+91" + phoneVal,
+                city: cityVal,
+                pincode: pincodeVal,
+                email: emailVal,
+                before_image: beforeImageVal || null,
+                after_image: afterImageVal || null
             };
 
             try {
@@ -207,6 +425,7 @@
                     statusMsg.textContent = "Success! Please expect an incoming call from our AI consultant shortly.";
                     statusMsg.className = "success";
                     document.getElementById('smileForm').reset();
+                    updateImagePreviews();
                 } else {
                     statusMsg.textContent = data.detail || "An error occurred. Please try again.";
                     statusMsg.className = "error";
@@ -221,5 +440,6 @@
             }
         });
     </script>
+    <script src="/static/js/city-autocomplete.js?v=3.0"></script>
 </body>
 </html>

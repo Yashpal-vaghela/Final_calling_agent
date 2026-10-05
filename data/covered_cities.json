@@ -1,11 +1,14 @@
 [
     "Ahmedabad",
     "Bangalore",
+    "Bengaluru",
     "Bharuch",
     "Chennai",
+    "Delhi",
     "Dhrangadhra",
     "Faridkot",
     "Guntur",
+    "Gurgaon",
     "Gurugram",
     "Guwahati",
     "Gwalior",
@@ -21,5 +24,6 @@
     "Sangli",
     "Sri Ganganagar",
     "Surat",
+    "Surendranagar",
     "Vadodara"
 ]

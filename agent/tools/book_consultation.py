@@ -5,11 +5,12 @@ import httpx
 from typing import Optional
 
 from backend.app.services.caller_context import validate_phone_number
+from backend.app.services.city_service import get_nearest_covered_city, get_default_pincode_for_city
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 CITIES_FILE = os.path.join(DATA_DIR, "covered_cities.json")
 AUTH_DENTISTS_FILE = os.path.join(DATA_DIR, "authorized_dentists.json")
-API_URL = "https://ultimatesmiledesign.com/api/consult-with-dentist/"
+API_URL = "http://192.168.0.161:1020/api/consult-with-dentist/"
 
 def book_consultation(
     first_name: str = "",
@@ -19,7 +20,8 @@ def book_consultation(
     city: str = "",
     doctor_name: str = "",
     message: str = "",
-    lead_id: str = ""
+    lead_id: str = "",
+    pincode: str = ""
 ) -> dict:
     """
     Book OR update an in-call consultation via the backend API.
@@ -58,15 +60,19 @@ def book_consultation(
             matched_city = c
             break
             
-    if not matched_city:
-        return {
-            "status": "city_not_covered",
-            "message": f"I'm sorry, but Ultimate Smile Design does not currently have authorized clinics in {city_clean}. I cannot submit the consultation request.",
-            "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
-        }
+    is_uncovered = False
+    if matched_city:
+        nearest_covered_city = matched_city
+        booking_city = matched_city
+    else:
+        is_uncovered = True
+        nearest_covered_city = get_nearest_covered_city(city_clean)
+        # CRITICAL: Always keep caller's actual city in the database payload
+        booking_city = city_clean
         
     # 2. Check authorized dentist if doctor_name is provided
     matched_doctor = None
+    doctor_city = nearest_covered_city
     doc_clean = doctor_name.strip()
     
     if doc_clean:
@@ -78,16 +84,43 @@ def book_consultation(
             except Exception:
                 pass
                 
-        city_dentists = auth_dentists.get(matched_city, [])
         from agent.tools.check_dentist import find_best_doctor_match
+
+        # First check in the caller's city or nearest covered city
+        city_dentists = auth_dentists.get(nearest_covered_city, [])
         matched_doctor = find_best_doctor_match(doc_clean, city_dentists)
+        if matched_doctor:
+            doctor_city = nearest_covered_city
+        else:
+            # Check across all other covered cities
+            for other_c, dentists in auth_dentists.items():
+                found = find_best_doctor_match(doc_clean, dentists)
+                if found:
+                    matched_doctor = found
+                    doctor_city = other_c
+                    break
 
         if not matched_doctor:
+            top_doc = city_dentists[0] if city_dentists else None
+            if top_doc:
+                msg = (
+                    f"The requested dentist is not an authorized smile designer. "
+                    f"We have {top_doc} in {nearest_covered_city}. "
+                    f"Tell the caller: '{doctor_name} is not one of our authorized smile designers. "
+                    f"I can book an appointment with {top_doc} in {nearest_covered_city}. Shall I confirm that for you?'"
+                )
+            else:
+                msg = (
+                    f"The requested dentist is not an authorized smile designer. "
+                    f"Tell the caller: '{doctor_name} is not one of our authorized smile designers. "
+                    f"Would you like me to check our nearest authorized smile designer for you?'"
+                )
             return {
                 "status": "not_authorized",
                 "doctor_requested": doctor_name,
-                "city": matched_city,
-                "message": f"The requested dentist is not an authorized smile designer in {matched_city}. You may proceed without specifying a dentist and our coordinator will assign the appropriate specialist.",
+                "city": booking_city,
+                "suggested_doctor": top_doc,
+                "message": msg,
                 "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
             }
             
@@ -98,9 +131,20 @@ def book_consultation(
 
     # CRITICAL: The external CRM API expects 'lead_id' to be an integer database primary key for updates,
     # or an empty string for new bookings.
-    # NEVER send UUID strings (like in-memory caller_context IDs) as they cause Django to crash with:
-    # "Field 'id' expected a number but got '<UUID>'".
     clean_lead_id = int(lead_id.strip()) if (lead_id and lead_id.strip().isdigit()) else ""
+
+    payload_message = message.strip()
+    location_notes = []
+    if is_uncovered:
+        location_notes.append(f"[Caller City: {city_clean} | Nearest authorized smile designer in {nearest_covered_city}]")
+    if matched_doctor and doctor_city.lower() != booking_city.lower():
+        location_notes.append(f"[Preferred Doctor: {matched_doctor}, authorized smile designer in {doctor_city}]")
+
+    if location_notes:
+        note_str = " ".join(location_notes)
+        payload_message = f"{payload_message} {note_str}".strip() if payload_message else note_str
+
+    clean_pincode = pincode.strip() if pincode and pincode.strip() else get_default_pincode_for_city(booking_city)
 
     payload = {
         "lead_id": clean_lead_id,
@@ -108,8 +152,9 @@ def book_consultation(
         "last_name": clean_last,
         "phone": validated_phone,
         "email": email.strip(),
-        "city": matched_city,
-        "message": message.strip(),
+        "pincode": clean_pincode,
+        "city": booking_city,
+        "message": payload_message,
         "is_cancel": False,
         "source": "calling_agent"
     }
@@ -155,11 +200,31 @@ def book_consultation(
             "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
         
-    # 5. Return success
+    # 5. Return success with strict brand terminology (authorized smile designer)
+    if is_uncovered:
+        success_message = (
+            f"Your consultation has been booked successfully with our authorized smile designer in {nearest_covered_city}. "
+            f"Tell the caller: 'Your consultation has been booked with our authorized smile designer in {nearest_covered_city}. "
+            f"Our team will call you as soon as possible to verify your details.'"
+        )
+    elif matched_doctor and doctor_city.lower() != booking_city.lower():
+        success_message = (
+            f"Your consultation with {matched_doctor} has been booked successfully. "
+            f"Tell the caller: 'Your consultation with {matched_doctor}, our authorized smile designer in {doctor_city}, has been booked successfully. "
+            f"Our team will call you as soon as possible to verify your details.'"
+        )
+    else:
+        success_message = (
+            f"Your consultation has been booked successfully with our authorized smile designer in {booking_city}. "
+            f"Tell the caller: 'Your consultation has been booked with our authorized smile designer in {booking_city}. "
+            f"Our team will call you as soon as possible to verify your details.'"
+        )
+
     return {
         "status": "success",
-        "message": "Your consultation has been booked successfully. Our team will call you soon to verify your details. Tell the caller: 'Our team will call you as soon as possible to verify your details.' NEVER mention a specific time such as hours, days, or 'tomorrow'.",
+        "message": success_message,
         "lead_id": returned_lead_id,
-        "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
+        "city": booking_city,
+        "nearest_covered_city": nearest_covered_city,
+        "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. Always say 'authorized smile designer'. Do not mention kilometers, distances, or specific timeframes."
     }
-

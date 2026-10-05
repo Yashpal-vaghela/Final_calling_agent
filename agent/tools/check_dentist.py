@@ -8,17 +8,26 @@ DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__
 AUTH_DENTISTS_FILE = os.path.join(DATA_DIR, "authorized_dentists.json")
 
 def _norm_doc(name: str) -> str:
-    cleaned = re.sub(r"^(dr\.?|doctor|mr\.?|mrs\.?|ms\.?)\s+", "", name.strip(), flags=re.IGNORECASE)
+    cleaned = name.strip()
+    cleaned = re.sub(r"^(dr\.?|doctor|mr\.?|mrs\.?|ms\.?|ડૉ\.?|ડો\.?|ડો|ડૉ|डॉ\.?|डो\.?|डो|डॉ)\s*", "", cleaned, flags=re.IGNORECASE)
     return re.sub(r"[^\w\s]", " ", cleaned).strip().lower()
 
 def norm_phonetic_word(w: str) -> str:
     w = w.lower()
+    # Normalize aspirated consonants common in Gujarati/Hindi speech & transliterations
+    w = re.sub(r"bh", "b", w)
+    w = re.sub(r"dh", "d", w)
+    w = re.sub(r"kh", "k", w)
+    w = re.sub(r"gh", "g", w)
+    w = re.sub(r"jh", "j", w)
     w = re.sub(r"th", "s", w)
     w = re.sub(r"sh", "s", w)
     w = re.sub(r"ee", "i", w)
     w = re.sub(r"oo", "u", w)
     w = re.sub(r"aa", "a", w)
     w = re.sub(r"ph", "f", w)
+    w = re.sub(r"ch", "c", w)
+    w = re.sub(r"j|z", "c", w)
     w = re.sub(r"b|v|w", "v", w)
     return w
 
@@ -36,6 +45,11 @@ def is_word_match(w1: str, w2: str) -> bool:
     sk1 = consonant_skeleton(w1)
     sk2 = consonant_skeleton(w2)
     if sk1 and sk1 == sk2:
+        return True
+    # Also check dental th vs t variations (e.g. Takkar vs Thakkar, Kataria vs Kathiriya)
+    sk1_t = consonant_skeleton(re.sub(r"th", "t", w1.lower()))
+    sk2_t = consonant_skeleton(re.sub(r"th", "t", w2.lower()))
+    if sk1_t and sk1_t == sk2_t:
         return True
     return False
 
@@ -76,6 +90,11 @@ def find_best_doctor_match(input_name: str, doctor_list: List[str]) -> Optional[
                     if is_word_match(iw, dw):
                         found = True
                         break
+                # If not found directly, check if iw is concatenated initials matching consecutive single-char words in d_words
+                if not found and len(iw) <= 3 and iw.isalpha():
+                    d_initials = "".join([w for w in d_words if len(w) == 1])
+                    if iw == d_initials:
+                        found = True
                 if not found:
                     all_matched = False
                     break
@@ -128,7 +147,7 @@ def check_dentist(doctor_name: str, city: str = "") -> Dict[str, Any]:
             "is_authorized": True,
             "doctor_name": matched_doctor,
             "city": matched_city,
-            "message": f"{matched_doctor} is an authorized Ultimate Smile Design specialist in {matched_city}.",
+            "message": f"{matched_doctor} is our authorized smile designer in {matched_city}.",
             "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
 
@@ -141,15 +160,40 @@ def check_dentist(doctor_name: str, city: str = "") -> Dict[str, Any]:
                 "doctor_name": other_match,
                 "city": matched_city or city_clean,
                 "actual_city": other_city,
-                "message": f"{other_match} is an authorized specialist in {other_city}, but NOT in {matched_city or city_clean}. Do NOT tell the caller to visit ultimatesmiledesign.com. Ask if they would like to arrange their consultation in {matched_city or city_clean} with an assigned specialist, or in {other_city} with {other_match}.",
+                "doctor_city": other_city,
+                "message": (
+                    f"{other_match} is an authorized smile designer in {other_city}, but NOT in {matched_city or city_clean}. "
+                    f"Tell the caller: '{other_match} is our authorized smile designer in {other_city}. "
+                    f"Shall I book your appointment with {other_match} in {other_city}?' "
+                    "DO NOT use the word 'clinic'. DO NOT say 'USD smile designer'. Do NOT change the caller's city."
+                ),
                 "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
             }
 
     # 3. Not authorized in any city
+    avail_dentists = city_dentists or auth_dentists.get(city_clean, [])
+    top_doc = avail_dentists[0] if avail_dentists else None
+    target_city = matched_city or city_clean
+    if top_doc:
+        msg = (
+            f"{doc_clean} is not an authorized smile designer. "
+            f"Tell the caller: '{doc_clean} is not one of our authorized smile designers. "
+            f"We have {top_doc} in {target_city}. "
+            f"Shall I book your appointment with {top_doc}?'"
+        )
+    else:
+        msg = (
+            f"{doc_clean} is not an authorized smile designer. "
+            f"Tell the caller: '{doc_clean} is not one of our authorized smile designers. "
+            f"Would you like me to check our nearest authorized smile designer for you?'"
+        )
+
     return {
         "is_authorized": False,
         "doctor_name": doc_clean,
-        "city": matched_city or city_clean,
-        "message": f"{doc_clean} is not an authorized Ultimate Smile Design specialist.",
+        "city": target_city,
+        "suggested_doctor": top_doc,
+        "message": msg,
         "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
     }
+

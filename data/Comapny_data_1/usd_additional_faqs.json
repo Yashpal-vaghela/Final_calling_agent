@@ -994,7 +994,6 @@
   "local_dentist_vs_usd": {
     "intent": "local_dentist_vs_usd",
     "topic": "Local Dentist vs USD Certified Smile Designer?",
-    "priority": 100,
     "emotion": "curious / skeptical",
     "user_questions": [
       "My dentist has the same veneers.",

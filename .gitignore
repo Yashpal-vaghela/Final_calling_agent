@@ -1,15 +1,37 @@
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
+
+# Byte-compiled / cache files
 __pycache__/
 *.pyc
-.pytest_cache/
+*.pyo
+*.pyd
 
-# Virtual Environments
-.venv/
+# Virtual environments
 venv/
-*.pyi
-env/
-ENV/
-*/venv/
-*/.venv/
-*/env/
-*/ENV/
+.venv/
+
+# Testing and linters
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Logs and databases
+*.log
+logs/
+dump.rdb
+*.sqlite3
+*.db
+
+# Operating system files
+.DS_Store
+Thumbs.db

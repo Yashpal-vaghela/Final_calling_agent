@@ -11,6 +11,7 @@ from backend.app.services.smartflo_service import smartflo_client
 from backend.app.services.caller_context import lookup_caller_context, remove_caller_context, ACTIVE_CALLER_CONTEXTS
 from agent.utils.call_logger import save_calls, load_calls
 from agent.pipeline import VoicePipelineOrchestrator
+from agent.utils.summarizer import generate_call_summary, save_call_record, CALLS_FILE
 
 router = APIRouter()
 
@@ -169,15 +170,17 @@ async def smartflo_media_stream(
     lead_city = caller_ctx.get("city") if caller_ctx else None
     lead_phone = caller_ctx.get("phone") if caller_ctx else None
     lead_email = caller_ctx.get("email") if caller_ctx else None
+    lead_pincode = caller_ctx.get("pincode") if caller_ctx else None
     lead_subject = caller_ctx.get("subject") if caller_ctx else None
     lead_message = (caller_ctx.get("message") or caller_ctx.get("notes")) if caller_ctx else None
 
     if caller_ctx:
-        print(f"[Smartflo WS] Successfully bound caller context for {lead_name} (City: {lead_city}, Phone: {lead_phone})")
+        print(f"[Smartflo WS] Successfully bound caller context for {lead_name} (City: {lead_city}, Phone: {lead_phone}, Pincode: {lead_pincode})")
     else:
         print(f"[Smartflo WS] Initial check: No pre-existing caller context found for call_sid: '{call_sid}' (Will check start payload)")
 
     orchestrator = None
+    media_log_count = 0
 
     try:
         while True:
@@ -232,9 +235,10 @@ async def smartflo_media_stream(
                         lead_city = caller_ctx.get("city")
                         lead_phone = caller_ctx.get("phone")
                         lead_email = caller_ctx.get("email")
+                        lead_pincode = caller_ctx.get("pincode")
                         lead_subject = caller_ctx.get("subject")
                         lead_message = caller_ctx.get("message") or caller_ctx.get("notes")
-                        print(f"[Smartflo WS] Resolved caller context on start event for {lead_name} (City: {lead_city}, Phone: {lead_phone})")
+                        print(f"[Smartflo WS] Resolved caller context on start event for {lead_name} (City: {lead_city}, Phone: {lead_phone}, Pincode: {lead_pincode})")
 
                 print(f"[Smartflo WS] Stream started. StreamSid: {stream_sid}, CallSid: {call_sid}")
 
@@ -250,6 +254,7 @@ async def smartflo_media_stream(
                     lead_email=lead_email,
                     lead_subject=lead_subject,
                     lead_message=lead_message,
+                    lead_pincode=lead_pincode,
                     caller_context=caller_ctx
                 )
                 await orchestrator.start()
@@ -258,12 +263,10 @@ async def smartflo_media_stream(
                 if orchestrator is not None:
                     media_obj = data.get("media", {})
                     # Low-volume diagnostic logging for the first 5 media events to inspect metadata keys
-                    if not hasattr(websocket, "_media_log_count"):
-                        websocket._media_log_count = 0
-                    if websocket._media_log_count < 5:
-                        websocket._media_log_count += 1
+                    if media_log_count < 5:
+                        media_log_count += 1
                         meta_info = {k: v for k, v in media_obj.items() if k != "payload"}
-                        print(f"[Smartflo WS Media Diagnostic #{websocket._media_log_count}] top_keys={list(data.keys())}, media_meta={meta_info}")
+                        print(f"[Smartflo WS Media Diagnostic #{media_log_count}] top_keys={list(data.keys())}, media_meta={meta_info}")
                     payload = media_obj.get("payload", "")
                     if payload:
                         await orchestrator.handle_media_payload(payload)
@@ -282,7 +285,24 @@ async def smartflo_media_stream(
         print(f"[Smartflo WS] Error handling stream for CallSid {call_sid}: {e}")
     finally:
         if orchestrator is not None:
+            # Snapshot conversation history, collected user entities, and call identifier
+            history_snapshot = list(orchestrator.session.conversation_history)
+            user_info_snapshot = dict(orchestrator.session.collected_user_info)
+            call_id_val = orchestrator.call_id
+
             await orchestrator.stop()
+
+            # # Trigger structured conversation summarization asynchronously in the background
+            # async def _run_post_call_summary():
+            #     try:
+            #         summary = await generate_call_summary(history_snapshot, user_info_snapshot)
+            #         if summary:
+            #             print(f"📋 [Call Summary for {call_id_val}]:\n{json.dumps(summary, indent=2)}")
+            #             save_call_record(call_id=call_id_val, summary=summary, transcript=history_snapshot)
+            #     except Exception as ex:
+            #         print(f"[Smartflo WS] Error generating post-call summary for {call_id_val}: {ex}")
+
+            # asyncio.create_task(_run_post_call_summary())
         
         # Purge caller context from memory across all indexed keys on call termination
         phone_to_clean = lead_phone or (caller_ctx.get("phone") if caller_ctx else None)
@@ -314,3 +334,35 @@ async def trigger_smartflo_outbound(request: Request):
         custom_params=custom_params
     )
     return result
+
+
+@router.get("/api/calls")
+async def list_call_records():
+    """Returns all logged call summaries and records."""
+    if not os.path.exists(CALLS_FILE):
+        return {"calls": {}}
+    try:
+        with open(CALLS_FILE, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            data = json.loads(content) if content else {}
+        return {"calls": data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read calls database: {e}")
+
+
+@router.get("/api/calls/{call_id}/summary")
+async def get_call_summary(call_id: str):
+    """Returns the structured summary for a specific call ID."""
+    if not os.path.exists(CALLS_FILE):
+        raise HTTPException(status_code=404, detail="No calls logged yet.")
+    try:
+        with open(CALLS_FILE, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            data = json.loads(content) if content else {}
+        if call_id in data:
+            return data[call_id]
+        raise HTTPException(status_code=404, detail=f"Call '{call_id}' not found.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve summary: {e}")

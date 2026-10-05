@@ -16,5 +16,8 @@ dependencies = [
     "google-genai",
     "pydantic-settings",
     "honcho",
-    "httpx"
+    "httpx",
+    "audioop-lts; python_version >= '3.13'",
+    "soxr"
 ]
+

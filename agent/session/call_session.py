@@ -40,7 +40,8 @@ class CallSession:
         self.profession_asked: bool = False  # True once Kiara has asked; prevents re-asking
 
         # AI Smile Preview tracking
-        self.preview_mentioned: bool = False  # True once Kiara has introduced AI Smile Preview
+        self.preview_mentioned: bool = (opening_intent == "outbound_smile_preview")  # True once Kiara has introduced AI Smile Preview
+        self.smile_diff: Optional[dict[str, Any]] = None  # Structured Before vs. After photo analysis
 
         # Booking state — independent of booking_stage for precise control
         self.booking_offered: bool = False     # Kiara proactively offered a consultation
@@ -48,11 +49,21 @@ class CallSession:
         self.booking_in_progress: bool = False # 3-step booking flow has started (details being collected)
         self.booking_confirmed: bool = (opening_intent == "outbound_booking_form")  # Booking already complete
 
+        # Dentist recommendation tracking (PIN code based)
+        self.recommended_dentists: list[str] = []
+        self.dentist_page: int = 0
+        self.top_recommended_doctor: str = ""
+
+        # City rejection and alternative recommendation tracking
+        self.rejected_cities: list[str] = []
+        self.suggested_cities: list[str] = []
+
         self.collected_user_info: dict[str, str] = {
             "name": "",
             "phone": "",
             "email": "",
             "city": "",
+            "pincode": "",
             "subject": "",
             "intent": "",
             "notes": ""
@@ -102,6 +113,18 @@ class CallSession:
         self.booking_declined = False
         self.booking_stage = "discovery"
 
+    def record_rejected_city(self, city: str) -> None:
+        """Records a city the caller has declined or expressed unwillingness to visit."""
+        clean = (city or "").strip()
+        if clean and clean.lower() not in [c.lower() for c in self.rejected_cities]:
+            self.rejected_cities.append(clean)
+
+    def record_suggested_city(self, city: str) -> None:
+        """Records a city that has been suggested to the caller."""
+        clean = (city or "").strip()
+        if clean and clean.lower() not in [c.lower() for c in self.suggested_cities]:
+            self.suggested_cities.append(clean)
+
 
 
     def set_preferred_language(self, lang: str) -> None:
@@ -119,7 +142,7 @@ class CallSession:
             if self.booking_stage == "greeting":
                 self.booking_stage = "discovery"
 
-    def update_user_info(self, name: Optional[str] = None, phone: Optional[str] = None, email: Optional[str] = None, city: Optional[str] = None, subject: Optional[str] = None, intent: Optional[str] = None, notes: Optional[str] = None) -> None:
+    def update_user_info(self, name: Optional[str] = None, phone: Optional[str] = None, email: Optional[str] = None, city: Optional[str] = None, subject: Optional[str] = None, intent: Optional[str] = None, notes: Optional[str] = None, pincode: Optional[str] = None) -> None:
         """Updates collected user entities across conversational turns.
         
         IMPORTANT: Does NOT overwrite active booking stages. If booking has been
@@ -130,6 +153,7 @@ class CallSession:
         if phone: self.collected_user_info["phone"] = phone
         if email: self.collected_user_info["email"] = email
         if city: self.collected_user_info["city"] = city
+        if pincode: self.collected_user_info["pincode"] = pincode
         if subject: self.collected_user_info["subject"] = subject
         if intent: self.collected_user_info["intent"] = intent
         if notes: self.collected_user_info["notes"] = notes
@@ -181,6 +205,30 @@ class CallSession:
         preview_note = (
             f"\n- AI Smile Preview Already Mentioned: {'Yes — do not bring it up again unless caller asks' if self.preview_mentioned else 'No — may introduce when contextually relevant'}"
         )
+        if self.smile_diff and isinstance(self.smile_diff, dict):
+            if self.smile_diff.get("has_valid_comparison"):
+                changes_inline = "; ".join(self.smile_diff.get("key_changes") or [])
+                preview_note += (
+                    f"\n- Caller Before Photo Summary: {self.smile_diff.get('before_summary', '')}"
+                    f"\n- Caller After AI Preview Summary: {self.smile_diff.get('after_summary', '')}"
+                    f"\n- Caller Before vs. After Key Differences: {changes_inline}"
+                )
+
+        # Dentist recommendation tracking
+        dentist_note = ""
+        if self.recommended_dentists:
+            dentist_note = (
+                f"\n- Recommended Dentists Already Presented: {', '.join(self.recommended_dentists)}"
+                f"\n- Top Nearest Doctor: {self.top_recommended_doctor}"
+                f"\n- Dentist Recommendation Page: {self.dentist_page}"
+            )
+
+        # City preference tracking
+        city_pref_note = ""
+        if self.rejected_cities:
+            city_pref_note += f"\n- Rejected Cities (Do NOT suggest again): {', '.join(self.rejected_cities)}"
+        if self.suggested_cities:
+            city_pref_note += f"\n- Suggested Cities: {', '.join(self.suggested_cities)}"
 
         return (
             f"[PYTHON SESSION MEMORY & STATE]\n"
@@ -190,6 +238,8 @@ class CallSession:
             f"{booking_flags}"
             f"{profession_note}"
             f"{preview_note}"
+            f"{dentist_note}"
+            f"{city_pref_note}"
             f"\n- Turn History Count: {len(self.conversation_history)}"
             f"{outbound_note}"
         )

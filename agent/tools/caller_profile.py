@@ -9,8 +9,9 @@ import httpx
 from typing import Optional, Dict, Any
 
 from backend.app.services.caller_context import validate_phone_number
+from backend.app.services.city_service import get_default_pincode_for_city
 
-API_URL = "https://ultimatesmiledesign.com/api/consult-with-dentist/"
+API_URL = "http://192.168.0.161:1020/api/consult-with-dentist/"
 
 
 def update_caller_profile(
@@ -22,6 +23,7 @@ def update_caller_profile(
     city: Optional[str] = None,
     doctor_name: Optional[str] = None,
     message: Optional[str] = None,
+    pincode: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Update or correct the caller's profile details (name or phone number).
@@ -100,13 +102,16 @@ def update_caller_profile(
             }
 
         # Perform backend CRM update
+        clean_city = city.strip() if (city and city.strip()) else "Ahmedabad"
+        clean_pincode = pincode.strip() if (pincode and pincode.strip()) else get_default_pincode_for_city(clean_city)
         payload = {
             "lead_id": clean_lead_id,
             "phone": norm_phone,
             "source": "calling_agent",
             "first_name": "Caller",
             "last_name": ".",
-            "city": city.strip() if (city and city.strip()) else "Ahmedabad"
+            "pincode": clean_pincode,
+            "city": clean_city
         }
         if name and name.strip():
             parts = name.strip().split(maxsplit=1)
