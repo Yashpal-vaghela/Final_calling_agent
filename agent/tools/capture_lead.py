@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from backend.app.services.caller_context import validate_phone_number
+from backend.app.services.id_service import generate_18_digit_lead_id
 
 # Phase 3: file-backed store. Phase 5 will swap this for a DB table.
 LEADS_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "data", "leads.json")
@@ -66,7 +67,7 @@ def capture_lead(
     norm_phone = phone_res["phone"]
 
     lead = {
-        "id": str(uuid.uuid4()),
+        "id": generate_18_digit_lead_id(),
         "call_id": call_id,
         "name": name.strip(),
         "phone": norm_phone,

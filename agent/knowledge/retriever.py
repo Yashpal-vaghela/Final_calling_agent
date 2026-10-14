@@ -133,7 +133,8 @@ class JSONFaqRetriever(KnowledgeRetriever):
 
     def _tokenize(self, text: str) -> List[str]:
         """Tokenizes text, cleans symbols, and filters common stop words."""
-        words = re.findall(r"\w+(?:\.\w+)?", text.lower())
+        clean_text = text.replace("_", " ").lower()
+        words = re.findall(r"\w+(?:\.\w+)?", clean_text)
         return [w for w in words if w not in _STOP_WORDS and len(w) > 1]
 
     def _get_content_for_language(self, content: Any, lang: str) -> str:

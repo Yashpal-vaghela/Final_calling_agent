@@ -25,12 +25,12 @@ _NOT_FOUND = {
 SUPPORTED_TOPICS = [
     "about_usd", "about_ade_haresh_savani", "safety_quality_materials",
     "warranty", "veneers", "implants", "whitening", "treatments_general",
-    "preview_ai_digital", "process_timeline", "cities_coverage", "cost_value",
+    "preview_ai_digital", "process_timeline", "cities_coverage", "cost",
     "aftercare_comfort", "privacy_busy_schedule", "contact_booking",
-    "process", "timeline", "cities", "cost", "before_after",
+    "process", "timeline", "cities", "before_after",
     "join_usd", "for_dentists", "join_team", "partner_dentist",
     "course_price", "dentist_course", "dentist_partner_benefits",
-    "local_dentist_vs_usd", "profession_guidance",
+    "local_dentist_vs_usd", "profession_guidance", "veneers_vs_aligners",
     # Guidance-layer topics
     "analogy", "analogies", "craftsmanship", "emax_vs_zirconia",
     "digital_smile_design_planning", "usd_vs_regular_dentist",
@@ -46,9 +46,13 @@ TOPIC_ALIASES = {
     "digital_preview": "ai_smile_preview",
     "smile_preview": "ai_smile_preview",
     "preview": "ai_smile_preview",
-    "prices": "cost_value",
-    "cost": "cost_value",
-    "price": "cost_value",
+    "prices": "cost",
+    "cost": "cost",
+    "price": "cost",
+    "cost_value": "cost",
+    "pricing": "cost",
+    "starting_price": "cost",
+    "starting price": "cost",
     "timeline": "process_timeline",
     "process": "process_timeline",
     "ade_haresh_savani": "about_ade_haresh_savani",
@@ -83,6 +87,9 @@ TOPIC_ALIASES = {
     "treatment_warranty": "treatment_warranties",
     "treatment_warranties": "treatment_warranties",
     "guarantee": "treatment_warranties",
+    "veneers_vs_aligners": "veneers_vs_aligners",
+    "veneers or aligners": "veneers_vs_aligners",
+    "aligners vs veneers": "veneers_vs_aligners",
 }
 
 
@@ -196,7 +203,13 @@ def get_faq(topic: str, language: str = "en") -> Dict[str, Any]:
     answer = primary["content"]
     related = list(primary["related_topics"])
     
-    if len(results) > 1 and results[1]["score"] > 0.35:
+    # If the primary result is a patient pricing/cost topic, do NOT append course or dentist training fees!
+    is_pricing_topic = (
+        primary.get("id") in ("smile_design_cost_india", "veneers_cost_india")
+        or any(w in clean_target for w in ("cost", "price", "pricing", "fee", "starting"))
+    )
+
+    if not is_pricing_topic and len(results) > 1 and results[1]["score"] > 0.35:
         second_content = results[1]["content"]
         if second_content != answer:
             answer = f"{answer}\n\n{second_content}"
@@ -204,15 +217,26 @@ def get_faq(topic: str, language: str = "en") -> Dict[str, Any]:
                 if t not in related:
                     related.append(t)
 
+    if is_pricing_topic:
+        instruction_text = (
+            "MANDATORY VERBATIM RULE: You MUST speak this exact sentence in Facts without paraphrasing or summarizing: "
+            "'You should keep your expectations regarding the treatment high; the investment is personalized and depends on your dentist, your dentist\\'s experience, and the clinic location.' "
+            "(In Gujarati: 'ટ્રીટમેન્ટ અંગે તમારે તમારી અપેક્ષાઓ ખૂબ ઊંચી રાખવી જોઈએ; આનું રોકાણ તમારા ડેન્ટિસ્ટ, તેમના અનુભવ અને ક્લિનિકના લોકેશન પર આધાર રાખે છે.' / "
+            "In Hindi: 'ट्रीटमेंट को लेकर आप अपनी उम्मीदें ऊंची रख सकते हैं; यह आपके डेंटिस्ट, उनके अनुभव और क्लिनिक की लोकेशन पर निर्भर करता है।'). "
+            "Do NOT paraphrase into 'pricing varies' or 'depends on materials and specific needs'."
+        )
+    else:
+        instruction_text = (
+            "Use these facts to answer the caller. "
+            "Respond entirely in the language of the caller's CURRENT spoken turn. "
+            "Do not let the language of this tool result determine the response language."
+        )
+
     return {
         "found": True,
         "topic": primary["topic"] or query_topic,
         "answer": answer,
         "score": primary["score"],
         "related_topics": related,
-        "instruction": (
-            "Use these facts to answer the caller. "
-            "Respond entirely in the language of the caller's CURRENT spoken turn. "
-            "Do not let the language of this tool result determine the response language."
-        )
+        "instruction": instruction_text
     }

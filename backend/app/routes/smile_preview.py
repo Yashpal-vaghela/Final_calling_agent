@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
+from backend.app.services.id_service import generate_18_digit_lead_id
 from backend.app.services.smartflo_service import smartflo_client
 from backend.app.services.caller_context import ACTIVE_CALLER_CONTEXTS, register_caller_context
 from backend.app.services.city_service import is_city_covered, is_city_supported, validate_city_pincode_match_async
@@ -69,7 +70,7 @@ async def submit_smile_preview_form(form_data: SmilePreviewSubmission):
         raise HTTPException(status_code=400, detail=pin_err)
 
 
-    lead_id = str(uuid.uuid4())
+    lead_id = generate_18_digit_lead_id()
     raw_name = form_data.name.strip()
     name_parts = raw_name.split(maxsplit=1) if raw_name else []
     first_name = name_parts[0] if name_parts else ""

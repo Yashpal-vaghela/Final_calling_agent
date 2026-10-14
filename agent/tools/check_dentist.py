@@ -4,12 +4,15 @@ import os
 import re
 from typing import Dict, Any, Optional, List
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
-AUTH_DENTISTS_FILE = os.path.join(DATA_DIR, "authorized_dentists.json")
+from backend.app.services.dentist_service import get_dentist_service, indic_to_latin
 
 def _norm_doc(name: str) -> str:
     cleaned = name.strip()
+    # Strip honorific doctor prefixes in English and Indic scripts
     cleaned = re.sub(r"^(dr\.?|doctor|mr\.?|mrs\.?|ms\.?|ડૉ\.?|ડો\.?|ડો|ડૉ|डॉ\.?|डो\.?|डो|डॉ)\s*", "", cleaned, flags=re.IGNORECASE)
+    # Transliterate any Indic (Gujarati/Hindi) characters to phonetic Latin
+    cleaned = indic_to_latin(cleaned)
+    cleaned = re.sub(r"^(dr\.?|doctor|mr\.?|mrs\.?|ms\.?|do\.?)\s*", "", cleaned, flags=re.IGNORECASE)
     return re.sub(r"[^\w\s]", " ", cleaned).strip().lower()
 
 def norm_phonetic_word(w: str) -> str:
@@ -120,13 +123,7 @@ def check_dentist(doctor_name: str, city: str = "") -> Dict[str, Any]:
     if not doc_clean:
         return {"is_authorized": False, "message": "No doctor name provided."}
 
-    auth_dentists = {}
-    if os.path.exists(AUTH_DENTISTS_FILE):
-        try:
-            with open(AUTH_DENTISTS_FILE, "r", encoding="utf-8") as f:
-                auth_dentists = json.load(f)
-        except Exception:
-            pass
+    auth_dentists = get_dentist_service().get_directory_sync()
 
     city_clean = city.strip()
     city_dentists = []

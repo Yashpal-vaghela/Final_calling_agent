@@ -1,4 +1,7 @@
 import os
+import asyncio
+import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -7,8 +10,22 @@ from fastapi.staticfiles import StaticFiles
 from backend.app.routes import smartflo_voice, contact_form, internal_callback, booking_form, cities, smile_preview
 from backend.app.services.caller_context import ACTIVE_CALLER_CONTEXTS
 
+logger = logging.getLogger(__name__)
 
-app = FastAPI(title="USD Calling Agent")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: pre-warm live dentist service in background so calls have instant RAM L1 cache
+    try:
+        from backend.app.services.dentist_service import get_dentist_service
+        asyncio.create_task(get_dentist_service().get_directory_async())
+        logger.info("[Startup] Pre-warming live dentist directory in background...")
+    except Exception as e:
+        logger.warning(f"[Startup] Dentist directory pre-warm failed: {e}")
+    yield
+
+
+app = FastAPI(title="USD Calling Agent", lifespan=lifespan)
 
 # Mount static directory
 static_dir = os.path.join(os.path.dirname(__file__), "..", "static")

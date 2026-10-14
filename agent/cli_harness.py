@@ -119,13 +119,13 @@ CAPTURE_LEAD_TOOL = genai_types.FunctionDeclaration(
 CHECK_CITY_COVERAGE_TOOL = genai_types.FunctionDeclaration(
     name="check_city_coverage",
     description=(
-        "Check if Ultimate Smile Design covers a given Indian city. "
-        "Call this when the caller asks if USD services are available in their city."
+        "Check if Ultimate Smile Design covers a given Indian city or state. "
+        "Call this when the caller asks if USD services are available in their city or state."
     ),
     parameters=genai_types.Schema(
         type=genai_types.Type.OBJECT,
         properties={
-            "city": genai_types.Schema(type=genai_types.Type.STRING, description="City name to check coverage for"),
+            "city": genai_types.Schema(type=genai_types.Type.STRING, description="City or state name to check coverage for (e.g. 'Gujarat', 'Surat')"),
         },
         required=["city"],
     ),

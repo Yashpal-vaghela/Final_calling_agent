@@ -6,10 +6,11 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
+from backend.app.services.id_service import generate_18_digit_lead_id
 
 
 class Lead(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: str = Field(default_factory=generate_18_digit_lead_id)
     call_id: Optional[str] = None          # FK to Call.id — linked in Phase 5
     name: str
     phone: str

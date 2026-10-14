@@ -6,6 +6,7 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
+from backend.app.services.id_service import generate_18_digit_lead_id
 from backend.app.services.smartflo_service import smartflo_client
 from backend.app.services.caller_context import register_caller_context
 from backend.app.services.city_service import is_city_covered, is_city_supported, validate_city_pincode_match_async
@@ -47,7 +48,7 @@ async def submit_booking_form(form_data: BookingFormSubmission):
         raise HTTPException(status_code=400, detail=pin_err)
 
 
-    lead_id = str(uuid.uuid4())
+    lead_id = generate_18_digit_lead_id()
     full_name = f"{form_data.first_name.strip()} {form_data.last_name.strip()}"
     
     context_data = {

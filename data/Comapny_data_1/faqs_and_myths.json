@@ -92,10 +92,20 @@
       "Kitne paise lagte hain smile design mein",
       "Smile makeover price kya hai",
       "Veneers ka rate kya hai",
-      "Smile design mehenga hai kya"
+      "Smile design mehenga hai kya",
+      "તો તમારી પ્રાઈઝ શું છે",
+      "પ્રાઈઝ શું છે",
+      "what is your price",
+      "what is the price",
+      "what is your starting price",
+      "what is the starting price",
+      "pricing",
+      "cost of treatment",
+      "cost_value",
+      "starting price"
     ],
-    "facts": "Treatments through Ultimate Smile Design start at ₹25,000 per unit, with the total investment depending on the customised treatment plan, number of units, materials, and clinical complexity. The cost varies based on the specific procedures included — whether veneers, crowns, whitening, aligners, implants, or gum contouring — and the complexity of the individual case.",
-    "details": "The total investment depends on several factors: the type of treatment selected, number of teeth being treated, materials chosen, complexity of the smile design, need for preliminary dental treatment, digital planning requirements, and the expertise of the dentist. Always ask for a complete treatment quotation rather than comparing only the advertised price per tooth. A written breakdown should show the treatment costs, included services, and any additional charges. Our consultant can arrange a personalized consultation directly on this call."
+    "facts": "You should keep your expectations regarding the treatment high; the investment is personalized and depends on your dentist, your dentist's experience, and the clinic location.",
+    "details": "You should keep your expectations regarding the treatment high; the investment is personalized and depends on your dentist, your dentist's experience, and the clinic location, as well as the specific procedures included, materials, and the clinical complexity of your customized treatment plan. Our consultant can arrange a personalized consultation directly on this call so your dentist can assess your case and provide an exact quotation."
   },
   "consultation_checkup_fees": {
     "intent": "consultation_checkup_fees",
@@ -113,7 +123,7 @@
       "Shu pehla checkup mate atla badha paisa aapva padse"
     ],
     "facts": "Consultation and initial checkup fees are not fixed. They depend on the specific authorized smile designer and clinic for your visit. Our consultant can arrange your consultation directly on this call.",
-    "details": "The ₹25,000 per unit starting price is for the dental treatment itself, not for the initial consultation. Consultation and checkup fees vary by dentist and clinic. Our consultant can arrange your consultation right here on this call."
+    "details": "Consultation and checkup fees are separate from the dental treatment itself, and depend on your dentist, clinic location, and doctor's experience. Our consultant can arrange your personalized consultation right here on this call."
   },
   "how_to_join_ultimate_smile_design": {
     "intent": "how_to_join_ultimate_smile_design",

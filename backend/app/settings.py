@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     SMARTFLO_CALLER_ID: str = ""
     SMARTFLO_AGENT_NUMBER: str = ""
 
+    # Zoho Flow CRM Integration
+    ZOHO_FLOW_WEBHOOK_URL: str = ""
+
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",

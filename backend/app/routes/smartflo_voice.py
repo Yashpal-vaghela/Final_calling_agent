@@ -12,6 +12,7 @@ from backend.app.services.caller_context import lookup_caller_context, remove_ca
 from agent.utils.call_logger import save_calls, load_calls
 from agent.pipeline import VoicePipelineOrchestrator
 from agent.utils.summarizer import generate_call_summary, save_call_record, CALLS_FILE
+from backend.app.services.zoho_service import send_call_summary_to_zoho
 
 router = APIRouter()
 
@@ -240,6 +241,13 @@ async def smartflo_media_stream(
                         lead_message = caller_ctx.get("message") or caller_ctx.get("notes")
                         print(f"[Smartflo WS] Resolved caller context on start event for {lead_name} (City: {lead_city}, Phone: {lead_phone}, Pincode: {lead_pincode})")
 
+                if caller_ctx and call_sid:
+                    try:
+                        from agent.cache import cache_set, build_call_context_key, TTL_CALL_CONTEXT
+                        asyncio.create_task(cache_set(build_call_context_key(call_sid), caller_ctx, ttl_seconds=TTL_CALL_CONTEXT))
+                    except Exception as e:
+                        print(f"[Smartflo WS Warning] Could not persist context to Redis: {e}")
+
                 print(f"[Smartflo WS] Stream started. StreamSid: {stream_sid}, CallSid: {call_sid}")
 
                 orchestrator = VoicePipelineOrchestrator(
@@ -285,24 +293,45 @@ async def smartflo_media_stream(
         print(f"[Smartflo WS] Error handling stream for CallSid {call_sid}: {e}")
     finally:
         if orchestrator is not None:
-            # Snapshot conversation history, collected user entities, and call identifier
+            # Snapshot conversation history, collected user entities, and call identifiers
             history_snapshot = list(orchestrator.session.conversation_history)
             user_info_snapshot = dict(orchestrator.session.collected_user_info)
             call_id_val = orchestrator.call_id
+            intake_lead_id_val = orchestrator.lead_id or lead_id
+            booking_lead_id_val = getattr(orchestrator, "booking_lead_id", None)
 
             await orchestrator.stop()
 
-            # # Trigger structured conversation summarization asynchronously in the background
-            # async def _run_post_call_summary():
-            #     try:
-            #         summary = await generate_call_summary(history_snapshot, user_info_snapshot)
-            #         if summary:
-            #             print(f"📋 [Call Summary for {call_id_val}]:\n{json.dumps(summary, indent=2)}")
-            #             save_call_record(call_id=call_id_val, summary=summary, transcript=history_snapshot)
-            #     except Exception as ex:
-            #         print(f"[Smartflo WS] Error generating post-call summary for {call_id_val}: {ex}")
+            # Trigger structured conversation summarization asynchronously in the background
+            async def _run_post_call_summary():
+                try:
+                    summary = await generate_call_summary(
+                        history_snapshot,
+                        user_info_snapshot,
+                        lead_id=intake_lead_id_val,
+                        booking_lead_id=booking_lead_id_val
+                    )
+                    if summary:
+                        print(f"📋 [Call Summary for {call_id_val}]:\n{json.dumps(summary, indent=2)}")
+                        save_call_record(
+                            call_id=call_id_val,
+                            summary=summary,
+                            transcript=history_snapshot,
+                            lead_id=intake_lead_id_val,
+                            booking_lead_id=booking_lead_id_val
+                        )
+                        await send_call_summary_to_zoho(
+                            call_id=call_id_val,
+                            user_info=user_info_snapshot,
+                            summary=summary,
+                            transcript_history=history_snapshot,
+                            lead_id=intake_lead_id_val,
+                            booking_lead_id=booking_lead_id_val
+                        )
+                except Exception as ex:
+                    print(f"[Smartflo WS] Error generating post-call summary for {call_id_val}: {ex}")
 
-            # asyncio.create_task(_run_post_call_summary())
+            asyncio.create_task(_run_post_call_summary())
         
         # Purge caller context from memory across all indexed keys on call termination
         phone_to_clean = lead_phone or (caller_ctx.get("phone") if caller_ctx else None)

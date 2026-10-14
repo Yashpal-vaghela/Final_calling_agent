@@ -157,8 +157,8 @@
 - Smile design mehenga hai kya
 
 **Response (Facts & Details)**:
-> Treatments through Ultimate Smile Design start at ₹25,000 per unit, with the total investment depending on the customised treatment plan, number of units, materials, and clinical complexity. The cost varies based on the specific procedures included — whether veneers, crowns, whitening, aligners, implants, or gum contouring — and the complexity of the individual case.
-> The total investment depends on several factors: the type of treatment selected, number of teeth being treated, materials chosen, complexity of the smile design, need for preliminary dental treatment, digital planning requirements, and the expertise of the dentist. Always ask for a complete treatment quotation rather than comparing only the advertised price per tooth. A written breakdown should show the treatment costs, included services, and any additional charges. For specific pricing details, visit ultimatesmiledesign.com or consult with an authorised smile designer.
+> For Ultimate Smile Design treatments, you should keep your expectations regarding the treatment high. The total investment is personalized and depends on your dentist, your dentist's experience, the clinic location, the specific procedures included, materials, and the clinical complexity of your customized treatment plan.
+> The total investment depends on several factors: your chosen dentist, your dentist's experience, the clinic location, the type of treatment selected, number of teeth being treated, materials chosen, complexity of the smile design, need for preliminary dental treatment, and digital planning requirements. You should keep your expectations regarding the treatment high as every smile is handcrafted and customized. Our consultant can arrange a personalized consultation directly on this call so your dentist can assess your case and provide an exact quotation.
 
 ### `Comapny_data_1/philosophy_and_aesthetics.json` (7 Examples)
 #### Intent: `ultimate_smile_design_philosophy`
@@ -396,7 +396,7 @@
 
 **Response (Facts & Details)**:
 > Normal smile design typically focuses on correcting a single cosmetic concern at each stage — improving specific aesthetic concerns through treatments like whitening, veneers, or crowns. Planning is generally limited to the dentition and oral soft tissues, with correlation to facial features usually missing. Ultimate Smile Design follows a different, comprehensive approach — it is a premium smile planning process that integrates facial aesthetics, digital scans, and dynamic lip movement to deliver a predictable, natural-looking smile.
-> Ultimate Smile Design begins with a personalised design process where every decision is based on the desired final smile, not just the condition of the teeth. It considers facial proportions, smile line, lip movement, and natural expressions. The approach uses AI, digital scans, and smile simulation to create a digital preview before treatment begins. Every smile is handcrafted by experts and planned as a coordinated smile makeover rather than individual procedures. The treatment is exclusively offered by authorised smile designers who follow the complete Ultimate Smile Design philosophy. Treatments start at ₹25,000 per unit, with the total investment depending on the customised plan, number of units, materials, and case complexity.
+> Ultimate Smile Design begins with a personalised design process where every decision is based on the desired final smile, not just the condition of the teeth. It considers facial proportions, smile line, lip movement, and natural expressions. The approach uses AI, digital scans, and smile simulation to create a digital preview before treatment begins. Every smile is handcrafted by experts and planned as a coordinated smile makeover rather than individual procedures. The treatment is exclusively offered by authorised smile designers who follow the complete Ultimate Smile Design philosophy. Patients can keep their expectations regarding the treatment high; the total investment is bespoke and depends on your dentist, your dentist's experience, the clinic location, and your customized plan.
 
 #### Intent: `smile_design_benefits`
 **Topic**: Benefits of Smile Design
@@ -1326,7 +1326,7 @@
 - Veneers ke daam
 
 **Response (Facts & Details)**:
-> Treatments through Ultimate Smile Design start at ₹25,000 per unit, with the total investment depending on the customised treatment plan, number of units, materials, and clinical complexity. The cost varies based on veneer material, number of teeth, dentist's experience, laboratory involved, digital planning requirements, complexity of the smile design, need for preliminary dental treatment, and city and clinic.
+> For Ultimate Smile Design treatments, you should keep your expectations regarding the treatment high. The total investment is personalized and depends on your dentist, your dentist's experience, the clinic location, veneer material, number of teeth, and the complexity of your customized treatment plan.
 > There is no single fixed cost for dental veneers in India. The investment depends on the specific material chosen, the number of teeth being treated, the complexity of the case, and whether digital smile design planning is included. Always ask for a complete treatment quotation rather than comparing only the advertised price per tooth. The quoted amount may or may not include consultation, digital smile design, scans, temporary restorations, laboratory charges, follow-up visits, or treatment required before veneers. For specific pricing, visit ultimatesmiledesign.com or consult with an authorised smile designer.
 
 #### Intent: `advanced_dsd_technologies`

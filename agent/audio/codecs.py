@@ -17,14 +17,14 @@ except ImportError as exc:
         "On Python 3.13+, install 'audioop-lts' (which provides the 'audioop' module)."
     ) from exc
 
+import numpy as np
+
 try:
     import soxr
-    import numpy as np
     HAS_SOXR = True
 except ImportError:
     HAS_SOXR = False
     soxr = None
-    np = None
 
 
 def mulaw_to_pcm16(mulaw_bytes: bytes) -> bytes:
@@ -80,6 +80,9 @@ def soxr_resample_pcm16(
     if not pcm_bytes:
         return b"", state
 
+    if not HAS_SOXR or soxr is None:
+        raise RuntimeError("soxr is required for soxr_resample_pcm16. Please install 'soxr'.")
+
     in_arr = np.frombuffer(pcm_bytes, dtype=np.int16)
     
     # 48 input samples (~2ms at 24kHz, 6ms at 8kHz) gives seamless overlap-save across frames
@@ -88,7 +91,7 @@ def soxr_resample_pcm16(
         history = state[0]
         extended = np.concatenate([history, in_arr])
         out_arr = soxr.resample(extended, in_rate, out_rate, quality=quality).astype(np.int16)
-        out_overlap = int(round(len(history) * (out_rate / in_rate)))
+        out_overlap = round(len(history) * (out_rate / in_rate))
         out_valid = out_arr[out_overlap:]
     else:
         out_valid = soxr.resample(in_arr, in_rate, out_rate, quality=quality).astype(np.int16)
@@ -134,7 +137,7 @@ def resample_pcm16(
         return soxr_resample_pcm16(pcm_bytes, in_rate, out_rate, state)
 
     # If state was from soxr, reset it to None for audioop to avoid TypeError
-    if state is not None and isinstance(state, tuple) and len(state) >= 1 and isinstance(state[0], np.ndarray if np else ()):
+    if state is not None and isinstance(state, tuple) and len(state) >= 1 and isinstance(state[0], np.ndarray):
         state = None
 
     # audioop.ratecv arguments: (fragment, width, nchannels, inrate, outrate, state[, weightA[, weightB]])

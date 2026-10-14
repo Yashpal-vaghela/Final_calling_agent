@@ -7,9 +7,10 @@ from typing import Optional
 from backend.app.services.caller_context import validate_phone_number
 from backend.app.services.city_service import get_nearest_covered_city, get_default_pincode_for_city
 
+from backend.app.services.dentist_service import get_dentist_service
+
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 CITIES_FILE = os.path.join(DATA_DIR, "covered_cities.json")
-AUTH_DENTISTS_FILE = os.path.join(DATA_DIR, "authorized_dentists.json")
 API_URL = "http://192.168.0.161:1020/api/consult-with-dentist/"
 
 def book_consultation(
@@ -76,13 +77,7 @@ def book_consultation(
     doc_clean = doctor_name.strip()
     
     if doc_clean:
-        auth_dentists = {}
-        if os.path.exists(AUTH_DENTISTS_FILE):
-            try:
-                with open(AUTH_DENTISTS_FILE, "r", encoding="utf-8") as f:
-                    auth_dentists = json.load(f)
-            except Exception:
-                pass
+        auth_dentists = get_dentist_service().get_directory_sync()
                 
         from agent.tools.check_dentist import find_best_doctor_match
 
@@ -220,10 +215,12 @@ def book_consultation(
             f"Our team will call you as soon as possible to verify your details.'"
         )
 
+    effective_lead_id = str(clean_lead_id) if clean_lead_id else returned_lead_id
+
     return {
         "status": "success",
         "message": success_message,
-        "lead_id": returned_lead_id,
+        "lead_id": effective_lead_id,
         "city": booking_city,
         "nearest_covered_city": nearest_covered_city,
         "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. Always say 'authorized smile designer'. Do not mention kilometers, distances, or specific timeframes."

@@ -177,6 +177,138 @@ CANONICAL_CITY_ALIASES: Dict[str, str] = {
     "surendranagar": "Dhrangadhra",
 }
 
+# All 28 Indian States & 8 Union Territories with canonical names and variations
+INDIAN_STATES: Dict[str, str] = {
+    "andhra pradesh": "Andhra Pradesh",
+    "arunachal pradesh": "Arunachal Pradesh",
+    "assam": "Assam",
+    "bihar": "Bihar",
+    "chhattisgarh": "Chhattisgarh",
+    "goa": "Goa",
+    "gujarat": "Gujarat",
+    "haryana": "Haryana",
+    "himachal pradesh": "Himachal Pradesh",
+    "jharkhand": "Jharkhand",
+    "karnataka": "Karnataka",
+    "kerala": "Kerala",
+    "madhya pradesh": "Madhya Pradesh",
+    "maharashtra": "Maharashtra",
+    "manipur": "Manipur",
+    "meghalaya": "Meghalaya",
+    "mizoram": "Mizoram",
+    "nagaland": "Nagaland",
+    "odisha": "Odisha",
+    "orissa": "Odisha",
+    "punjab": "Punjab",
+    "rajasthan": "Rajasthan",
+    "sikkim": "Sikkim",
+    "tamil nadu": "Tamil Nadu",
+    "tamilnadu": "Tamil Nadu",
+    "telangana": "Telangana",
+    "tripura": "Tripura",
+    "uttar pradesh": "Uttar Pradesh",
+    "uttarakhand": "Uttarakhand",
+    "uttaranchal": "Uttarakhand",
+    "west bengal": "West Bengal",
+    # Union Territories & NCR
+    "delhi": "Delhi",
+    "new delhi": "Delhi",
+    "nct of delhi": "Delhi",
+    "national capital territory of delhi": "Delhi",
+    "chandigarh": "Chandigarh",
+    "jammu and kashmir": "Jammu and Kashmir",
+    "j&k": "Jammu and Kashmir",
+    "ladakh": "Ladakh",
+    "puducherry": "Puducherry",
+    "pondicherry": "Puducherry",
+    "dadra and nagar haveli and daman and diu": "Dadra and Nagar Haveli and Daman and Diu",
+    "daman and diu": "Dadra and Nagar Haveli and Daman and Diu",
+    "dadra and nagar haveli": "Dadra and Nagar Haveli and Daman and Diu",
+    "andaman and nicobar islands": "Andaman and Nicobar Islands",
+    "andaman and nicobar": "Andaman and Nicobar Islands",
+    "lakshadweep": "Lakshadweep",
+}
+
+# Mapping of Indian states/UTs to authorized covered cities with active dentists
+STATE_TO_COVERED_CITIES: Dict[str, List[str]] = {
+    "gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Jamnagar", "Bharuch", "Dhrangadhra", "Halvad"],
+    "maharashtra": ["Mumbai", "Pune", "Sangli"],
+    "delhi": ["New Delhi"],
+    "new delhi": ["New Delhi"],
+    "haryana": ["Gurugram"],
+    "karnataka": ["Bangalore"],
+    "tamil nadu": ["Chennai"],
+    "tamilnadu": ["Chennai"],
+    "telangana": ["Hyderabad"],
+    "andhra pradesh": ["Guntur"],
+    "madhya pradesh": ["Indore", "Gwalior"],
+    "punjab": ["Faridkot"],
+    "rajasthan": ["Sri Ganganagar"],
+    "assam": ["Guwahati"],
+    "west bengal": ["Malda"],
+}
+
+# Fallback nearest covered center for states that do not have active smile designer coverage
+UNCOVERED_STATE_NEAREST_CENTER: Dict[str, str] = {
+    "uttar pradesh": "Gwalior",
+    "bihar": "Malda",
+    "jharkhand": "Malda",
+    "odisha": "Malda",
+    "orissa": "Malda",
+    "chhattisgarh": "Indore",
+    "kerala": "Bangalore",
+    "goa": "Sangli",
+    "uttarakhand": "New Delhi",
+    "uttaranchal": "New Delhi",
+    "himachal pradesh": "Faridkot",
+    "chandigarh": "Faridkot",
+    "jammu and kashmir": "Faridkot",
+    "j&k": "Faridkot",
+    "ladakh": "Faridkot",
+    "arunachal pradesh": "Guwahati",
+    "manipur": "Guwahati",
+    "meghalaya": "Guwahati",
+    "mizoram": "Guwahati",
+    "nagaland": "Guwahati",
+    "tripura": "Guwahati",
+    "sikkim": "Malda",
+    "puducherry": "Chennai",
+    "pondicherry": "Chennai",
+    "dadra and nagar haveli and daman and diu": "Surat",
+    "daman and diu": "Surat",
+    "dadra and nagar haveli": "Surat",
+}
+
+
+def is_indian_state(name: str) -> bool:
+    """Returns True if the string matches an Indian state, Union Territory, or alias."""
+    if not name:
+        return False
+    return name.strip().lower() in INDIAN_STATES
+
+
+def get_canonical_state_name(name: str) -> str:
+    """Returns the properly formatted official state/UT name."""
+    if not name:
+        return ""
+    return INDIAN_STATES.get(name.strip().lower(), name.strip().title())
+
+
+def get_state_covered_cities(state_name: str) -> List[str]:
+    """Returns list of covered cities in the given state, or empty list if state has no direct coverage."""
+    if not state_name:
+        return []
+    s = state_name.strip().lower()
+    return STATE_TO_COVERED_CITIES.get(s, [])
+
+
+def get_nearest_center_for_uncovered_state(state_name: str) -> str:
+    """Returns the nearest authorized covered center for an uncovered state."""
+    if not state_name:
+        return "Ahmedabad"
+    s = state_name.strip().lower()
+    return UNCOVERED_STATE_NEAREST_CENTER.get(s, "Ahmedabad")
+
 
 def _normalize_city_name(city_name: str) -> str:
     """Returns canonical city name for aliases."""

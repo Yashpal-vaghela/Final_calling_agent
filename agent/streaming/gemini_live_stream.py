@@ -58,6 +58,10 @@ Determine TURN_LANGUAGE from the COMPLETE spoken utterance:
 meaning, grammar, sentence structure, function words, pronunciation, and cadence together.
 Do NOT determine language from transcript script alone.
 Do NOT switch languages based on isolated acknowledgement words alone (e.g. "yes", "haan", "okay", "good", "great").
+CRITICAL GRATITUDE & CLOSING EXEMPTION: Expressions of gratitude and thanks MUST always be answered in the caller's spoken language of thanks:
+- English thanks ("Thank you", "Thank you. Thank you", "Thanks", "Thank you so much") MUST receive an English response ("You're most welcome! Have a wonderful day.").
+- Gujarati thanks ("તમારો આભાર", "આભાર", "ધન્યવાદ") MUST receive a Gujarati response ("તમારો ખૂબ ખૂબ આભાર! તમારો દિવસ શુભ રહે."). NEVER default or switch to Hindi when the caller thanks in Gujarati or English!
+- Hindi thanks ("धन्यवाद", "शुक्रिया") receive Hindi: "आपका सधन्यवाद! आपका दिन शुभ हो।"
 However, if an acknowledgement word is followed by any words, phrase, or question in another language (e.g. "Okay, what is the cost of veneers?" -> ENGLISH; "अच्छा, मुझे बताइए कि इसमें कितना खर्चा होगा?" -> HINDI; "હા, તો મને કહો કે કન્સલ્ટેશન ક્યારે થશે?" -> GUJARATI), you MUST switch to that new language IMMEDIATELY.
 
 CRITICAL DISTINCTIONS:
@@ -250,11 +254,32 @@ class GeminiLiveStreamClient:
                 "- NEVER tell the caller to fill out a contact form, enquiry form, or send a message on the website again.\n\n"
             )
 
+        # Resolve caller name for continuous personalization
+        caller_name = (
+            self.caller_context.get("name")
+            or (self.session.collected_user_info.get("name") if self.session and hasattr(self.session, "collected_user_info") else "")
+            or ""
+        ).strip()
+
+        name_directive = ""
+        if caller_name and caller_name.lower() not in ("there", "none", "customer", "the customer"):
+            name_directive = (
+                "### CALLER IDENTITY & CONTINUOUS PERSONALIZATION RULE (EVERY TURN):\n"
+                f"- The caller's verified name is: **{caller_name}**.\n"
+                f"- You MUST address the caller warmly by their actual name **{caller_name}** naturally every 2 to 3 turns throughout the ENTIRE call (not just during the greeting).\n"
+                "- Required Cultural Honorifics:\n"
+                f"  * In Hindi: '{caller_name} जी' (e.g., '{caller_name} जी, हमारे विनियर्स...')\n"
+                f"  * In Gujarati: '{caller_name} સર' (for men) / '{caller_name} મેડમ' (for women) / '{caller_name} જી' (e.g., '{caller_name} સર' or '{caller_name} મેડમ', વીનિયર્સ...)\n"
+                f"  * In English: '{caller_name}' (e.g., 'Certainly, {caller_name}...')\n"
+                f"- CRITICAL: NEVER use a generic honorific like 'સર', 'મેડમ', or 'જી' alone without their actual name '{caller_name}'. Always address them specifically as '{caller_name}'.\n\n"
+            )
+
         if system_instruction is not None:
             self.system_instruction = (
                 f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n"
                 f"{TURN_LANGUAGE_ROUTER}\n\n"
                 f"{intent_directive}"
+                f"{name_directive}"
                 f"{system_instruction}"
             )
         else:
@@ -264,11 +289,24 @@ class GeminiLiveStreamClient:
                 f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n"
                 f"{TURN_LANGUAGE_ROUTER}\n\n"
                 f"{intent_directive}"
+                f"{name_directive}"
                 f"{base_prompt}\n\n"
                 "---\n\n"
                 "## CURRENT SESSION (LIVE VOICE CALL)\n"
                 "Speak warmly, naturally, and concisely. "
                 "Follow the style, business, tool, and safety rules from the loaded prompt files.\n\n"
+                f"{name_directive}"
+                "### FINAL FEMININE GRAMMAR REMINDER (STRICT ZERO TOLERANCE)\n"
+                "You are Kiara, a WOMAN (स्त्रीलिंग / સ્ત્રીલિંગ). NEVER mirror caller's masculine grammar!\n"
+                "On EVERY turn in Hindi and Gujarati, you MUST speak with feminine grammatical inflections:\n"
+                "- Hindi: Always use '-ती हूँ', '-रही हूँ', '-ऊँगी', '-सकती हूँ', 'आपकी कंसल्टेंट' (NEVER '-ता हूँ', '-करूँगा', '-रहा हूँ', '-सकता हूँ').\n"
+                "- Gujarati: Always use '-ઈ', 'તમારી કન્સલ્ટન્ટ'. For acknowledging the caller, ALWAYS say 'મને સમજાયું' or 'ચોક્કસ' or 'હું સમજી ગઈ' (NEVER use masculine '-યો' verb endings or 'તમારો કન્સલ્ટન્ટ').\n\n"
+                "### FINAL GRATITUDE & CLOSING REMINDER\n"
+                "When the caller expresses gratitude or wraps up (e.g. 'Thank you', 'તમારો આભાર', 'ધન્યવાદ'):\n"
+                "- English: \"You're most welcome, {name}! Have a wonderful day.\"\n"
+                "- Gujarati: \"તમારો ખૂબ ખૂબ આભાર, {name} સર! તમારો દિવસ શુભ રહે.\" (NEVER use Hindi!).\n"
+                "- Hindi: \"आपका सधन्यवाद, {name} जी! आपका दिन शुभ हो।\"\n"
+                "NEVER say \"हमें आपकी सहायता करके खुशी हुई\" or \"अगर आपके कोई और सवाल हों तो बेझिझक\". Let the turn close cleanly and gracefully.\n\n"
                 "### FINAL PER-TURN SPOKEN LANGUAGE REMINDER\n"
                 "Before every response, determine the caller's spoken language from the complete latest caller turn. "
                 "Respond in that language. A clear current-turn language overrides the previous conversation language. "
@@ -325,15 +363,19 @@ class GeminiLiveStreamClient:
         check_city_tool = genai_types.FunctionDeclaration(
             name="check_city_coverage",
             description=(
-                "Check if Ultimate Smile Design services are available in a specific Indian city, "
+                "Check if Ultimate Smile Design services are available in a specific Indian city or state, "
                 "or find the nearest authorized city and authorized dentists from the 51-dentist API. "
+                "Pass the city, town, or state name into city (e.g. 'Gujarat', 'Amreli', 'Surat', 'Maharashtra'). "
                 "If the caller rejects a previously suggested city (e.g. 'I do not want to go to Rajkot', 'Rajkot nahi jana'), "
                 "pass that city in exclude_cities to automatically receive the next closest authorized city and dentist names."
             ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
                 properties={
-                    "city": genai_types.Schema(type=genai_types.Type.STRING, description="City name to check coverage for (e.g. 'Amreli', 'Surat')"),
+                    "city": genai_types.Schema(
+                        type=genai_types.Type.STRING,
+                        description="City, town, or state name to check coverage for (e.g. 'Gujarat', 'Surat', 'Amreli', 'Maharashtra')"
+                    ),
                     "exclude_cities": genai_types.Schema(
                         type=genai_types.Type.ARRAY,
                         items=genai_types.Schema(type=genai_types.Type.STRING),
@@ -347,21 +389,11 @@ class GeminiLiveStreamClient:
         get_faq_tool = genai_types.FunctionDeclaration(
             name="get_faq",
             description=(
-                "Retrieve authoritative answers and approved conversational guidance from the local knowledge base. "
-                "YOU MUST CALL THIS TOOL whenever the caller asks about ANY of the following topics:\n"
-                "DENTAL CONCERNS: gaps between teeth, yellow or stained teeth, crooked or uneven teeth, chipped teeth, gummy smile, missing teeth, tooth sensitivity, discoloration\n"
-                "TREATMENTS & PROCEDURES: veneers, crowns, clear aligners, AD-Aligners, implants, whitening, gum contouring, smile makeover, smile design, Ultimate Smile Design\n"
-                "MATERIALS & COMPARISONS: E.max, E.max vs zirconia, zirconia, lithium disilicate, veneer materials, which material is better, natural-looking materials\n"
-                "PROCESS & TIMELINE: digital smile design, DSD, 3D scanning, how the process works, how long it takes, steps in the treatment, planning process, digital preview\n"
-                "PRICING & VALUE: cost, price, investment, worth, starting price, consultation fee, payment\n"
-                "COMPANY & AUTHORITY: Ultimate Smile Design, Advance Dental Export, Haresh Savani, master ceramist, how many cases, 120000 cases, cities covered, authorized dentists\n"
-                "COMPARISONS & OBJECTIONS: USD vs regular dentist, why choose USD, what makes USD different, local dentist comparison\n"
-                "COMFORT & SAFETY: pain, discomfort, scared, safe, anaesthesia, procedure comfort, aftercare\n"
-                "AI SMILE PREVIEW: virtual smile try-on, digital simulation, preview, before and after, how results look\n"
-                "PROFESSION GUIDANCE: profession-based smile personalization (pass topic as 'profession_<profession>', e.g. 'profession_teacher', 'profession_lawyer')\n"
-                "ANALOGIES: when an approved analogy is needed to clarify craftsmanship, materials, or a comparison (pass topic as 'analogy' or 'emax_vs_zirconia' or 'digital_smile_design_planning' etc.)\n"
-                "OTHER TOPICS: warranty, authentication, dentist partnership, training courses, privacy, booking guidance\n"
-                "Always call this tool before answering factual dental or company questions. Never answer from memory alone."
+                "Retrieve authoritative answers from the knowledge base. "
+                "ALWAYS call before answering ANY dental or company question: treatments (veneers, implants, aligners, crowns, whitening), "
+                "pricing, materials (E.max, zirconia), process/timeline, company info (Haresh Savani, USD, ADE), "
+                "pain/safety, AI smile preview, profession guidance (topic='profession_X'), analogies, warranty, privacy. "
+                "Never answer from memory alone."
             ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
@@ -369,7 +401,7 @@ class GeminiLiveStreamClient:
                     "topic": genai_types.Schema(
                         type=genai_types.Type.STRING,
                         description=(
-                            "Topic or keyword query. Examples: 'veneers', 'cost_value', 'emax_vs_zirconia', "
+                            "Topic or keyword query. Examples: 'veneers', 'cost', 'emax_vs_zirconia', "
                             "'digital_smile_design_planning', 'whitening', 'implants', 'about_ade_haresh_savani', "
                             "'local_dentist_vs_usd', 'process_timeline', 'cities_coverage', 'warranty', "
                             "'profession_teacher', 'profession_lawyer', 'analogy', 'ai_smile_preview', "
@@ -408,27 +440,11 @@ class GeminiLiveStreamClient:
         book_consultation_tool = genai_types.FunctionDeclaration(
             name="book_consultation",
             description=(
-                "Book an in-call consultation with an authorized dentist in the specified city. "
-                "Submit the booking to the backend database. Speech alone does NOT save the booking.\n\n"
-                "WHEN TO CALL THIS TOOL (MANDATORY — one of these conditions must be true):\n"
-                "1. EXPLICIT BOOKING COMMAND: The caller gives a clear, unambiguous instruction to book, such as:\n"
-                "   'Book my appointment', 'Schedule a consultation', 'Book kar do', 'Appointment book karo', "
-                "   'મારી એપોઇન્ટમેન્ટ બુક કરો', 'Book karo', 'Consultation book kar do', 'হ্যাঁ বুক করুন'\n"
-                "2. FINAL CONFIRMATION after Kiara has summarized full details (Doctor, City, Message) and asked "
-                "   'Shall I go ahead and submit your consultation?': Caller says 'Yes', 'Go ahead', 'Haan', 'Ha', "
-                "   'हां', 'हाँ कीजिए', 'હા', 'હા કરો', 'Confirm', 'Submit it', 'Yes go ahead'\n\n"
-                "⚠ WHEN NOT TO CALL THIS TOOL:\n"
-                "- CASUAL CONVERSATIONAL AFFIRMATIONS: Words like 'yes', 'okay', 'haan', 'good', 'great', 'perfect', "
-                "'sure', 'fine' said in response to a FACTUAL QUESTION or GENERAL RESPONSE do NOT trigger booking.\n"
-                "- INFORMATION QUESTIONS: Do not call if caller only says 'yes I understand', 'okay tell me more', "
-                "'haan that sounds good' in context of learning about treatments, prices, or processes.\n"
-                "- BOOKING NEVER ALREADY CONFIRMED: Do not call again if booking is already confirmed in this session.\n\n"
-                "CONTEXT TEST: Before calling, verify the caller's response is to Kiara's explicit booking summary "
-                "question ('Shall I go ahead and submit your consultation?'), not to a general conversational exchange.\n\n"
-                "NEVER say 'I have submitted your request' or 'Your appointment is booked' without calling this tool!\n\n"
-                "STRICT NEGATIVE CONSTRAINTS:\n"
-                "- NEVER ask the caller for preferred appointment date, day, or time! Consultations are scheduled directly by our clinical coordinator who contacts the patient. You ONLY collect City, Doctor preference (optional), and Message (optional).\n"
-                "- NEVER tell the caller to visit ultimatesmiledesign.com to book or schedule an appointment — you book it directly on this call!"
+                "Submits a consultation booking to the backend database. "
+                "Call ONLY on an explicit booking command or final confirmation after Kiara has summarized details. "
+                "NEVER call on casual affirmations like 'yes', 'okay', 'haan' given in response to factual questions. "
+                "NEVER call again if a booking is already confirmed this session. "
+                "Speech alone does NOT save the booking — this tool call is required."
             ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
@@ -436,10 +452,6 @@ class GeminiLiveStreamClient:
                     "doctor_name": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. The name of the specific dentist the caller wants to see, or empty string '' if no specific doctor requested."),
                     "city": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. The consultation city requested by the caller (e.g. Surat, Ahmedabad)."),
                     "message": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. Any additional notes or message from the caller."),
-                    "first_name": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
-                    "last_name": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
-                    "phone": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
-                    "email": genai_types.Schema(type=genai_types.Type.STRING, description="Not required. Filled by system."),
                     "pincode": genai_types.Schema(type=genai_types.Type.STRING, description="Optional. The 6-digit area pincode if mentioned by caller, or empty string ''."),
                 },
                 required=[],
@@ -449,9 +461,9 @@ class GeminiLiveStreamClient:
         check_dentist_tool = genai_types.FunctionDeclaration(
             name="check_dentist",
             description=(
-                "Check if a specific doctor or dentist named by the caller is an authorized Ultimate Smile Design partner in a specific city. "
-                "You MUST call this whenever a caller asks if a specific doctor is available, asks if Dr. [Name] is our smile designer, or mentions a doctor name before booking. "
-                "CRITICAL: Do NOT use this tool to list dentists. NEVER volunteer or give dentist names to the caller."
+                "Check if a doctor named by the caller is an authorized USD smile designer in a specific city. "
+                "Call whenever caller asks about a specific doctor or mentions a doctor name before booking. "
+                "Do NOT use to list dentists. NEVER volunteer dentist names."
             ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
@@ -466,11 +478,9 @@ class GeminiLiveStreamClient:
         cancel_consultation_tool = genai_types.FunctionDeclaration(
             name="cancel_consultation",
             description=(
-                "Cancel an existing in-call consultation appointment via the backend API. "
-                "MANDATORY: You MUST only call this tool AFTER the user explicitly insists on canceling, "
-                "AND only AFTER you have asked them why they want to cancel and attempted to help them. "
-                "If the user insists on canceling, you MUST call this tool. Do NOT say 'I have canceled your appointment' "
-                "without calling this tool."
+                "Cancel an existing consultation booking. "
+                "Only call AFTER you have asked why and attempted to retain the caller. "
+                "If they still insist, call this tool. Never claim cancellation happened without calling this tool."
             ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
@@ -484,16 +494,9 @@ class GeminiLiveStreamClient:
         update_caller_profile_tool = genai_types.FunctionDeclaration(
             name="update_caller_profile",
             description=(
-                "Update or correct the caller's profile details (such as name or phone number). "
-                "ONLY use this tool when the caller explicitly provides or corrects their own identity or contact details. "
-                "NEVER invent a caller name. Never infer a caller name from unrelated words. "
-                "Never autocomplete names. Never translate names. "
-                "Never change a trusted form name unless the caller explicitly corrects it (e.g. 'My name isn't Kunal, it is Keval'). "
-                "If a spoken name is uncertain, ask the caller to repeat it rather than guessing. "
-                "It is better to omit the caller's name than use an uncertain or wrong name. "
-                "For phone number changes, pass the complete 10-digit number. "
-                "If the caller only provided a partial number, do NOT call this tool; ask them for the full 10-digit number. "
-                "If the caller has already confirmed the phone number change, pass confirm_phone=True."
+                "Update caller's name or phone number ONLY when they explicitly provide or correct their details. "
+                "NEVER invent or guess a name. If name is uncertain, ask caller to repeat. "
+                "For phone, require full 10-digit number. Set confirm_phone=True only after caller confirms."
             ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
@@ -509,14 +512,10 @@ class GeminiLiveStreamClient:
         get_nearest_dentists_tool = genai_types.FunctionDeclaration(
             name="get_nearest_dentists",
             description=(
-                "Fetch the nearest authorized smile designers (dentists) for the caller based on PIN code. "
-                "Use this when the caller is interested in booking a consultation or asks about available dentists. "
-                "Strict instructions:\n"
-                "1. DO NOT say 'in your closest area' or 'in your nearest area'.\n"
-                "2. Present the names: 'We have Dr. [1], Dr. [2], and Dr. [3] in [city]. Should I confirm your appointment with your nearest dentist, Dr. [1]?'\n"
-                "3. If the caller asks for more names or other options, call with page=2.\n"
-                "4. If the caller asks which dentist is best, great, more experienced, or cannot decide: DO NOT say coordinator assigns. NEVER claim one dentist is better than another. Reassure them: 'All of our dentists are equally experienced and great because all of them are our authorized smile designers. Since Dr. [top_recommended_doctor] is your nearest dentist in [city], should I confirm your appointment with Dr. [top_recommended_doctor]?'\n"
-                "5. Speak ONLY doctor names. NEVER speak clinic addresses, clinic names, or PIN codes over the phone."
+                "Fetch nearest authorized smile designers for the caller. "
+                "Call when caller wants to book or asks about available dentists. "
+                "Use page=2 if caller asks for more options. "
+                "The tool result contains strict presentation instructions — follow them exactly."
             ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
@@ -646,8 +645,8 @@ class GeminiLiveStreamClient:
                 turn_coverage=genai_types.TurnCoverage.TURN_INCLUDES_ONLY_ACTIVITY,
                 automatic_activity_detection=genai_types.AutomaticActivityDetection(
                     disabled=False,
-                    prefix_padding_ms=500,
-                    silence_duration_ms=650,
+                    prefix_padding_ms=int(os.getenv("VAD_PREFIX_PADDING_MS", "300")),   # was 500
+                    silence_duration_ms=int(os.getenv("VAD_SILENCE_DURATION_MS", "500")), # was 650
                 ),
             ),
             session_resumption=session_resumption_cfg,
@@ -674,6 +673,8 @@ class GeminiLiveStreamClient:
                             parts=[genai_types.Part.from_text(
                                 text=(
                                     "[SESSION ANCHOR] This is a live voice call. "
+                                    "You are Kiara, an elite female consultant for Ultimate Smile Design. "
+                                    "Strictly maintain your female identity and feminine grammatical endings (-ती हूँ in Hindi, -ઈ in Gujarati) on every turn. "
                                     "Do not infer the caller's language from name, city, form data or metadata. "
                                     "Listen to the caller's spoken audio. "
                                     "Respond in the language of their current clear spoken sentence. "
@@ -685,7 +686,7 @@ class GeminiLiveStreamClient:
                         ),
                         genai_types.Content(
                             parts=[genai_types.Part.from_text(
-                                text="Understood. I will listen to the caller's spoken audio and match the language of their current sentence. If the caller switches between English, Hindi, or Gujarati, I will switch my response language immediately."
+                                text="Understood. I am Kiara, an elite female consultant, and I will strictly use feminine grammatical forms. I will listen to the caller's spoken audio and match the language of their current sentence. If the caller switches between English, Hindi, or Gujarati, I will switch my response language immediately."
                             )],
                             role="model",
                         ),
@@ -704,7 +705,7 @@ class GeminiLiveStreamClient:
 
                         name_note = ""
                         if name:
-                            name_note = f"Caller Name: {name} (Strict Rule: Pronounce caller's name exactly as '{name}'. Do not repeat the caller's name in every sentence).\n"
+                            name_note = f"Caller Name: {name} (Address the caller warmly as '{name}' naturally every 2-3 turns with polite cultural honorifics like '{name} ji' in Hindi / '{name} sir' or '{name} madam' in Gujarati).\n"
 
                         smile_analysis_block = ""
                         if smile_diff and isinstance(smile_diff, dict):
@@ -885,9 +886,22 @@ class GeminiLiveStreamClient:
                                             result_data = {"error": f"Unknown tool: {func_name}"}
 
                                         if isinstance(result_data, dict):
+                                            current_name = (
+                                                self.caller_context.get("name")
+                                                or (self.session.collected_user_info.get("name") if self.session and hasattr(self.session, "collected_user_info") else "")
+                                                or ""
+                                            ).strip()
+                                            name_tool_clause = ""
+                                            if current_name and current_name.lower() not in ("there", "none", "customer", "the customer"):
+                                                name_tool_clause = (
+                                                    f"Address the caller warmly by name as '{current_name}' "
+                                                    f"('{current_name} जी' in Hindi, '{current_name} સર' for men or '{current_name} મેડમ' for women in Gujarati). "
+                                                )
                                             result_data.setdefault(
                                                 "instruction",
                                                 "Respond entirely in the language of the caller's CURRENT spoken turn. "
+                                                "Maintain Kiara's strict feminine grammatical identity (-ती हूँ in Hindi, -ઈ in Gujarati) in your response. "
+                                                f"{name_tool_clause}"
                                                 "If the caller switched languages (e.g. from Gujarati to Hindi or English, "
                                                 "or from Hindi to English or Gujarati), you MUST respond in their NEW language. "
                                                 "Do not let the language of this tool result determine or lock the response language."

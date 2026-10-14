@@ -35,3 +35,8 @@ dump.rdb
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Tests and test artifacts (kept locally, never staged or pushed)
+tests/
+test_results_*.txt
+*.bak

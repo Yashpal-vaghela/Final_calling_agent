@@ -11,7 +11,7 @@ import inspect
 import audioop
 import time
 import re
-from typing import Optional
+from typing import Optional, Dict, Tuple, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ import numpy as np
 try:
     from agent.audio.silero import SileroVAD
 except Exception as e:
-    SileroVAD = None
+    Silerol = None
     print(f"[Orchestrator] SileroVAD not available: {e}")
 
 from agent.streaming.gemini_live_stream import GeminiLiveStreamClient
@@ -83,6 +83,10 @@ class VoicePipelineOrchestrator:
         self.lead_subject = lead_subject
         self.lead_message = lead_message
         self.lead_pincode = lead_pincode
+        # Independent booking lead ID: distinct from intake contact form lead ID
+        self.booking_lead_id: Optional[str] = (
+            self.lead_id if self.opening_intent == "outbound_booking_form" and self.lead_id else None
+        )
 
         # Assemble full caller context dictionary
         self.caller_context = caller_context or {}
@@ -120,7 +124,7 @@ class VoicePipelineOrchestrator:
                 doctor = self.caller_context.get("doctor", "your selected doctor")
                 self.greeting = (
                     f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. I'm calling to confirm that we've received your appointment booking request with {doctor}{city_str}. "
-                    "Your consultation has been scheduled, and our team will contact you shortly to confirm the details. Do you have any other questions I can help you with?"
+                    "Your consultation has been scheduled, and our team will contact you shortly to confirm the details. How can I help you today?"
                 )
             elif self.opening_intent == "outbound_smile_preview":
                 first_name = self.caller_context.get("first_name") or self.lead_name.split()[0]
@@ -152,7 +156,7 @@ class VoicePipelineOrchestrator:
                 doctor = self.caller_context.get("doctor", "your selected doctor") if self.caller_context else "your selected doctor"
                 self.greeting = (
                     f"Hello! This is Kiara from Ultimate Smile Design. I'm calling to confirm that we've received your appointment booking request with {doctor}{city_str}. "
-                    "Your consultation has been scheduled, and our team will contact you shortly to confirm the details. Do you have any other questions I can help you with?"
+                    "Your consultation has been scheduled, and our team will contact you shortly to confirm the details. How can I help you today?"
                 )
             elif self.opening_intent == "outbound_smile_preview":
                 city_str = f" in {self.lead_city}" if self.lead_city else ""
@@ -199,7 +203,7 @@ class VoicePipelineOrchestrator:
         self.gemini_live_client = None
         self.tts_provider_name = "Gemini Live"
         self.mulaw_frame_size = 160
-        self.prebuffer_threshold = int(os.getenv("PREBUFFER_THRESHOLD_BYTES", "3200"))  # 300ms jitter buffer (absorbs WAN jitter without perceptible delay)
+        self.prebuffer_threshold = int(os.getenv("PREBUFFER_THRESHOLD_BYTES", "2400"))  # 300ms jitter buffer (absorbs WAN jitter without perceptible delay)
         self.output_buffer = bytearray()
         self._initial_greeting_complete = False
         self._timings = {}
@@ -232,14 +236,20 @@ class VoicePipelineOrchestrator:
         self._gemini_reconnecting: bool = False
         
         self.vad_buffer = bytearray()
-        if SileroVAD:
-            try:
-                self.vad_iterator = SileroVAD(threshold=0.5, min_silence_duration_ms=500, sample_rate=16000)
-            except Exception as e:
-                print(f"[Orchestrator] SileroVAD initialization failed: {e}")
-                self.vad_iterator = None
-        else:
-            self.vad_iterator = None
+        self.vad_iterator = None
+
+
+        # Per-session tool call tracker for repeat request logging
+        self._tool_call_counts: Dict[str, int] = {}
+
+    def _record_tool_call(self, tool_name: str, kwargs: dict) -> Tuple[int, str]:
+        """Tracks tool invocations per session and returns (call_count, repeat_tag)."""
+        clean_args = {k: v for k, v in kwargs.items() if k not in ("call_id", "preferred_language")}
+        fp = f"{tool_name}:{json.dumps(clean_args, sort_keys=True, ensure_ascii=False, default=str)}"
+        self._tool_call_counts[fp] = self._tool_call_counts.get(fp, 0) + 1
+        count = self._tool_call_counts[fp]
+        tag = "[NEW]" if count == 1 else f"[REPEAT #{count}]"
+        return count, tag
 
     def update_canonical_identity(
         self,
@@ -350,7 +360,7 @@ class VoicePipelineOrchestrator:
         CHUNK_MULTIPLIER = 2 # 800 bytes (100ms) - matches Smartflo native 100ms packet cadence
         target_chunk_size = getattr(self, "mulaw_frame_size", 160) * CHUNK_MULTIPLIER
         FRAME_DURATION = 0.02 * CHUNK_MULTIPLIER  # 100ms = 0.10s
-        recovery_threshold = target_chunk_size  # 200ms hysteresis recovery  # 200ms hysteresis recovery (1600 bytes)
+        recovery_threshold = target_chunk_size  # 200ms hysteresis recovery (1600 bytes)
         
         try:
             next_send_at = time.monotonic()
@@ -647,12 +657,30 @@ class VoicePipelineOrchestrator:
         from agent.tools.check_dentist import check_dentist
         from agent.tools.cancel_consultation import cancel_consultation
 
-        def live_check_dentist(**kwargs):
+        async def live_check_dentist(**kwargs):
+            from agent.cache import cache_get, cache_set, build_dentist_key, TTL_CHECK_DENTIST
+            doctor_name = kwargs.get("doctor_name", "")
             city = kwargs.get("city") or self.caller_context.get("city") or self.lead_city or ""
-            return check_dentist(doctor_name=kwargs.get("doctor_name", ""), city=city)
+            count, repeat_tag = self._record_tool_call("check_dentist", kwargs)
+
+            cache_key = build_dentist_key(doctor_name=doctor_name, city=city)
+            cached = await cache_get(cache_key)
+            if cached is not None:
+                _safe_print(f"[DATA SOURCE: REDIS_L2] check_dentist {repeat_tag} doc='{doctor_name}' city='{city}'")
+                logger.info(f"[DATA SOURCE: REDIS_L2] check_dentist {repeat_tag} doc='{doctor_name}' city='{city}'")
+                return cached
+
+            res = check_dentist(doctor_name=doctor_name, city=city)
+            _safe_print(f"[DATA SOURCE: DENTIST_LIVE_API/RAM] check_dentist {repeat_tag} doc='{doctor_name}' city='{city}' is_authorized={res.get('is_authorized')}")
+            logger.info(f"[DATA SOURCE: DENTIST_LIVE_API/RAM] check_dentist {repeat_tag} doc='{doctor_name}' city='{city}' is_authorized={res.get('is_authorized')}")
+            asyncio.create_task(cache_set(cache_key, res, ttl_seconds=TTL_CHECK_DENTIST))
+            return res
 
         def live_capture_lead(**kwargs):
             kwargs.setdefault("call_id", self.call_id)
+            _, repeat_tag = self._record_tool_call("capture_lead", kwargs)
+            _safe_print(f"[DATA SOURCE: CRM_BACKEND] capture_lead {repeat_tag} name='{kwargs.get('name')}' phone='{kwargs.get('phone')}'")
+            logger.info(f"[DATA SOURCE: CRM_BACKEND] capture_lead {repeat_tag} name='{kwargs.get('name')}' phone='{kwargs.get('phone')}'")
             res = capture_lead(**kwargs)
             self.session.update_user_info(
                 name=kwargs.get("name"),
@@ -663,8 +691,37 @@ class VoicePipelineOrchestrator:
             )
             return res
 
-        def live_check_city(**kwargs):
+        async def live_check_city(**kwargs):
+            from backend.app.services.city_service import is_indian_state
+            from agent.cache import (
+                cache_get,
+                cache_set,
+                build_city_key,
+                build_state_key,
+                TTL_CITY,
+                TTL_STATE
+            )
+
+            city_raw = (kwargs.get("city") or "").strip()
+            _, repeat_tag = self._record_tool_call("check_city_coverage", kwargs)
+            is_state = is_indian_state(city_raw)
+            cache_key = build_state_key(city_raw) if is_state else build_city_key(city_raw)
+            ttl = TTL_STATE if is_state else TTL_CITY
+
+            # Skip cache if exclude_cities is specified (personalized result)
             exclude_cities = kwargs.get("exclude_cities") or []
+            if not exclude_cities:
+                cached = await cache_get(cache_key)
+                if cached:
+                    _safe_print(f"[DATA SOURCE: REDIS_L2] check_city_coverage {repeat_tag} city='{city_raw}'")
+                    logger.info(f"[DATA SOURCE: REDIS_L2] check_city_coverage {repeat_tag} city='{city_raw}'")
+                    if hasattr(self, "session") and self.session and not cached.get("is_state"):
+                        nearest = cached.get("nearest_city") or cached.get("city")
+                        if nearest:
+                            self.session.record_suggested_city(nearest)
+                    return cached
+
+            # Cache miss or personalized exclusion query
             if hasattr(self, "session") and self.session:
                 for ec in exclude_cities:
                     self.session.record_rejected_city(ec)
@@ -672,28 +729,63 @@ class VoicePipelineOrchestrator:
                 kwargs["exclude_cities"] = merged_excludes
 
             res = check_city_coverage(**kwargs)
+            _safe_print(f"[DATA SOURCE: LOCAL_RAM] check_city_coverage {repeat_tag} city='{city_raw}' covered={res.get('covered')}")
+            logger.info(f"[DATA SOURCE: LOCAL_RAM] check_city_coverage {repeat_tag} city='{city_raw}' covered={res.get('covered')}")
             if hasattr(self, "session") and self.session:
-                nearest = res.get("nearest_city") or res.get("city")
-                if nearest:
-                    self.session.record_suggested_city(nearest)
+                if not res.get("is_state"):
+                    nearest = res.get("nearest_city") or res.get("city")
+                    if nearest:
+                        self.session.record_suggested_city(nearest)
+
+            # Fire-and-forget write-behind to Redis for generic lookups
+            if not exclude_cities:
+                asyncio.create_task(cache_set(cache_key, res, ttl_seconds=ttl))
+
             return res
 
-        def live_get_faq(**kwargs):
+        async def live_get_faq(**kwargs):
+            from agent.cache import cache_get, cache_set, build_faq_key, TTL_FAQ
             latest_lang = getattr(self, "_last_detected_caller_language", None)
             if latest_lang:
                 kwargs["language"] = latest_lang
+
+            topic = kwargs.get("topic", "")
+            lang = kwargs.get("language", "en")
+            _, repeat_tag = self._record_tool_call("get_faq", kwargs)
+            cache_key = build_faq_key(topic, lang)
+
+            # L2 Redis check (cache hit path)
+            cached = await cache_get(cache_key)
+            if cached:
+                _safe_print(f"[DATA SOURCE: REDIS_L2] get_faq {repeat_tag} topic='{topic}' lang='{lang}'")
+                logger.info(f"[DATA SOURCE: REDIS_L2] get_faq {repeat_tag} topic='{topic}' lang='{lang}'")
+                if topic and hasattr(self, "session") and self.session:
+                    self.session.update_topic(topic)
+                return cached
+
+            # Cache miss — execute original function
             res = get_faq(**kwargs)
-            if kwargs.get("topic"):
-                self.session.update_topic(kwargs.get("topic"))
+            _safe_print(f"[DATA SOURCE: LOCAL_KB] get_faq {repeat_tag} topic='{topic}' lang='{lang}' found={res.get('found')}")
+            logger.info(f"[DATA SOURCE: LOCAL_KB] get_faq {repeat_tag} topic='{topic}' lang='{lang}' found={res.get('found')}")
+            if topic and hasattr(self, "session") and self.session:
+                self.session.update_topic(topic)
+
+            # Write-behind to Redis (fire-and-forget — keeps latency low)
+            if res.get("found"):
+                asyncio.create_task(cache_set(cache_key, res, ttl_seconds=TTL_FAQ))
             return res
 
         def live_handoff(**kwargs):
             kwargs.setdefault("call_id", self.call_id)
+            _, repeat_tag = self._record_tool_call("human_handoff", kwargs)
+            _safe_print(f"[DATA SOURCE: LIVE_CALL_ROUTING] human_handoff {repeat_tag}")
+            logger.info(f"[DATA SOURCE: LIVE_CALL_ROUTING] human_handoff {repeat_tag}")
             res = human_handoff(**kwargs)
             self.session.booking_stage = "handoff"
             return res
 
         def live_cancel_consultation(**kwargs):
+            _, repeat_tag = self._record_tool_call("cancel_consultation", kwargs)
             if not getattr(self, "_cancellation_save_attempted", False):
                 # The agent tried to cancel immediately. Block it and force the prompt.
                 self._cancellation_save_attempted = True
@@ -702,7 +794,7 @@ class VoicePipelineOrchestrator:
                     "message": "SYSTEM GUARDRAIL: Do not cancel yet. First politely ask the caller why they want to cancel and if you can help resolve their issue."
                 }
             
-            lead_id_to_cancel = kwargs.get("lead_id") or getattr(self, "lead_id", None) or ""
+            lead_id_to_cancel = kwargs.get("lead_id") or getattr(self, "booking_lead_id", None) or getattr(self, "lead_id", None) or ""
             full_name = self.caller_context.get("name") or self.lead_name or ""
             name_parts = full_name.strip().split(maxsplit=1) if full_name.strip() else []
             
@@ -714,6 +806,8 @@ class VoicePipelineOrchestrator:
             pincode    = self.caller_context.get("pincode") or getattr(self, "lead_pincode", "") or ""
             doctor     = getattr(self, "_consultation_doctor", None) or ""
 
+            _safe_print(f"[DATA SOURCE: CRM_BACKEND] cancel_consultation {repeat_tag} lead_id='{lead_id_to_cancel}'")
+            logger.info(f"[DATA SOURCE: CRM_BACKEND] cancel_consultation {repeat_tag} lead_id='{lead_id_to_cancel}'")
             res = cancel_consultation(
                 lead_id=lead_id_to_cancel, 
                 reason=kwargs.get("reason", ""),
@@ -742,6 +836,7 @@ class VoicePipelineOrchestrator:
             from agent.tools.caller_profile import update_caller_profile
             lead_id_val = getattr(self, "lead_id", None) or ""
             kwargs.setdefault("lead_id", lead_id_val)
+            _, repeat_tag = self._record_tool_call("update_caller_profile", kwargs)
             if kwargs.get("confirm_phone") and not kwargs.get("phone") and getattr(self, "_pending_phone", None):
                 kwargs["phone"] = self._pending_phone
 
@@ -762,6 +857,8 @@ class VoicePipelineOrchestrator:
                 if pincode_val:
                     kwargs["pincode"] = pincode_val
 
+            _safe_print(f"[DATA SOURCE: LOCAL_SESSION] update_caller_profile {repeat_tag}")
+            logger.info(f"[DATA SOURCE: LOCAL_SESSION] update_caller_profile {repeat_tag}")
             res = update_caller_profile(**kwargs)
             if res.get("status") == "confirmation_required":
                 self._pending_phone = res.get("phone")
@@ -782,9 +879,10 @@ class VoicePipelineOrchestrator:
         def live_book_consultation(**kwargs):
             # REMOVED the "_consultation_booked" guard here so the agent can send updates.
             
-            # Pass lead_id if an earlier booking in this session already registered one.
-            # Do NOT fall back to caller_context['id'] which is an internal UUID.
-            kwargs["lead_id"] = getattr(self, "lead_id", None) or ""
+            # If an appointment booking was already created in this call session, pass its ID to update it.
+            # For a brand-new booking, pass empty string "" so the backend creates a fresh row.
+            kwargs["lead_id"] = getattr(self, "booking_lead_id", "") or ""
+            _, repeat_tag = self._record_tool_call("book_consultation", kwargs)
             # CRITICAL: Always use canonical form-submitted or confirmed data for identity fields.
             full_name = self.caller_context.get("name") or self.lead_name or (self.session.collected_user_info.get("name") if hasattr(self, "session") else "") or ""
             name_parts = full_name.strip().split(maxsplit=1) if full_name.strip() else []
@@ -807,13 +905,17 @@ class VoicePipelineOrchestrator:
             canonical_pincode = self.caller_context.get("pincode") or getattr(self, "lead_pincode", "") or (self.session.collected_user_info.get("pincode") if hasattr(self, "session") else "") or kwargs.get("pincode", "").strip()
             kwargs["pincode"] = canonical_pincode
             
+            _safe_print(f"[DATA SOURCE: CRM_BACKEND] book_consultation {repeat_tag} doc='{kwargs.get('doctor_name')}' city='{canonical_city}'")
+            logger.info(f"[DATA SOURCE: CRM_BACKEND] book_consultation {repeat_tag} doc='{kwargs.get('doctor_name')}' city='{canonical_city}'")
             res = book_consultation(**kwargs)
             if res.get("status") == "success":
                 self._consultation_booked = True
                 self._consultation_doctor = (kwargs.get("doctor_name") or "").strip()
-                # If the backend returned a newly generated lead_id, save it for future updates in this call
-                if res.get("lead_id"):
-                    self.lead_id = res.get("lead_id")
+                returned_lead_id = res.get("lead_id")
+                if returned_lead_id:
+                    self.booking_lead_id = str(returned_lead_id)
+                    if not getattr(self, "lead_id", None):
+                        self.lead_id = str(returned_lead_id)
                 # Sync session state so Gemini sees booking_confirmed on next turn
                 if hasattr(self, "session") and self.session:
                     self.session.mark_booking_confirmed()
@@ -823,6 +925,9 @@ class VoicePipelineOrchestrator:
         async def live_get_nearest_dentists(**kwargs):
             from agent.tools.get_nearest_dentists import async_get_nearest_dentists
             from backend.app.services.city_service import get_default_pincode_for_city
+            from agent.cache import cache_get, cache_set, build_dentists_key, TTL_DENTISTS
+
+            _, repeat_tag = self._record_tool_call("get_nearest_dentists", kwargs)
 
             req_city = (kwargs.get("city") or "").strip()
             context_city = (self.caller_context.get("city") or getattr(self, "lead_city", "") or "").strip()
@@ -844,6 +949,22 @@ class VoicePipelineOrchestrator:
             limit = kwargs.get("limit", 3)
             exclude_cities = kwargs.get("exclude_cities") or []
 
+            # Check L2 Redis cache if no personalized exclusions
+            cache_key = build_dentists_key(pincode=pincode, city=city, page=page)
+            if not exclude_cities:
+                cached = await cache_get(cache_key)
+                if cached:
+                    _safe_print(f"[DATA SOURCE: REDIS_L2] get_nearest_dentists {repeat_tag} city='{city}' pin='{pincode}' page={page}")
+                    logger.info(f"[DATA SOURCE: REDIS_L2] get_nearest_dentists {repeat_tag} city='{city}' pin='{pincode}' page={page}")
+                    if hasattr(self, "session") and self.session and cached.get("status") == "success":
+                        self.session.recommended_dentists = cached.get("dentists", [])
+                        self.session.dentist_page = cached.get("page", 1)
+                        self.session.top_recommended_doctor = cached.get("top_recommended_doctor", "")
+                        covered_res_city = cached.get("nearest_covered_city") or cached.get("city")
+                        if covered_res_city:
+                            self.session.record_suggested_city(covered_res_city)
+                    return cached
+
             if hasattr(self, "session") and self.session:
                 for ec in exclude_cities:
                     self.session.record_rejected_city(ec)
@@ -858,6 +979,8 @@ class VoicePipelineOrchestrator:
                 limit=limit,
                 exclude_cities=merged_excludes
             )
+            _safe_print(f"[DATA SOURCE: DENTIST_LIVE_API] get_nearest_dentists {repeat_tag} city='{city}' pin='{pincode}' count={len(res.get('dentists', []))}")
+            logger.info(f"[DATA SOURCE: DENTIST_LIVE_API] get_nearest_dentists {repeat_tag} city='{city}' pin='{pincode}' count={len(res.get('dentists', []))}")
 
             # Sync session tracking
             if hasattr(self, "session") and self.session and res.get("status") == "success":
@@ -867,6 +990,10 @@ class VoicePipelineOrchestrator:
                 covered_res_city = res.get("nearest_covered_city") or res.get("city")
                 if covered_res_city:
                     self.session.record_suggested_city(covered_res_city)
+
+            # Fire-and-forget write-behind to Redis for generic queries
+            if not exclude_cities and res.get("status") == "success":
+                asyncio.create_task(cache_set(cache_key, res, ttl_seconds=TTL_DENTISTS))
 
             return res
 
@@ -907,7 +1034,7 @@ class VoicePipelineOrchestrator:
                 f"CRITICAL: You already know the caller's First Name, Last Name, City ({city_display}){doc_info} from the booking form they just submitted. "
                 f"DO NOT ask them for their name, city, or doctor. "
                 "STRICT RULE: The appointment is ALREADY booked. NEVER tell them to book an appointment, schedule a consultation, or fill out any booking form again! "
-                f"You MUST open by confirming the appointment{doc_info} in {city_display} and asking if they have any other questions. {location_rule}"
+                f"You MUST open by confirming the appointment{doc_info} in {city_display} and asking how you can help them today. {location_rule}"
             )
         elif self.opening_intent == "outbound_smile_preview":
             crucial_instruction = (
@@ -938,7 +1065,7 @@ class VoicePipelineOrchestrator:
                 
                 initial_prompt = (
                     f"The outbound call has connected to {clean_first_name}. "
-                    f"Say exactly: '{greet_phrase}' Then answer the question from their message directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options) using our knowledge base, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                    f"Say exactly: '{greet_phrase}' Then answer the question from their message directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options) using our knowledge base, and let them respond naturally. "
                     f"{crucial_instruction}"
                 )
             else:
@@ -950,7 +1077,7 @@ class VoicePipelineOrchestrator:
                 
                 initial_prompt = (
                     f"The outbound call has connected to {known_name or 'the customer'}. "
-                    f"Say exactly: '{greet_phrase}' Then answer the question from their message directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options with an intuitive analogy) using our knowledge base, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                    f"Say exactly: '{greet_phrase}' Then answer the question from their message directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options with an intuitive analogy) using our knowledge base, and let them respond naturally. "
                     f"If the caller decides to book an appointment later in the call, use their initial message '{msg}' as the booking reason and verify it with them. "
                     f"{crucial_instruction}"
                 )
@@ -967,7 +1094,7 @@ class VoicePipelineOrchestrator:
             
             initial_prompt = (
                 f"The outbound call has connected to {known_name or 'the customer'}. "
-                f"Say exactly: '{greet_phrase}' Then address their topic directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options with an intuitive analogy) based on our knowledge base, and then ask: 'Do you have any other questions or any additional details you’d like to know?'. "
+                f"Say exactly: '{greet_phrase}' Then address their topic directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options with an intuitive analogy) based on our knowledge base, and let them respond naturally. "
                 f"{crucial_instruction}"
             )
             return initial_prompt
@@ -1046,7 +1173,12 @@ class VoicePipelineOrchestrator:
                             if text:
                                 history_lines.append(f"{role}: {text}")
                         history_text = "\n".join(history_lines) if history_lines else "No previous turns recorded."
-                        caller_name = self.lead_name or "the caller"
+                        caller_name = self.lead_name or self.caller_context.get("name") or "the caller"
+                        caller_name_clause = (
+                            f"Caller Name: {caller_name} (Address the caller warmly by name as '{caller_name}' naturally every 2-3 turns using cultural honorifics '{caller_name} जी' in Hindi or '{caller_name} સર' for men / '{caller_name} મેડમ' for women in Gujarati)\n"
+                            if caller_name and caller_name.lower() not in ("the caller", "there", "none")
+                            else f"Caller Name: {caller_name}\n"
+                        )
                         fallback_prompt = (
                             f"[CALL CONTINUATION FALLBACK CONTEXT]\n\n"
                             f"This is a continuation of the same phone call.\n\n"
@@ -1057,7 +1189,7 @@ class VoicePipelineOrchestrator:
                             f"Wait silently for the caller's next actual spoken audio.\n"
                             f"On their next clear spoken turn, respond in the language of that CURRENT spoken turn.\n"
                             f"If the next turn is only a short or ambiguous acknowledgment, infer the conversational language from the recent dialogue context.\n\n"
-                            f"Caller Name: {caller_name}\n"
+                            f"{caller_name_clause}"
                             f"Current Booking Stage: {self.session.booking_stage}\n"
                             f"Session State: {self.session.get_session_context_prompt()}\n"
                             f"Recent conversation context:\n{history_text}\n\n"

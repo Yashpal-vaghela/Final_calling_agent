@@ -230,11 +230,17 @@ class CallSession:
         if self.suggested_cities:
             city_pref_note += f"\n- Suggested Cities: {', '.join(self.suggested_cities)}"
 
+        name_val = self.collected_user_info.get("name", "").strip()
+        name_note = ""
+        if name_val and name_val.lower() not in ("there", "none", "customer", "the customer"):
+            name_note = f"\n- Caller Name for Personalization: {name_val} (Address as '{name_val}' every 2-3 turns; '{name_val} जी' in Hindi, '{name_val} સર' for men or '{name_val} મેડમ' for women in Gujarati)"
+    
         return (
             f"[PYTHON SESSION MEMORY & STATE]\n"
             f"- Active Topic in Discussion: {self.last_discussed_topic or 'General Inquiry'}\n"
             f"- Current Booking Stage: {self.booking_stage}\n"
             f"- Collected User Info: {info_str}"
+            f"{name_note}"
             f"{booking_flags}"
             f"{profession_note}"
             f"{preview_note}"

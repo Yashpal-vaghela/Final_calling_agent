@@ -13,7 +13,6 @@ from backend.app.services.city_service import (
 )
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
-AUTH_DENTISTS_FILE = os.path.join(DATA_DIR, "authorized_dentists.json")
 
 REMOTE_API_URL = "https://ultimatesmiledesign.com/api/dentists-list/pincode/"
 LOCAL_API_URL = "http://192.168.0.161:1020/api/dentists-list/pincode/"
@@ -128,27 +127,7 @@ def _fetch_from_api(pincode: str) -> List[Dict[str, Any]]:
             continue
     return []
 
-def _fallback_from_local_cache(city: str) -> List[str]:
-    """Read-only emergency fallback from local authorized_dentists.json if the live API is unreachable."""
-    target_city = city.strip() if city else ""
-    if not target_city or not is_city_covered(target_city):
-        target_city = get_nearest_covered_city(target_city)
 
-    if os.path.exists(AUTH_DENTISTS_FILE):
-        try:
-            with open(AUTH_DENTISTS_FILE, "r", encoding="utf-8") as f:
-                auth_dentists = json.load(f)
-            
-            for c, names in auth_dentists.items():
-                if c.lower() == target_city.lower():
-                    # Filter to English names only (exclude Gujarati/Hindi transliterations)
-                    english_names = [n for n in names if re.match(r"^[A-Za-z\s\.\-]+$", n)]
-                    if english_names:
-                        return english_names
-        except Exception:
-            pass
-
-    return []
 
 def _extract_locality_tokens(localities: List[str]) -> Tuple[List[str], List[str]]:
     """
@@ -332,10 +311,7 @@ def _build_response(
             if name and name.lower() not in seen:
                 seen.add(name.lower())
                 doctor_names.append(name)
-    else:
-        # Fallback to local cache if API is unreachable
-        fallback_target = target_covered_city or caller_city
-        doctor_names = _fallback_from_local_cache(fallback_target)
+
 
     total_count = len(doctor_names)
     
@@ -364,9 +340,12 @@ def _build_response(
     elif len(batch) == 2:
         presentation_rule = f"2. Present the names: 'We have {batch[0]} and {batch[1]} {city_note}. Should I confirm your appointment with your nearest dentist, {batch[0]}?'"
         hesitation_rule = f"3. If the caller asks which dentist is best, great, more experienced, or cannot decide: DO NOT say coordinator assigns. NEVER say one doctor is better than another. Reassure them: 'All of our dentists are equally experienced and great because all of them are our authorized smile designers. Since {top_recommended} is your nearest dentist {city_note}, should I confirm your appointment with {top_recommended}?'"
-    else:
+    elif len(batch) >= 3:
         presentation_rule = f"2. Present the names: 'We have {', '.join(batch[:-1])} and {batch[-1]} {city_note}. Should I confirm your appointment with your nearest dentist, {batch[0]}?'"
         hesitation_rule = f"3. If the caller asks which dentist is best, great, more experienced, or cannot decide: DO NOT say coordinator assigns. NEVER say one doctor is better than another. Reassure them: 'All of our dentists are equally experienced and great because all of them are our authorized smile designers. Since {top_recommended} is your nearest dentist {city_note}, should I confirm your appointment with {top_recommended}?'"
+    else:
+        presentation_rule = "2. Inform the caller that no authorized dentists were found in this area."
+        hesitation_rule = "3. Offer to check another city or nearby area."
 
     instruction = (
         "Respond entirely in the language of the caller's CURRENT spoken turn. "
@@ -489,9 +468,10 @@ async def async_get_nearest_dentists(
             target_city=target_covered
         )
     else:
-        # Fallback to local cache if API is unreachable
-        fallback_names = _fallback_from_local_cache(target_covered)
-        candidate_dentists = [{"name": n} for n in fallback_names]
+        from backend.app.services.dentist_service import get_dentist_service
+        live_dir = await get_dentist_service().get_directory_async()
+        city_docs = live_dir.get(target_covered, [])
+        candidate_dentists = [{"name": n} for n in city_docs]
 
     return _build_response(candidate_dentists, caller_city, page, limit, postal_info=postal_info, target_covered_city=target_covered)
 
@@ -557,8 +537,10 @@ def get_nearest_dentists(
             target_city=target_covered
         )
     else:
-        fallback_names = _fallback_from_local_cache(target_covered)
-        candidate_dentists = [{"name": n} for n in fallback_names]
+        from backend.app.services.dentist_service import get_dentist_service
+        live_dir = get_dentist_service().get_directory_sync()
+        city_docs = live_dir.get(target_covered, [])
+        candidate_dentists = [{"name": n} for n in city_docs]
 
     return _build_response(candidate_dentists, caller_city, page, limit, postal_info=postal_info, target_covered_city=target_covered)
 

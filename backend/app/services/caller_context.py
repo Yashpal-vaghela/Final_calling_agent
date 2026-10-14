@@ -1,7 +1,11 @@
 import re
 import uuid
+import logging
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
+from backend.app.services.id_service import generate_18_digit_lead_id
+
+logger = logging.getLogger(__name__)
 
 # In-memory fast cache for active caller contexts mapped by lead_id, raw phone, and 10-digit normalized phone
 ACTIVE_CALLER_CONTEXTS: Dict[str, Dict[str, Any]] = {}
@@ -98,7 +102,7 @@ def register_caller_context(context_data: Dict[str, Any]) -> str:
     Indexes deterministically by lead_id, normalized full digits, and last-10 digits.
     No global fallback or _latest_pending_lead is set to avoid cross-caller pollution.
     """
-    lead_id = context_data.get("id") or str(uuid.uuid4())
+    lead_id = str(context_data.get("id") or generate_18_digit_lead_id())
     context_data["id"] = lead_id
     if "created_at" not in context_data:
         context_data["created_at"] = datetime.now(timezone.utc).isoformat()
@@ -115,6 +119,17 @@ def register_caller_context(context_data: Dict[str, Any]) -> str:
         # Store by last 10 digits (e.g. 8758657212)
         if len(digits) >= 10:
             ACTIVE_CALLER_CONTEXTS[digits[-10:]] = context_data
+
+    # Persist to Redis L2 cache
+    try:
+        from agent.cache import cache_set_sync, build_call_context_key, TTL_CALL_CONTEXT
+        cache_set_sync(build_call_context_key(lead_id), context_data, ttl_seconds=TTL_CALL_CONTEXT)
+        if digits:
+            cache_set_sync(build_call_context_key(digits), context_data, ttl_seconds=TTL_CALL_CONTEXT)
+            if len(digits) >= 10:
+                cache_set_sync(build_call_context_key(digits[-10:]), context_data, ttl_seconds=TTL_CALL_CONTEXT)
+    except Exception:
+        pass
 
     return lead_id
 
@@ -142,19 +157,44 @@ def lookup_caller_context(identifier: Optional[Any], allow_latest_fallback: bool
 
     # 1. Exact match in memory cache (lead_id or call_sid)
     if clean_id in ACTIVE_CALLER_CONTEXTS:
-        return ACTIVE_CALLER_CONTEXTS[clean_id]
+        res = ACTIVE_CALLER_CONTEXTS[clean_id]
+        logger.info(f"[CALLER CONTEXT] [DATA SOURCE: RAM_L1] Exact match for '{clean_id}' (name='{res.get('name')}', phone='{res.get('phone')}')")
+        return res
 
     # 2. Normalized phone match in memory cache
     digits = normalize_phone(clean_id)
     if digits and digits in ACTIVE_CALLER_CONTEXTS:
-        return ACTIVE_CALLER_CONTEXTS[digits]
+        res = ACTIVE_CALLER_CONTEXTS[digits]
+        logger.info(f"[CALLER CONTEXT] [DATA SOURCE: RAM_L1] Normalized phone match for '{clean_id}' (phone='{res.get('phone')}')")
+        return res
     if digits and len(digits) >= 10 and digits[-10:] in ACTIVE_CALLER_CONTEXTS:
-        return ACTIVE_CALLER_CONTEXTS[digits[-10:]]
+        res = ACTIVE_CALLER_CONTEXTS[digits[-10:]]
+        logger.info(f"[CALLER CONTEXT] [DATA SOURCE: RAM_L1] 10-digit phone match for '{clean_id}' (phone='{res.get('phone')}')")
+        return res
 
     # 3. Explicit fallback only if enabled (disabled by default)
     if allow_latest_fallback:
-        return ACTIVE_CALLER_CONTEXTS.get("_latest_pending_lead")
+        res = ACTIVE_CALLER_CONTEXTS.get("_latest_pending_lead")
+        if res:
+            logger.info(f"[CALLER CONTEXT] [DATA SOURCE: RAM_L1] Latest pending fallback matched for '{clean_id}'")
+            return res
 
+    # 4. Redis L2 fallback (after RAM miss)
+    try:
+        from agent.cache import cache_get_sync, build_call_context_key
+        redis_val = cache_get_sync(build_call_context_key(clean_id))
+        if not redis_val and digits:
+            redis_val = cache_get_sync(build_call_context_key(digits))
+            if not redis_val and len(digits) >= 10:
+                redis_val = cache_get_sync(build_call_context_key(digits[-10:]))
+        if redis_val:
+            ACTIVE_CALLER_CONTEXTS[clean_id] = redis_val  # Re-warm L1
+            logger.info(f"[CALLER CONTEXT] [DATA SOURCE: REDIS_L2] Context resolved from Redis L2 for '{clean_id}' (re-warmed RAM L1)")
+            return redis_val
+    except Exception as e:
+        logger.warning(f"[CALLER CONTEXT] Redis L2 lookup error for '{clean_id}': {e}")
+
+    logger.info(f"[CALLER CONTEXT] [MISS] No caller context found for '{clean_id}'")
     return None
 
 
@@ -169,12 +209,26 @@ def reindex_caller_phone(old_phone: Optional[str], new_phone: str, context_data:
             ACTIVE_CALLER_CONTEXTS.pop(old_digits, None)
             if len(old_digits) >= 10:
                 ACTIVE_CALLER_CONTEXTS.pop(old_digits[-10:], None)
+            try:
+                from agent.cache import cache_delete_sync, build_call_context_key
+                cache_delete_sync(build_call_context_key(old_digits))
+                if len(old_digits) >= 10:
+                    cache_delete_sync(build_call_context_key(old_digits[-10:]))
+            except Exception:
+                pass
 
     new_digits = normalize_phone(new_phone)
     if new_digits:
         ACTIVE_CALLER_CONTEXTS[new_digits] = context_data
         if len(new_digits) >= 10:
             ACTIVE_CALLER_CONTEXTS[new_digits[-10:]] = context_data
+        try:
+            from agent.cache import cache_set_sync, build_call_context_key, TTL_CALL_CONTEXT
+            cache_set_sync(build_call_context_key(new_digits), context_data, ttl_seconds=TTL_CALL_CONTEXT)
+            if len(new_digits) >= 10:
+                cache_set_sync(build_call_context_key(new_digits[-10:]), context_data, ttl_seconds=TTL_CALL_CONTEXT)
+        except Exception:
+            pass
 
 
 def remove_caller_context(lead_id: Optional[str] = None, phone: Optional[str] = None, call_id: Optional[str] = None) -> None:
@@ -195,6 +249,11 @@ def remove_caller_context(lead_id: Optional[str] = None, phone: Optional[str] = 
                 
     for k in keys_to_remove:
         ACTIVE_CALLER_CONTEXTS.pop(k, None)
+        try:
+            from agent.cache import cache_delete_sync, build_call_context_key
+            cache_delete_sync(build_call_context_key(k))
+        except Exception:
+            pass
 
     # Check _latest_pending_lead if lingering
     latest = ACTIVE_CALLER_CONTEXTS.get("_latest_pending_lead")

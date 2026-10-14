@@ -5,7 +5,11 @@ from backend.app.services.city_service import (
     get_nearest_covered_city,
     get_ranked_covered_cities,
     is_city_covered,
-    get_covered_cities
+    get_covered_cities,
+    is_indian_state,
+    get_canonical_state_name,
+    get_state_covered_cities,
+    get_nearest_center_for_uncovered_state
 )
 
 # Path to covered_cities.json
@@ -32,10 +36,10 @@ def check_city_coverage(
     exclude_cities: Optional[List[str]] = None
 ) -> dict:
     """
-    Check if Ultimate Smile Design covers a specific city, or find the nearest authorized city and dentists.
+    Check if Ultimate Smile Design covers a specific city or state, or find the nearest authorized city and dentists.
     
     Args:
-        city (str): The name of the city to check.
+        city (str): The name of the city or state to check.
         exclude_cities (list, optional): Cities rejected by the caller or to be excluded.
         
     Returns:
@@ -46,6 +50,81 @@ def check_city_coverage(
     city_clean = (city or "").strip()
     city_lower = city_clean.lower()
     exclude_clean = [ec.strip().lower() for ec in (exclude_cities or []) if ec and ec.strip()]
+
+    # 1. State-level check: Handle queries where caller names an Indian state or UT
+    if is_indian_state(city_clean):
+        canon_state = get_canonical_state_name(city_clean)
+        state_cities = get_state_covered_cities(city_clean)
+        # Filter out any cities caller explicitly rejected
+        filtered_state_cities = [c for c in state_cities if c.lower() not in exclude_clean]
+
+        if filtered_state_cities:
+            if len(filtered_state_cities) > 1:
+                spoken_offer = "Yes, we have an authorized smile designer in many cities in your state. Which city are you looking for?"
+                cities_phrase = ", ".join(filtered_state_cities)
+                result_msg = (
+                    f"The caller asked about the state of {canon_state}. We DO have authorized smile designers in {canon_state}. "
+                    f"Tell the caller: '{spoken_offer}' "
+                    f"If the caller asks which cities we have, the authorized cities in {canon_state} are: {cities_phrase}. "
+                    f"STRICT RULES: DO NOT give doctor names yet until the caller specifies their city. Wait for the caller to name their city."
+                )
+            else:
+                city_name = filtered_state_cities[0]
+                spoken_offer = "Yes, we have an authorized smile designer in your state. Which city are you looking for?"
+                result_msg = (
+                    f"The caller asked about the state of {canon_state}. We DO have an authorized smile designer in {canon_state}. "
+                    f"Tell the caller: '{spoken_offer}' "
+                    f"If the caller asks which city we have, our authorized center in {canon_state} is in {city_name}. "
+                    f"STRICT RULES: DO NOT give doctor names yet until the caller specifies their city. Wait for the caller to name their city."
+                )
+
+            return {
+                "covered": True,
+                "is_state": True,
+                "state": canon_state,
+                "city": city_clean,
+                "covered_cities": filtered_state_cities,
+                "result": result_msg,
+                "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
+            }
+        elif state_cities:
+            # Caller rejected all cities in this state
+            nearest = get_nearest_covered_city(city_clean, exclude_cities=exclude_cities)
+            speech_msg = (
+                f"Understood. If you prefer not to visit those cities in {canon_state}, "
+                f"our next nearest authorized smile designer is in {nearest}. Which city would be convenient for you?"
+            )
+            return {
+                "covered": False,
+                "is_state": True,
+                "state": canon_state,
+                "city": city_clean,
+                "nearest_city": nearest,
+                "result": f"Tell the caller: '{speech_msg}'",
+                "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately."
+            }
+        else:
+            # State is not directly covered (e.g. Kerala, Bihar)
+            nearest = get_nearest_center_for_uncovered_state(city_clean)
+            speech_msg = (
+                f"Currently, we do not have an authorized smile designer in {canon_state}, "
+                f"but our nearest center is in {nearest}. Which city are you located in?"
+            )
+            result_msg = (
+                f"Currently, we do not have an authorized smile designer in {canon_state}. "
+                f"The nearest authorized center is in {nearest}. "
+                f"Tell the caller: '{speech_msg}' "
+                "STRICT RULES: DO NOT use the word 'clinic'. DO NOT say 'USD smile designer'. Mention ONLY the center name."
+            )
+            return {
+                "covered": False,
+                "is_state": True,
+                "state": canon_state,
+                "city": city_clean,
+                "nearest_city": nearest,
+                "result": result_msg,
+                "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately."
+            }
 
     # Load covered cities list
     covered_cities = get_covered_cities()
