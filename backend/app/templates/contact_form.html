@@ -543,10 +543,16 @@
         if (response.ok && result.success) {
           showStatus(
             'success',
-            'Outbound Call Triggered Successfully!',
-            `Smartflo is calling ${phone}. Kiara has been equipped with ${name}'s details and will conduct the consultation seamlessly.`
+            'Call Request Accepted',
+            `The call request for ${phone} was accepted. Please expect an incoming call.`
           );
-          btnText.textContent = 'Call in Progress...';
+          btnText.textContent = 'Request Accepted';
+
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            btnSpinner.style.display = 'none';
+            btnText.textContent = 'Send Another Message';
+          }, 15000);
         } else {
           showStatus(
             'error',

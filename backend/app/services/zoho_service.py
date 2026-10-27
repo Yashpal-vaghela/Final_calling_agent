@@ -30,6 +30,65 @@ def format_transcript_as_text(transcript_history: Optional[List[Dict[str, Any]]]
     return "\n\n".join(lines)
 
 
+def _to_e164(phone: Any) -> str:
+    """
+    Normalises an Indian phone number to E.164 format (+91XXXXXXXXXX).
+
+    Accepts:
+      - 10-digit national number  : "8758657212"   → "+918758657212"
+      - 12-digit with country code: "918758657212" → "+918758657212"
+      - Already E.164             : "+918758657212" → "+918758657212"
+      - Empty / None              : ""              → ""
+    """
+    if not phone:
+        return ""
+    raw = str(phone).strip()
+    if not raw:
+        return ""
+    # Already has '+' prefix — return as-is
+    if raw.startswith("+"):
+        return raw
+    # Strip any non-digit characters for normalisation
+    import re as _re
+    digits = _re.sub(r"\D", "", raw)
+    if len(digits) == 10:
+        return f"+91{digits}"
+    if len(digits) == 12 and digits.startswith("91"):
+        return f"+{digits}"
+    # Unexpected format — return original string unchanged to avoid data loss
+    return raw
+
+
+def _coerce_lead_id(value: Any) -> Any:
+    """
+    Coerces a Zoho lead_id to an integer when it is a valid numeric 18-digit ID.
+    Returns the integer if coercible, otherwise returns "" so the field is never None.
+
+    Zoho CRM assigns 18-digit numeric IDs; the Zoho Flow webhook spec expects them
+    as JSON integers, not strings.
+    """
+    if value is None or value == "":
+        return ""
+    try:
+        int_val = int(str(value).strip())
+        return int_val
+    except (ValueError, TypeError):
+        return str(value).strip() or ""
+
+
+def _coerce_pincode(value: Any) -> Any:
+    """
+    Coerces a pincode to an integer when possible.
+    Returns the integer if coercible, otherwise returns "" so the field is never None.
+    """
+    if value is None or value == "":
+        return ""
+    try:
+        return int(str(value).strip())
+    except (ValueError, TypeError):
+        return str(value).strip() or ""
+
+
 async def send_call_summary_to_zoho(
     call_id: str,
     user_info: Dict[str, Any],
@@ -71,21 +130,33 @@ async def send_call_summary_to_zoho(
     actions_text = "\n".join(f"- {a}" for a in actions_raw) if isinstance(actions_raw, list) else str(actions_raw)
 
     lead_name = user_info.get("name") or ""
-    lead_phone = user_info.get("phone") or ""
+    lead_phone = _to_e164(user_info.get("phone") or "")
     lead_email = user_info.get("email") or ""
     lead_city = user_info.get("city") or ""
-    lead_pincode = user_info.get("pincode") or ""
+    lead_pincode = _coerce_pincode(user_info.get("pincode") or "")
 
     call_outcome = summary.get("call_outcome") or "information_provided"
     callback_time = summary.get("callback_time") or ""
 
-    # Structured payload supporting both flat top-level mapping and nested structures
+    # Resolve and type-coerce lead_id: Zoho CRM uses 18-digit integer IDs in JSON
+    resolved_lead_id_raw = lead_id or user_info.get("lead_id") or ""
+    resolved_lead_id = _coerce_lead_id(resolved_lead_id_raw)
+
+    resolved_booking_id_raw = (
+        booking_lead_id
+        or user_info.get("booking_lead_id")
+        or summary.get("booking_lead_id")
+        or ""
+    )
+    resolved_booking_id = str(resolved_booking_id_raw).strip() if resolved_booking_id_raw else ""
+
+    # Structured payload — field names, nesting, and value types match the Zoho Flow cURL spec exactly
     payload: Dict[str, Any] = {
         "event": "call_completed",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "call_id": call_id,
-        "lead_id": lead_id or user_info.get("lead_id") or "",
-        "booking_lead_id": booking_lead_id or user_info.get("booking_lead_id") or summary.get("booking_lead_id") or "",
+        "lead_id": resolved_lead_id,
+        "booking_lead_id": resolved_booking_id,
         # Flat fields for instant drag-and-drop mapping in Zoho Flow UI
         "name": lead_name,
         "phone": lead_phone,
@@ -107,8 +178,8 @@ async def send_call_summary_to_zoho(
             "email": lead_email,
             "city": lead_city,
             "pincode": lead_pincode,
-            "lead_id": lead_id or user_info.get("lead_id") or "",
-            "booking_lead_id": booking_lead_id or user_info.get("booking_lead_id") or summary.get("booking_lead_id") or "",
+            "lead_id": resolved_lead_id,
+            "booking_lead_id": resolved_booking_id,
             "intent": user_info.get("intent") or "",
             "notes": user_info.get("notes") or "",
         },
@@ -160,4 +231,32 @@ async def send_call_summary_to_zoho(
     except Exception as e:
         logger.error(f"[Zoho Flow] Error sending call summary to Zoho Flow for call {call_id}: {e}", exc_info=True)
         print(f"[Zoho Flow] [ERROR] Webhook error for call {call_id}: {e}")
+        return False
+
+
+async def send_call_status_to_zoho(provider_event: Dict[str, Any]) -> bool:
+    """Deliver an outbox event with exact provider status/cause values.
+
+    None fields are omitted so an answer or partial enrichment does not clear
+    cause fields. Flow must gate lead updates and deduplicate event_id.
+    """
+    webhook_url = settings.ZOHO_FLOW_WEBHOOK_URL
+    if not webhook_url:
+        return False
+    if (provider_event.get("event") != "call_status_update" or
+            not provider_event.get("event_id") or not provider_event.get("attempt_id") or
+            not provider_event.get("lead_id")):
+        return False
+    status = provider_event.get("call_status")
+    if status is not None and (not isinstance(status, str) or not status.strip() or
+                               status.strip().startswith("$") or not provider_event.get("status_event_id")):
+        return False
+    payload = {key: value for key, value in provider_event.items() if value is not None}
+    payload["lead_id"] = _coerce_lead_id(payload["lead_id"])
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(webhook_url, json=payload, headers={"Content-Type": "application/json"})
+            return response.status_code in (200, 201, 202, 204)
+    except Exception:
+        logger.exception("[Zoho Flow] Status delivery failed for event %s", payload["event_id"])
         return False

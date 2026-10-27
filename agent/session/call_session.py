@@ -219,7 +219,7 @@ class CallSession:
         if self.recommended_dentists:
             dentist_note = (
                 f"\n- Recommended Dentists Already Presented: {', '.join(self.recommended_dentists)}"
-                f"\n- Top Nearest Doctor: {self.top_recommended_doctor}"
+                f"\n- Geographically Nearest Doctor (Distance only, no ranking): {self.top_recommended_doctor}"
                 f"\n- Dentist Recommendation Page: {self.dentist_page}"
             )
 

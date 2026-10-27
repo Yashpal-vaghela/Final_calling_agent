@@ -158,6 +158,21 @@ def _extract_locality_tokens(localities: List[str]) -> Tuple[List[str], List[str
 
     return phrases, list(keywords)
 
+PINCODE_LOCALITY_FALLBACK: Dict[str, List[str]] = {
+    # Surat zones
+    "395006": ["varachha", "varachha road", "mota varachha", "laskana", "pasodara", "valak"],
+    "394101": ["mota varachha", "varachha", "surat"],
+    "395004": ["ved road", "katargam", "dabholi", "surat"],
+    "395007": ["vesu", "parle point", "surat"],
+    "395009": ["adajan", "pal", "surat"],
+    "395001": ["surat", "station", "chowk"],
+    # Ahmedabad zones
+    "380015": ["satellite", "vastrapur", "bodakdev", "ahmedabad"],
+    "380054": ["thaltej", "sg highway", "ahmedabad"],
+    "380001": ["central", "ahmedabad"],
+    "380009": ["navrangpura", "ahmedabad"],
+}
+
 def _rank_dentists_by_postal_proximity(
     dentists: List[Dict[str, Any]],
     user_pincode: str,
@@ -182,6 +197,9 @@ def _rank_dentists_by_postal_proximity(
     localities = postal_info.get("localities", []) if postal_info else []
     district = (postal_info.get("district") or "").strip() if postal_info else ""
     user_pin = user_pincode.strip()
+
+    if not localities and user_pin in PINCODE_LOCALITY_FALLBACK:
+        localities = PINCODE_LOCALITY_FALLBACK[user_pin]
 
     loc_phrases, loc_keywords = _extract_locality_tokens(localities)
 
@@ -335,14 +353,14 @@ def _build_response(
     city_note = f"in {nearest_city}" if nearest_city else ""
 
     if len(batch) == 1:
-        presentation_rule = f"2. Present the doctor: 'We have {batch[0]} {city_note}. Should I confirm your appointment with them as your nearest dentist?'"
-        hesitation_rule = f"3. If the caller asks if this dentist is good, more experienced, is hesitant, or confirms: DO NOT say coordinator assigns. Reassure them: '{top_recommended} is highly experienced and great because they are an authorized smile designer. Shall I confirm your appointment with {top_recommended} {city_note}?'"
+        presentation_rule = f"2. Present the doctor: 'In {nearest_city}, our authorized smile designer is {batch[0]}.'"
+        hesitation_rule = f"3. If the caller asks if this dentist is good or is hesitant: Reassure them: 'All of our dentists are equally experienced because all of them are our certified authorized smile designers adhering to identical clinical and master lab protocols.'"
     elif len(batch) == 2:
-        presentation_rule = f"2. Present the names: 'We have {batch[0]} and {batch[1]} {city_note}. Should I confirm your appointment with your nearest dentist, {batch[0]}?'"
-        hesitation_rule = f"3. If the caller asks which dentist is best, great, more experienced, or cannot decide: DO NOT say coordinator assigns. NEVER say one doctor is better than another. Reassure them: 'All of our dentists are equally experienced and great because all of them are our authorized smile designers. Since {top_recommended} is your nearest dentist {city_note}, should I confirm your appointment with {top_recommended}?'"
+        presentation_rule = f"2. Present the names: 'In {nearest_city}, our authorized smile designers are {batch[0]} and {batch[1]}.'"
+        hesitation_rule = f"3. If the caller asks which dentist is best, more experienced, or asks why one was named: DO NOT say coordinator assigns. NEVER say one doctor is better than another and NEVER mention rankings. Reassure them that all dentists are certified authorized smile designers adhering to identical clinical and master lab protocols, and doctor suggestions are ordered purely by geographic proximity to their area."
     elif len(batch) >= 3:
-        presentation_rule = f"2. Present the names: 'We have {', '.join(batch[:-1])} and {batch[-1]} {city_note}. Should I confirm your appointment with your nearest dentist, {batch[0]}?'"
-        hesitation_rule = f"3. If the caller asks which dentist is best, great, more experienced, or cannot decide: DO NOT say coordinator assigns. NEVER say one doctor is better than another. Reassure them: 'All of our dentists are equally experienced and great because all of them are our authorized smile designers. Since {top_recommended} is your nearest dentist {city_note}, should I confirm your appointment with {top_recommended}?'"
+        presentation_rule = f"2. Present the names: 'In {nearest_city}, our authorized smile designers include {', '.join(batch[:-1])}, and {batch[-1]}.'"
+        hesitation_rule = f"3. If the caller asks which dentist is best, more experienced, or asks why one was named: DO NOT say coordinator assigns. NEVER say one doctor is better than another and NEVER mention rankings. Reassure them that all dentists are certified authorized smile designers adhering to identical clinical and master lab protocols, and doctor suggestions are ordered purely by geographic proximity to their area."
     else:
         presentation_rule = "2. Inform the caller that no authorized dentists were found in this area."
         hesitation_rule = "3. Offer to check another city or nearby area."
@@ -353,7 +371,8 @@ def _build_response(
         "1. DO NOT say 'in your closest area' or 'in your nearest area'. DO NOT say 'in our nearest center'.\n"
         f"{presentation_rule}\n"
         f"{hesitation_rule}\n"
-        "4. Speak ONLY doctor names. NEVER speak clinic addresses, clinic names, or PIN codes over the phone."
+        "4. Speak ONLY doctor names. NEVER speak clinic addresses, clinic names, or PIN codes over the phone.\n"
+        "5. BOOKING CONTEXT: Do NOT ask to confirm or schedule an appointment unless the caller explicitly requested to book or asked how to schedule a visit."
     )
 
     result: Dict[str, Any] = {
@@ -361,6 +380,7 @@ def _build_response(
         "dentists": batch,
         "count": len(batch),
         "total_available": total_count,
+        "nearest_doctor": top_recommended,
         "top_recommended_doctor": top_recommended,
         "page": safe_page,
         "has_more": has_more,
@@ -391,6 +411,14 @@ async def async_get_nearest_dentists(
     Supports exclude_cities to bypass rejected cities and find the next nearest authorized dentists.
     100% non-blocking HTTP execution on the asyncio event loop via httpx.AsyncClient.
     """
+    # Defensive swap: if caller passed city as first positional arg or pincode as city
+    if pincode and not city and re.search(r"[a-zA-Z]", str(pincode)) and not re.search(r"^\d{6}$", str(pincode).strip()):
+        city = str(pincode)
+        pincode = ""
+    elif city and not pincode and re.match(r"^\s*\d{6}\s*$", str(city)):
+        pincode = str(city)
+        city = ""
+
     clean_pin = _clean_pincode(pincode)
     caller_city = city.strip() if city else ""
 
@@ -488,6 +516,14 @@ def get_nearest_dentists(
     Extracts ONLY doctor names. Omits clinic addresses, clinic names, and PIN codes.
     Supports exclude_cities to bypass rejected cities.
     """
+    # Defensive swap: if caller passed city as first positional arg or pincode as city
+    if pincode and not city and re.search(r"[a-zA-Z]", str(pincode)) and not re.search(r"^\d{6}$", str(pincode).strip()):
+        city = str(pincode)
+        pincode = ""
+    elif city and not pincode and re.match(r"^\s*\d{6}\s*$", str(city)):
+        pincode = str(city)
+        city = ""
+
     clean_pin = _clean_pincode(pincode)
     caller_city = city.strip() if city else ""
 

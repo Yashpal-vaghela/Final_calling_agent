@@ -1,20 +1,38 @@
 import json
-import os
 import asyncio
 import urllib.parse
 from typing import Optional, Any
 from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect, HTTPException
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse
 
-from backend.app.models.call import Call
 from backend.app.services.smartflo_service import smartflo_client
-from backend.app.services.caller_context import lookup_caller_context, remove_caller_context, ACTIVE_CALLER_CONTEXTS
-from agent.utils.call_logger import save_calls, load_calls
+from backend.app.services.caller_context import (
+    lookup_caller_context,
+    async_lookup_caller_context,
+    remove_caller_context,
+    pop_pending_caller_context_by_phone,
+    ACTIVE_CALLER_CONTEXTS
+)
+from agent.audio.greeting_cache import remove_dynamic_greeting
 from agent.pipeline import VoicePipelineOrchestrator
-from agent.utils.summarizer import generate_call_summary, save_call_record, CALLS_FILE
+from agent.utils.summarizer import (
+    generate_call_summary,
+    save_call_record,
+    find_call_record,
+)
 from backend.app.services.zoho_service import send_call_summary_to_zoho
+from backend.app.services.call_record_service import get_call_store, provider_ids, now_iso, CorrelationError
+from backend.app.services.outbound_call_service import initiate_tracked_call
 
 router = APIRouter()
+
+
+async def _attempt_context(attempt_id: str):
+    context = lookup_caller_context(attempt_id)
+    if context and context.get("attempt_id") == attempt_id:
+        return context
+    record = await asyncio.to_thread(get_call_store().get_attempt, attempt_id)
+    return record.get("user_info") if record else None
 
 @router.api_route("/smartflo/voice", methods=["GET", "POST"])
 @router.api_route("/", methods=["POST"])
@@ -30,10 +48,9 @@ async def smartflo_dynamic_endpoint(request: Request):
     }
     (Note: 'sucess' with single 'c' as per Tata Smartflo specification)
     """
-    print("🚨🚨🚨 LOCAL SMARTFLO HTTP WEBHOOK HIT 🚨🚨🚨")
+    print("[SMARTFLO WEBHOOK] >>> LOCAL SMARTFLO HTTP WEBHOOK HIT <<<")
     print(f"[LOCAL RECEIVER PROOF] method={request.method}")
     print(f"[LOCAL RECEIVER PROOF] url={request.url}")
-    print(f"[LOCAL RECEIVER PROOF] headers={dict(request.headers)}")
     print(f"[LOCAL RECEIVER PROOF] query_params={dict(request.query_params)}")
 
     # Parse parameters from query parameters, JSON body, and Form data
@@ -51,7 +68,6 @@ async def smartflo_dynamic_endpoint(request: Request):
                 pass
 
     print(f"[Smartflo Dynamic Endpoint Debug] ALL incoming params: {json.dumps(params)}")
-    print(f"[Smartflo Dynamic Endpoint Debug] Headers: {dict(request.headers)}")
 
     call_id = (
         params.get("callId") or params.get("$callId") or
@@ -65,19 +81,44 @@ async def smartflo_dynamic_endpoint(request: Request):
         params.get("toNumber") or params.get("$toNumber") or
         params.get("to") or params.get("$to") or params.get("customer_number") or ""
     )
-    status = params.get("status") or params.get("$status") or "ringing"
     
     raw_intent = params.get("opening_intent") or params.get("intent") or request.query_params.get("opening_intent")
     raw_lead_id = params.get("lead_id") or params.get("leadId") or request.query_params.get("lead_id")
     opening_intent = str(raw_intent) if raw_intent is not None else None
     lead_id = str(raw_lead_id) if raw_lead_id is not None else None
 
-    # Match caller context from active contact form submission if available (exact lookup by lead_id, to_number, or from_number)
-    caller_ctx = (
-        lookup_caller_context(lead_id)
-        or lookup_caller_context(to_number)
-        or lookup_caller_context(from_number)
-    )
+    # Hangup notifications belong to the authenticated status receiver.
+    if "end_stamp" in params or "hangup_cause_key" in params:
+        raise HTTPException(400, "Configure lifecycle callbacks at /api/smartflo/webhook")
+
+    ids = provider_ids(params)
+    attempt_id = await asyncio.to_thread(get_call_store().bind_identifiers, ids) if ids else None
+    caller_ctx = None
+    if attempt_id:
+        caller_ctx = lookup_caller_context(attempt_id)
+        if not caller_ctx:
+            tracked = await asyncio.to_thread(get_call_store().get_attempt, attempt_id)
+            caller_ctx = tracked.get("user_info") if tracked else None
+
+    # 1. If explicit lead_id is provided, look up by lead_id first
+    if lead_id and not caller_ctx:
+        caller_ctx = lookup_caller_context(lead_id)
+
+    # 2. If no lead_id (standard Smartflo dynamic webhook), pop from pending FIFO queue for to_number
+    if not caller_ctx and to_number:
+        caller_ctx = pop_pending_caller_context_by_phone(to_number)
+
+    # 3. Fallback to candidate keys in RAM L1
+    if not caller_ctx:
+        candidates = [k for k in [lead_id, to_number, from_number] if k and str(k).strip() and str(k).lower() != "none"]
+        for cand in candidates:
+            caller_ctx = lookup_caller_context(cand)
+            if caller_ctx:
+                break
+
+    if not caller_ctx and lead_id:
+        caller_ctx = await async_lookup_caller_context(lead_id)
+
     if caller_ctx:
         lead_id = str(caller_ctx.get("id") or lead_id or "")
         if not opening_intent:
@@ -86,17 +127,10 @@ async def smartflo_dynamic_endpoint(request: Request):
             ACTIVE_CALLER_CONTEXTS[call_id] = caller_ctx
             print(f"[Smartflo Dynamic Endpoint] Linked callId '{call_id}' to lead '{caller_ctx.get('name')}' (Phone: {caller_ctx.get('phone')}, Lead ID: {lead_id})")
 
-    # Log call record if call_id is present
-    # if call_id:
-    #     call_log = Call(
-    #         call_sid=call_id,
-    #         direction="outbound" if from_number else "inbound",
-    #         from_number=from_number,
-    #         to_number=to_number
-    #     )
-    #     calls_db = load_calls()
-    #     calls_db[call_id] = call_log.to_dict()
-    #     save_calls(calls_db)
+    if not attempt_id and caller_ctx:
+        attempt_id = caller_ctx.get("attempt_id")
+    if attempt_id:
+        await asyncio.to_thread(get_call_store().bind_identifiers, ids, attempt_id)
 
     # Determine host for WebSocket URL (Smartflo regex schema requires wss://)
     host = request.headers.get("x-forwarded-host") or request.headers.get("host", "localhost:8000")
@@ -109,7 +143,11 @@ async def smartflo_dynamic_endpoint(request: Request):
     else:
         composite_sid = target_sid
 
+    if attempt_id:
+        composite_sid += f"__attempt__{attempt_id}"
     ws_url = f"wss://{host}/smartflo/media-stream?call_sid={urllib.parse.quote(composite_sid)}"
+    if attempt_id:
+        ws_url += f"&attempt_id={urllib.parse.quote(attempt_id)}"
     if opening_intent:
         ws_url += f"&opening_intent={urllib.parse.quote(opening_intent)}"
     if lead_id:
@@ -133,15 +171,15 @@ async def smartflo_media_stream(
     websocket: WebSocket,
     call_sid: str = "",
     opening_intent: Optional[str] = None,
-    lead_id: Optional[str] = None
+    lead_id: Optional[str] = None,
+    attempt_id: Optional[str] = None
 ):
     """
     Bi-directional audio streaming WebSocket endpoint for Tata Smartflo.
     Exchanges 8kHz µ-law audio chunks and lifecycle events with VoicePipelineOrchestrator.
     """
-    print("🚨🚨🚨 LOCAL SMARTFLO WEBSOCKET HIT 🚨🚨🚨")
+    print("[SMARTFLO WEBSOCKET] >>> LOCAL SMARTFLO WEBSOCKET HIT <<<")
     print(f"[LOCAL RECEIVER PROOF] ws_url={websocket.url}")
-    print(f"[LOCAL RECEIVER PROOF] headers={dict(websocket.headers)}")
 
     await websocket.accept()
     raw_query_sid = websocket.query_params.get("call_sid", "")
@@ -149,6 +187,11 @@ async def smartflo_media_stream(
     query_lead_id = websocket.query_params.get("lead_id")
     lead_id = lead_id or query_lead_id
     opening_intent = opening_intent or websocket.query_params.get("opening_intent")
+
+    attempt_id = attempt_id or websocket.query_params.get("attempt_id")
+    if "__attempt__" in call_sid:
+        call_sid, embedded_attempt = call_sid.split("__attempt__", 1)
+        attempt_id = attempt_id or embedded_attempt
 
     # Unpack composite call_sid if lead_id was encoded into call_sid
     if "__lead__" in call_sid:
@@ -159,11 +202,16 @@ async def smartflo_media_stream(
 
     print(f"[Smartflo WS] Connection accepted for CallSid: {call_sid} (Lead ID: {lead_id})")
 
-    # Look up full caller context strictly by exact keys
-    caller_ctx = (
-        lookup_caller_context(lead_id)
-        or lookup_caller_context(call_sid)
-    )
+    # Look up full caller context strictly in RAM L1 (0.001ms, non-blocking)
+    caller_ctx = await _attempt_context(attempt_id) if attempt_id else None
+    if not attempt_id:
+        candidates = [k for k in [lead_id, call_sid] if k and k.strip() and k.lower() != "none"]
+        for cand in candidates:
+            caller_ctx = lookup_caller_context(cand)
+            if caller_ctx:
+                break
+    if caller_ctx and not lead_id:
+        lead_id = caller_ctx.get("id")
     if not opening_intent and caller_ctx:
         opening_intent = str(caller_ctx.get("intent", "outbound_contact_form"))
 
@@ -210,36 +258,42 @@ async def smartflo_media_stream(
                 print(f"[Smartflo WS] Extracted customParameters: {custom_params}")
                 
                 custom_lead_id = custom_params.get("lead_id") or custom_params.get("leadId")
+                attempt_id = attempt_id or custom_params.get("attempt_id")
+                if not attempt_id and caller_ctx:
+                    attempt_id = caller_ctx.get("attempt_id")
+                attempt_id = await asyncio.to_thread(
+                    get_call_store().record_media_start, call_sid, attempt_id
+                ) or attempt_id
                 custom_intent = custom_params.get("opening_intent") or custom_params.get("intent")
-
-                print(f"[Smartflo WS Debug] lead_id exists in customParameters: {'lead_id' in custom_params or 'leadId' in custom_params}")
-                print(f"[Smartflo WS Debug] exact values passed to lookup: custom_lead_id={custom_lead_id}, lead_id={lead_id}, from_num={from_num_stripped}, to_num={to_num_stripped}, call_sid={call_sid}")
-                print(f"[Smartflo WS Debug] ACTIVE_CALLER_CONTEXTS keys: {list(ACTIVE_CALLER_CONTEXTS.keys())}")
+                if attempt_id:
+                    caller_ctx = await _attempt_context(attempt_id)
 
                 # If caller context wasn't resolved at WS query param time, resolve it now from start payload
-                if not caller_ctx:
-                    caller_ctx = (
-                        lookup_caller_context(query_lead_id)
-                        or lookup_caller_context(custom_lead_id)
-                        or lookup_caller_context(lead_id)
-                        or lookup_caller_context(from_num_stripped)
-                        or lookup_caller_context(to_num_stripped)
-                        or lookup_caller_context(call_sid)
-                    )
+                if not caller_ctx and not attempt_id:
+                    raw_cands = [query_lead_id, custom_lead_id, lead_id, from_num_stripped, to_num_stripped, call_sid]
+                    cands = list(dict.fromkeys([c for c in raw_cands if c and str(c).strip() and str(c).lower() != "none"]))
+                    for cand in cands:
+                        caller_ctx = lookup_caller_context(cand)
+                        if caller_ctx:
+                            break
+
+                    # Fast async fallback if lead_id was supplied
+                    if not caller_ctx and (custom_lead_id or query_lead_id or lead_id):
+                        primary_lead = custom_lead_id or query_lead_id or lead_id
+                        caller_ctx = await async_lookup_caller_context(primary_lead)
                     
-                    print(f"[DEBUG CRITICAL] WS Payload customParams: {custom_params} | Lookup Tried: {[query_lead_id, custom_lead_id, from_num_stripped, to_num_stripped]} | Active Memory Keys: {list(ACTIVE_CALLER_CONTEXTS.keys())} | Lookup Result: {'SUCCESS' if caller_ctx else 'FAILED'}")
+                    print(f"[DEBUG CRITICAL] WS Payload customParams: {custom_params} | Lookup Result: {'SUCCESS' if caller_ctx else 'FAILED'}")
                     
-                    if caller_ctx:
-                        lead_id = str(caller_ctx.get("id") or lead_id or custom_lead_id or "")
-                        opening_intent = str(caller_ctx.get("intent") or opening_intent or custom_intent or "outbound_contact_form")
-                        lead_name = caller_ctx.get("name")
-                        lead_city = caller_ctx.get("city")
-                        lead_phone = caller_ctx.get("phone")
-                        lead_email = caller_ctx.get("email")
-                        lead_pincode = caller_ctx.get("pincode")
-                        lead_subject = caller_ctx.get("subject")
-                        lead_message = caller_ctx.get("message") or caller_ctx.get("notes")
-                        print(f"[Smartflo WS] Resolved caller context on start event for {lead_name} (City: {lead_city}, Phone: {lead_phone}, Pincode: {lead_pincode})")
+                if caller_ctx:
+                    lead_id = str(caller_ctx.get("id") or lead_id or custom_lead_id or "")
+                    opening_intent = str(caller_ctx.get("intent") or opening_intent or custom_intent or "outbound_contact_form")
+                    lead_name = caller_ctx.get("name")
+                    lead_city = caller_ctx.get("city")
+                    lead_phone = caller_ctx.get("phone")
+                    lead_email = caller_ctx.get("email")
+                    lead_pincode = caller_ctx.get("pincode")
+                    lead_subject = caller_ctx.get("subject")
+                    lead_message = caller_ctx.get("message") or caller_ctx.get("notes")
 
                 if caller_ctx and call_sid:
                     try:
@@ -304,6 +358,8 @@ async def smartflo_media_stream(
 
             # Trigger structured conversation summarization asynchronously in the background
             async def _run_post_call_summary():
+                from datetime import datetime, timezone
+                media_ended_at = datetime.now(timezone.utc).isoformat()
                 try:
                     summary = await generate_call_summary(
                         history_snapshot,
@@ -311,15 +367,19 @@ async def smartflo_media_stream(
                         lead_id=intake_lead_id_val,
                         booking_lead_id=booking_lead_id_val
                     )
+                    # Conversation updates cannot change provider status or causes.
+                    await asyncio.to_thread(save_call_record,
+                        call_id=call_id_val,
+                        summary=summary,
+                        transcript=history_snapshot,
+                        lead_id=intake_lead_id_val,
+                        booking_lead_id=booking_lead_id_val,
+                        attempt_id=attempt_id,
+                        user_info=user_info_snapshot,
+                        timestamps={"media_ended_at": media_ended_at}
+                    )
                     if summary:
                         print(f"📋 [Call Summary for {call_id_val}]:\n{json.dumps(summary, indent=2)}")
-                        save_call_record(
-                            call_id=call_id_val,
-                            summary=summary,
-                            transcript=history_snapshot,
-                            lead_id=intake_lead_id_val,
-                            booking_lead_id=booking_lead_id_val
-                        )
                         await send_call_summary_to_zoho(
                             call_id=call_id_val,
                             user_info=user_info_snapshot,
@@ -330,13 +390,28 @@ async def smartflo_media_stream(
                         )
                 except Exception as ex:
                     print(f"[Smartflo WS] Error generating post-call summary for {call_id_val}: {ex}")
+                    await asyncio.to_thread(save_call_record,
+                        call_id=call_id_val,
+                        summary=None,
+                        transcript=history_snapshot,
+                        lead_id=intake_lead_id_val,
+                        booking_lead_id=booking_lead_id_val,
+                        attempt_id=attempt_id,
+                        user_info=user_info_snapshot,
+                        timestamps={"media_ended_at": media_ended_at}
+                    )
 
             asyncio.create_task(_run_post_call_summary())
         
-        # Purge caller context from memory across all indexed keys on call termination
+        # Purge caller context and dynamic prewarmed greeting from memory across all indexed keys on call termination
         phone_to_clean = lead_phone or (caller_ctx.get("phone") if caller_ctx else None)
-        remove_caller_context(lead_id=lead_id, phone=phone_to_clean, call_id=call_sid)
-        print(f"[Smartflo WS] Cleaned up stream and purged caller context from memory for CallSid: {call_sid} (Lead ID: {lead_id})")
+        remove_caller_context(lead_id=lead_id, phone=phone_to_clean, call_id=call_sid, attempt_id=attempt_id)
+        remove_dynamic_greeting(lead_id=lead_id, phone=phone_to_clean)
+        print(f"[Smartflo WS] Cleaned up stream and purged caller context & dynamic greeting from memory for CallSid: {call_sid} (Lead ID: {lead_id})")
+        try:
+            await websocket.close()
+        except (WebSocketDisconnect, RuntimeError, OSError):
+            pass  # Peer or ASGI server already closed the transport.
 
 
 @router.post("/api/smartflo/outbound")
@@ -354,44 +429,36 @@ async def trigger_smartflo_outbound(request: Request):
 
     custom_params = {}
     if lead_id:
-        custom_params["lead_id"] = lead_id
+        custom_params["lead_id"] = str(lead_id).strip()
     if opening_intent:
         custom_params["opening_intent"] = opening_intent
 
-    result = await smartflo_client.initiate_click_to_call(
-        customer_number=customer_number,
-        custom_params=custom_params
+    context = lookup_caller_context(lead_id) if lead_id else None
+    attempt_id, result = await initiate_tracked_call(
+        smartflo_client, customer_number, lead_id=lead_id, source="api_smartflo_outbound",
+        custom_params=custom_params, caller_context=dict(context) if context else None,
     )
-    return result
+    return {**result, "attempt_id": attempt_id}
 
 
 @router.get("/api/calls")
 async def list_call_records():
-    """Returns all logged call summaries and records."""
-    if not os.path.exists(CALLS_FILE):
-        return {"calls": {}}
-    try:
-        with open(CALLS_FILE, "r", encoding="utf-8") as f:
-            content = f.read().strip()
-            data = json.loads(content) if content else {}
-        return {"calls": data}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read calls database: {e}")
+    """Return provider records and unchanged, explicitly identified legacy history."""
+    return {"calls": await asyncio.to_thread(get_call_store().list_records)}
 
 
-@router.get("/api/calls/{call_id}/summary")
-async def get_call_summary(call_id: str):
-    """Returns the structured summary for a specific call ID."""
-    if not os.path.exists(CALLS_FILE):
-        raise HTTPException(status_code=404, detail="No calls logged yet.")
-    try:
-        with open(CALLS_FILE, "r", encoding="utf-8") as f:
-            content = f.read().strip()
-            data = json.loads(content) if content else {}
-        if call_id in data:
-            return data[call_id]
-        raise HTTPException(status_code=404, detail=f"Call '{call_id}' not found.")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve summary: {e}")
+@router.get("/api/call-attempts/{attempt_id}")
+async def get_call_attempt(attempt_id: str):
+    rec = await asyncio.to_thread(get_call_store().get_attempt, attempt_id)
+    if rec is None:
+        raise HTTPException(404, "Call attempt not found")
+    return rec
+
+
+@router.get("/api/calls/{identifier}/summary")
+@router.get("/api/leads/{identifier}/summary")
+async def get_call_summary(identifier: str):
+    rec = await asyncio.to_thread(find_call_record, identifier)
+    if rec is None:
+        raise HTTPException(404, "Call record not found")
+    return rec

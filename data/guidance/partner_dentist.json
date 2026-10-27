@@ -1,0 +1,30 @@
+{
+  "partner_dentist": {
+    "intent": "dentist_partnership_and_courses",
+    "topic": "partner_dentist",
+    "keywords": [
+      "partner dentist",
+      "become partner",
+      "join usd",
+      "dentist training",
+      "dentist course",
+      "course price",
+      "course fees",
+      "doctor partnership",
+      "partner banvu che",
+      "course karvo che"
+    ],
+    "guidance": "When a dentist or doctor inquires about partnership, certification courses, or course fees:",
+    "rules": [
+      "NEVER say the fee depends on course or clinic setup.",
+      "Explain that our clinical onboarding team directly shares all curriculum and fee details after partner form submission.",
+      "Highlight the 3 Core Benefits: (1) Learn New Skills (advanced Digital Smile Design & 3D aesthetic workflows), (2) Full Marketing & Branding Support as an Authorized USD Smile Designer, (3) Attract More High-Value Patients to grow their private practice.",
+      "Guide them strictly to visit ultimatesmiledesign.com, navigate to the 'For Dentist' section, and submit the partner form."
+    ],
+    "scripts": {
+      "en": "We welcome dental professionals to our authorized network. Our partner program offers three core benefits: mastering advanced Digital Smile Design workflows, comprehensive marketing and branding support, and attracting high-value smile design patients. Our clinical onboarding team shares all curriculum and certification fee details directly after form submission. Please visit ultimatesmiledesign.com, go to the 'For Dentist' section, and submit your details.",
+      "gu": "અમારા ઓથોરાઇઝ્ડ નેટવર્કમાં ડેન્ટલ પ્રોફેશનલ્સનું સ્વાગત છે. અમારા પાર્ટનર પ્રોગ્રામના ત્રણ મુખ્ય ફાયદા છે: એડવાન્સ ડિજિટલ સ્માઇલ ડિઝાઇન વર્કફ્લો શીખવો, સંપૂર્ણ માર્કેટિંગ અને બ્રાન્ડિંગ સપોર્ટ, અને પ્રીમિયમ પેશન્ટ્સ સુધી પહોંચવું. અભ્યાસક્રમ અને ફીની વિગતો ફોર્મ સબમિટ કર્યા પછી અમારી ટીમ સીધી શેર કરે છે. કૃપા કરીને ultimatesmiledesign.com ની મુલાકાત લો અને 'For Dentist' સેક્શનમાં વિગતો સબમિટ કરો.",
+      "hi": "हमारे ऑथराइज्ड नेटवर्क में सभी डेंटल प्रोफेशनल्स का स्वागत है। हमारे पार्टनर प्रोग्राम के तीन मुख्य लाभ हैं: एडवांस्ड डिजिटल स्माइल डिज़ाइन सीखना, संपूर्ण मार्केटिंग और ब्रांडिंग सपोर्ट, और हाई-वैल्यू पेशेंट्स तक पहुंच। पाठ्यक्रम और सर्टिफिकेशन फीस की पूरी जानकारी फॉर्म सबमिट करने के बाद हमारी टीम सीधे साझा करती है। कृपया ultimatesmiledesign.com पर जाएं और 'For Dentist' सेक्शन में अपनी जानकारी दर्ज करें।"
+    }
+  }
+}

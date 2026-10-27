@@ -17,9 +17,13 @@ class Settings(BaseSettings):
     SMARTFLO_BASE_URL: str = "https://api-smartflo.tatateleservices.com"
     SMARTFLO_CALLER_ID: str = ""
     SMARTFLO_AGENT_NUMBER: str = ""
-
-    # Zoho Flow CRM Integration
+    SMARTFLO_WEBHOOK_SECRET: str = ""
+    SMARTFLO_STATE_FILE: str = ""
+    # Zoho Flow CRM Integration -- URL (including zapikey) must be set via .env only; no hardcoded default
     ZOHO_FLOW_WEBHOOK_URL: str = ""
+    # AI-agent call-status webhook (POST {"lead_id", "status"}); set via .env only
+    AI_AGENT_STATUS_WEBHOOK_URL: str = ""
+    AI_AGENT_WEBHOOK_SECRET: str = ""
 
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"),

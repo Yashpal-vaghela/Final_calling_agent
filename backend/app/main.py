@@ -2,6 +2,7 @@ import os
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from contextlib import suppress
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -9,23 +10,43 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.app.routes import smartflo_voice, contact_form, internal_callback, booking_form, cities, smile_preview
 from backend.app.services.caller_context import ACTIVE_CALLER_CONTEXTS
+from backend.app.routes import smartflo_webhook
+from backend.app.services.smartflo_delivery import delivery_loop
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: pre-warm live dentist service in background so calls have instant RAM L1 cache
+    # 1. Startup: pre-warm live dentist service in background so calls have instant RAM L1 cache
     try:
         from backend.app.services.dentist_service import get_dentist_service
         asyncio.create_task(get_dentist_service().get_directory_async())
         logger.info("[Startup] Pre-warming live dentist directory in background...")
     except Exception as e:
         logger.warning(f"[Startup] Dentist directory pre-warm failed: {e}")
-    yield
+
+    # 2. Dynamic greeting mode active (pre-recorded audio removed)
+    logger.info("[Startup] Dynamic standard greeting mode active (Gemini Live synthesizes greetings on call connect).")
+
+
+    delivery_task = asyncio.create_task(delivery_loop(), name="smartflo-zoho-delivery")
+    try:
+        yield
+    finally:
+        delivery_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await delivery_task
 
 
 app = FastAPI(title="USD Calling Agent", lifespan=lifespan)
+
+# Enable ProxyHeadersMiddleware for accurate client IP and https/wss scheme behind aaPanel Nginx
+try:
+    from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+except Exception as e:
+    logger.warning(f"[Startup] Could not attach ProxyHeadersMiddleware: {e}")
 
 # Mount static directory
 static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
@@ -34,6 +55,7 @@ if not os.path.exists(static_dir):
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 app.include_router(smartflo_voice.router)
+app.include_router(smartflo_webhook.router)
 app.include_router(contact_form.router)
 app.include_router(internal_callback.router)
 app.include_router(booking_form.router)
@@ -70,5 +92,3 @@ def debug_environment():
         "knowledge_files_found": kb_files,
         "active_contexts_count": len(ACTIVE_CALLER_CONTEXTS)
     }
-
-

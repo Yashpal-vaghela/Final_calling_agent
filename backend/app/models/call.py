@@ -13,7 +13,7 @@ class Call(BaseModel):
     ended_at: Optional[datetime] = None
     duration_seconds: Optional[float] = None
     transcript: List[Dict[str, Any]] = Field(default_factory=list)
-    status: str = "started"
+    status: Optional[str] = None  # Only a provider webhook may supply telephony status.
 
     def to_dict(self):
         d = self.model_dump()

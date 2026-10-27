@@ -1,0 +1,37 @@
+{
+  "pricing_policy": {
+    "intent": "pricing_and_cost",
+    "topic": "pricing",
+    "keywords": [
+      "price",
+      "cost",
+      "charges",
+      "fees",
+      "starting price",
+      "starting cost",
+      "how much",
+      "budget",
+      "expensive",
+      "kitna kharcha",
+      "kitna lagega",
+      "bhav",
+      "kimat",
+      "ketlo kharch",
+      "rate",
+      "financing",
+      "emi"
+    ],
+    "guidance": "Mandatory Pricing Rules & Verbatim Scripts:",
+    "rules": [
+      "You MUST speak the verbatim script below without paraphrasing, altering, or summarizing.",
+      "ABSOLUTE PROHIBITION AGAINST NUMBERS: You MUST NEVER quote any fixed baseline numbers (such as ₹25,000, ₹15,000, ₹50,000, etc.).",
+      "NO Financing or EMIs: Ultimate Smile Design does NOT offer financing, payment plans, or easy EMIs directly.",
+      "NEVER qualify callers: Never ask about their budget, price range, or timeline."
+    ],
+    "scripts": {
+      "en": "You should keep your expectations regarding the treatment high; the investment is personalized and depends on your dentist, your dentist's experience, and the clinic location.",
+      "gu": "ટ્રીટમેન્ટ અંગે તમારે તમારી અપેક્ષાઓ ખૂબ ઊંચી રાખવી જોઈએ; આનું રોકાણ તમારા ડેન્ટિસ્ટ, તેમના અનુભવ અને ક્લિનિકના લોકેશન પર આધાર રાખે છે.",
+      "hi": "ट्रीटमेंट को लेकर आप अपनी उम्मीदें ऊंची रख सकते हैं; यह आपके डेंटिस्ट, उनके अनुभव और क्लिनिक की लोकेशन पर निर्भर करता है।"
+    }
+  }
+}

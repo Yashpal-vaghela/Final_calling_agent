@@ -1,4 +1,5 @@
 import os
+import asyncio
 import json
 import uuid
 from datetime import datetime, timezone
@@ -6,12 +7,11 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
 
 from backend.app.settings import settings
-from backend.app.models.call import Call
 from backend.app.services.smartflo_service import smartflo_client
+from backend.app.services.outbound_call_service import initiate_tracked_call
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
-from agent.utils.call_logger import save_calls, load_calls
 
 router = APIRouter()
 
@@ -63,18 +63,22 @@ async def trigger_callback(payload: TriggerCallbackRequest, request: Request, _ 
     # 4. Initiate Outbound Click-to-Call via Tata Smartflo
     custom_params = {
         "lead_id": payload.lead_id,
-        "opening_intent": "follow-up"
+        "opening_intent": "follow-up",
     }
 
-    result = await smartflo_client.initiate_click_to_call(
-        customer_number=phone,
-        custom_params=custom_params
+    attempt_id, result = await initiate_tracked_call(
+        smartflo_client, phone, lead_id=payload.lead_id, source="internal_callback",
+        custom_params=custom_params, caller_context=dict(lead),
     )
     
-    rate_limit_cache[phone] = now
+    if result.get("success") is True:
+        rate_limit_cache[phone] = now
     
     return {
-        "status": "success",
+        "status": "success" if result.get("success") is True else "error",  # Request acknowledgement only.
+        "success": result.get("success") is True,
+        "attempt_id": attempt_id,
+        "ref_id": result.get("ref_id"),
         "lead_id": payload.lead_id,
         "phone": phone,
         "smartflo_response": result

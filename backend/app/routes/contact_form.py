@@ -1,4 +1,5 @@
 import os
+import asyncio
 import json
 import uuid
 import re
@@ -10,7 +11,8 @@ from pydantic import BaseModel, Field
 
 from backend.app.services.id_service import generate_18_digit_lead_id
 from backend.app.services.smartflo_service import smartflo_client
-from backend.app.services.city_service import is_city_supported, validate_city_pincode_match_async
+from backend.app.services.outbound_call_service import initiate_tracked_call
+from backend.app.services.city_service import is_city_covered, get_nearest_covered_city, validate_city_pincode_match_async
 
 router = APIRouter()
 
@@ -43,14 +45,17 @@ async def submit_contact_form(form_data: ContactFormSubmission):
     """
     Receives submitted caller contact form details, caches context, logs lead,
     and initiates outbound Click-to-Call via Tata Smartflo.
+    Accepts leads from any city/PIN code across India; dynamically associates nearest covered center.
     """
-    if not is_city_supported(form_data.city):
-        raise HTTPException(status_code=400, detail=f"City '{form_data.city}' is not covered. Please select a valid city.")
+    clean_city = form_data.city.strip()
+    clean_pincode = form_data.pincode.strip()
 
-    is_valid_pin, pin_err = await validate_city_pincode_match_async(form_data.city, form_data.pincode)
+    is_valid_pin, pin_err = await validate_city_pincode_match_async(clean_city, clean_pincode)
     if not is_valid_pin:
         raise HTTPException(status_code=400, detail=pin_err)
 
+    is_covered = is_city_covered(clean_city)
+    nearest_center = clean_city if is_covered else get_nearest_covered_city(clean_city)
 
     lead_id = generate_18_digit_lead_id()
     raw_name = form_data.name.strip()
@@ -65,8 +70,10 @@ async def submit_contact_form(form_data: ContactFormSubmission):
         "last_name": last_name,
         "phone": form_data.phone.strip(),
         "email": form_data.email.strip(),
-        "city": form_data.city.strip(),
-        "pincode": form_data.pincode.strip(),
+        "city": clean_city,
+        "pincode": clean_pincode,
+        "nearest_covered_city": nearest_center,
+        "is_covered": is_covered,
         "subject": form_data.subject.strip() if form_data.subject else "",
         "notes": form_data.message.strip() if form_data.message else "",
         "message": form_data.message.strip() if form_data.message else "",
@@ -78,32 +85,27 @@ async def submit_contact_form(form_data: ContactFormSubmission):
     register_caller_context(context_data)
     print(f"[ContactForm] Registered caller context for {context_data['name']} ({context_data['phone']}) - Lead ID: {lead_id}")
 
+
     # Initiate Smartflo Click-to-Call
     custom_params = {
         "lead_id": lead_id,
         "opening_intent": "outbound_contact_form",
-        "city": form_data.city.strip(),
-        "pincode": form_data.pincode.strip()
+        "city": clean_city,
+        "pincode": clean_pincode,
+        "nearest_center": nearest_center,
     }
 
-    result = await smartflo_client.initiate_click_to_call(
-        customer_number=form_data.phone.strip(),
-        custom_params=custom_params
+    attempt_id, result = await initiate_tracked_call(
+        smartflo_client, form_data.phone.strip(), lead_id=lead_id, source="contact_form",
+        custom_params=custom_params, caller_context=context_data,
     )
 
     print(f"[ContactForm] Smartflo click-to-call response: {result}")
-    if isinstance(result, dict):
-        resp_call_id = (
-            result.get("call_id") or result.get("call_uuid") or
-            result.get("id") or result.get("ref_id") or
-            (result.get("data") if isinstance(result.get("data"), dict) else {}).get("call_id")
-        )
-        if resp_call_id:
-            ACTIVE_CALLER_CONTEXTS[str(resp_call_id)] = context_data
-            print(f"[ContactForm] Associated Smartflo response callId '{resp_call_id}' to lead '{lead_id}'")
-
     return {
-        "success": True,
+        "success": result.get("success") is True,
+        "attempt_id": attempt_id,
+        "ref_id": result.get("ref_id"),
+        "error": result.get("error") or result.get("message") if result.get("success") is not True else None,
         "lead_id": lead_id,
         "customer_number": form_data.phone.strip(),
         "smartflo_response": result

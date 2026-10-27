@@ -36,6 +36,10 @@ SUPPORTED_TOPICS = [
     "digital_smile_design_planning", "usd_vs_regular_dentist",
     "navigation", "booking_guidance", "authentication",
     "smile_results", "privacy_assurance", "pain_fear", "trust_uncertainty",
+    "usd_protocols", "protocols", "protocol",
+    # Newly extracted Phase 1 guidance topics
+    "pricing_policy", "pricing", "competitor_comparison", "symptom_handling",
+    "brand_facts", "haresh_savani", "tooth_pain",
 ]
 
 
@@ -46,23 +50,109 @@ TOPIC_ALIASES = {
     "digital_preview": "ai_smile_preview",
     "smile_preview": "ai_smile_preview",
     "preview": "ai_smile_preview",
-    "prices": "cost",
-    "cost": "cost",
-    "price": "cost",
-    "cost_value": "cost",
-    "pricing": "cost",
-    "starting_price": "cost",
-    "starting price": "cost",
+    # Pricing routes
+    "prices": "pricing_policy",
+    "cost": "pricing_policy",
+    "price": "pricing_policy",
+    "cost_value": "pricing_policy",
+    "pricing": "pricing_policy",
+    "starting_price": "pricing_policy",
+    "starting price": "pricing_policy",
+    "kitna kharcha": "pricing_policy",
+    "kitna lagega": "pricing_policy",
+    "bhav": "pricing_policy",
+    "kimat": "pricing_policy",
+    "ketlo kharch": "pricing_policy",
     "timeline": "process_timeline",
     "process": "process_timeline",
-    "ade_haresh_savani": "about_ade_haresh_savani",
-    "haresh_savani": "about_ade_haresh_savani",
+    # Brand facts routes
+    "ade_haresh_savani": "brand_facts",
+    "haresh_savani": "brand_facts",
+    "about_ade_haresh_savani": "brand_facts",
+    "founder": "brand_facts",
+    "master_ceramist": "brand_facts",
+    "brand_facts": "brand_facts",
+    "prayogshala": "brand_facts",
+    "પ્રયોગશાળા": "brand_facts",
     "cities": "cities_coverage",
     "city": "cities_coverage",
-    "local_dentist": "local_dentist_vs_usd",
-    "local_dentist_comparison": "local_dentist_vs_usd",
-    "dentist_comparison": "local_dentist_vs_usd",
-    "other_dentist": "local_dentist_vs_usd",
+    # Competitor comparison routes
+    "local_dentist": "competitor_comparison",
+    "local_dentist_comparison": "competitor_comparison",
+    "dentist_comparison": "competitor_comparison",
+    "other_dentist": "competitor_comparison",
+    "competitor": "competitor_comparison",
+    "competitor_comparison": "competitor_comparison",
+    "my dentist is cheaper": "competitor_comparison",
+    "cheaper dentist": "competitor_comparison",
+    # Symptom routes
+    "pain": "symptom_handling",
+    "tooth_pain": "symptom_handling",
+    "toothache": "symptom_handling",
+    "bleeding": "symptom_handling",
+    "bleeding_gums": "symptom_handling",
+    "broken_tooth": "symptom_handling",
+    "decay": "symptom_handling",
+    "cavity": "symptom_handling",
+    "symptom": "symptom_handling",
+    "symptom_handling": "symptom_handling",
+    # Partner dentist routes
+    "partner_dentist": "partner_dentist",
+    "partner dentist": "partner_dentist",
+    "dentist_partner": "partner_dentist",
+    "dentist_course": "partner_dentist",
+    "course_price": "partner_dentist",
+    "course_fees": "partner_dentist",
+    "dentist_training": "partner_dentist",
+    "other_dentist": "competitor_comparison",
+    "which_dentist": "choosing_right_dentist",
+    "which dentist": "choosing_right_dentist",
+    "best_dentist": "choosing_right_dentist",
+    "best dentist": "choosing_right_dentist",
+    "doctor_selection": "choosing_right_dentist",
+    "doctor selection": "choosing_right_dentist",
+    "doctor_ranking": "choosing_right_dentist",
+    "doctor ranking": "choosing_right_dentist",
+    "dentist_ranking": "choosing_right_dentist",
+    "dentist ranking": "choosing_right_dentist",
+    "why_this_doctor": "choosing_right_dentist",
+    "dentist_experience": "dentist_experience_and_case_history",
+    "dentist experience": "dentist_experience_and_case_history",
+    "doctor_experience": "dentist_experience_and_case_history",
+    "doctor experience": "dentist_experience_and_case_history",
+    "doctor_cases": "dentist_experience_and_case_history",
+    "doctor cases": "dentist_experience_and_case_history",
+    "case_count": "dentist_experience_and_case_history",
+    "case count": "dentist_experience_and_case_history",
+    "cases_handled": "dentist_experience_and_case_history",
+    # Protocol routes
+    "protocol": "usd_protocols",
+    "protocols": "usd_protocols",
+    "which_protocol": "usd_protocols",
+    "which protocol": "usd_protocols",
+    "what_is_a_protocol": "usd_protocols",
+    "what is a protocol": "usd_protocols",
+    "what_is_protocol": "usd_protocols",
+    "what is protocol": "usd_protocols",
+    "what protocol": "usd_protocols",
+    "clinical_protocol": "usd_protocols",
+    "clinical protocol": "usd_protocols",
+    "digital_protocol": "usd_protocols",
+    "digital protocol": "usd_protocols",
+    "usd_protocol": "usd_protocols",
+    "usd protocol": "usd_protocols",
+    "usd_protocols": "usd_protocols",
+    "usd protocols": "usd_protocols",
+    "dental_protocol": "usd_protocols",
+    "dental protocol": "usd_protocols",
+    "પ્રોટોકોલ": "usd_protocols",
+    "પ્રોટોકોલ એટલે શું": "usd_protocols",
+    "કયા પ્રોટોકોલ": "usd_protocols",
+    "પ્રક્રિયા": "usd_protocols",
+    "प्रोटोकॉल": "usd_protocols",
+    "प्रोटोकॉल क्या है": "usd_protocols",
+    "कौन सा प्रोटोकॉल": "usd_protocols",
+    "क्लिनिकल प्रोटोकॉल": "usd_protocols",
     # Analogy / guidance routes
     "analogy": "craftsmanship_analogy_bank",
     "analogies": "craftsmanship_analogy_bank",
@@ -118,8 +208,11 @@ def get_faq(topic: str, language: str = "en") -> Dict[str, Any]:
     clean_target = target_topic.lower()
     
     # 1. Check if the query is explicitly guidance, profession, objection, analogy, navigation, or booking related.
-    # GuidanceRetriever covers: data/guidance/analogies.json, navigation.json, booking.json, profession.json
-    _GUIDANCE_PREFIXES = ("profession", "guidance", "objection", "reframe", "analogy", "navigation", "booking")
+    # GuidanceRetriever covers: data/guidance/*.json
+    _GUIDANCE_PREFIXES = (
+        "profession", "guidance", "objection", "reframe", "analogy",
+        "navigation", "booking", "pricing", "competitor", "symptom", "partner"
+    )
     _GUIDANCE_EXACT = {
         "profession_guidance", "objection_handling", "privacy_framing", "conversation_coaching",
         # Analogy routes
@@ -135,6 +228,9 @@ def get_faq(topic: str, language: str = "en") -> Dict[str, Any]:
         "emotional_reasons", "ai_and_human_expertise", "usd_protocols", "smile_confidence",
         "privacy_assurance", "pain_fear", "trust_uncertainty", "no_time",
         "price_objection", "hesitation_think_about_it",
+        # Newly extracted Phase 1 guidance entries
+        "pricing_policy", "pricing", "cost", "competitor_comparison", "symptom_handling",
+        "partner_dentist", "brand_facts", "about_ade_haresh_savani", "haresh_savani"
     }
     is_guidance_query = (
         any(clean_target.startswith(p) for p in _GUIDANCE_PREFIXES)
@@ -142,6 +238,9 @@ def get_faq(topic: str, language: str = "en") -> Dict[str, Any]:
         or "objection" in clean_target
         or "analogy" in clean_target
         or "craftsmanship" in clean_target
+        or "pricing" in clean_target
+        or "competitor" in clean_target
+        or "symptom" in clean_target
         or clean_target in _GUIDANCE_EXACT
     )
 

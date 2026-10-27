@@ -19,6 +19,15 @@ from backend.app.settings import settings
 
 logger = logging.getLogger(__name__)
 
+MANDATORY_ACCENT_INSTRUCTION = (
+    "### MANDATORY INDIAN FEMALE IDENTITY & VOCAL ACCENT POLICY (ABSOLUTE TOP PRIORITY)\n"
+    "- IDENTITY: You are Kiara, an elite Indian woman / female consultant for Ultimate Smile Design.\n"
+    "- INDIAN FEMALE ACCENT & CADENCE: When speaking English, you MUST speak in an authentic, natural, warm Indian-English female accent with a refined Indian concierge cadence.\n"
+    "- PHONETICS & PRONUNCIATION: Use clear, natural Indian English phonetics with soft dental articulation (clear, gentle 't' and 'd' sounds, natural syllable rhythm, no exaggerated Western sales inflection).\n"
+    "- STRICT FORBIDDEN ACCENTS: NEVER speak in an American, British, Australian, or Western accent. Do not use Western vocal fry, American rhotic drawls, or American conversational slang (avoid 'Awesome', 'Gotcha', 'You bet', 'No worries').\n"
+    "- FEMININE GRAMMAR: Maintain Kiara's female identity on every turn in Hindi (-ती हूँ, -रही हूँ, आपकी कंसल्टेंट) and Gujarati (-ઈ, -મને સમજાયું, તમારી કન્સલ્ટન્ટ).\n"
+)
+
 MANDATORY_TRANSCRIPTION_INSTRUCTION = (
     "TRANSCRIPTION POLICY — TRANSCRIPTION ONLY. "
     "When Hindi speech is clearly recognized, transcribe it in Devanagari where practical. "
@@ -228,7 +237,7 @@ class GeminiLiveStreamClient:
         self.voice_name = (
             voice_name 
             or getattr(settings, "GEMINI_LIVE_VOICE", None) 
-            or os.environ.get("GEMINI_LIVE_VOICE", "Erinome")
+            or os.environ.get("GEMINI_LIVE_VOICE", "Aoede")
         )
 
         # Build system instruction incorporating conversational context
@@ -276,6 +285,7 @@ class GeminiLiveStreamClient:
 
         if system_instruction is not None:
             self.system_instruction = (
+                f"{MANDATORY_ACCENT_INSTRUCTION}\n\n"
                 f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n"
                 f"{TURN_LANGUAGE_ROUTER}\n\n"
                 f"{intent_directive}"
@@ -286,6 +296,7 @@ class GeminiLiveStreamClient:
             base_prompt = build_system_prompt(self.opening_intent or "inbound")
 
             self.system_instruction = (
+                f"{MANDATORY_ACCENT_INSTRUCTION}\n\n"
                 f"{MANDATORY_TRANSCRIPTION_INSTRUCTION}\n\n"
                 f"{TURN_LANGUAGE_ROUTER}\n\n"
                 f"{intent_directive}"
@@ -293,27 +304,8 @@ class GeminiLiveStreamClient:
                 f"{base_prompt}\n\n"
                 "---\n\n"
                 "## CURRENT SESSION (LIVE VOICE CALL)\n"
-                "Speak warmly, naturally, and concisely. "
-                "Follow the style, business, tool, and safety rules from the loaded prompt files.\n\n"
-                f"{name_directive}"
-                "### FINAL FEMININE GRAMMAR REMINDER (STRICT ZERO TOLERANCE)\n"
-                "You are Kiara, a WOMAN (स्त्रीलिंग / સ્ત્રીલિંગ). NEVER mirror caller's masculine grammar!\n"
-                "On EVERY turn in Hindi and Gujarati, you MUST speak with feminine grammatical inflections:\n"
-                "- Hindi: Always use '-ती हूँ', '-रही हूँ', '-ऊँगी', '-सकती हूँ', 'आपकी कंसल्टेंट' (NEVER '-ता हूँ', '-करूँगा', '-रहा हूँ', '-सकता हूँ').\n"
-                "- Gujarati: Always use '-ઈ', 'તમારી કન્સલ્ટન્ટ'. For acknowledging the caller, ALWAYS say 'મને સમજાયું' or 'ચોક્કસ' or 'હું સમજી ગઈ' (NEVER use masculine '-યો' verb endings or 'તમારો કન્સલ્ટન્ટ').\n\n"
-                "### FINAL GRATITUDE & CLOSING REMINDER\n"
-                "When the caller expresses gratitude or wraps up (e.g. 'Thank you', 'તમારો આભાર', 'ધન્યવાદ'):\n"
-                "- English: \"You're most welcome, {name}! Have a wonderful day.\"\n"
-                "- Gujarati: \"તમારો ખૂબ ખૂબ આભાર, {name} સર! તમારો દિવસ શુભ રહે.\" (NEVER use Hindi!).\n"
-                "- Hindi: \"आपका सधन्यवाद, {name} जी! आपका दिन शुभ हो।\"\n"
-                "NEVER say \"हमें आपकी सहायता करके खुशी हुई\" or \"अगर आपके कोई और सवाल हों तो बेझिझक\". Let the turn close cleanly and gracefully.\n\n"
-                "### FINAL PER-TURN SPOKEN LANGUAGE REMINDER\n"
-                "Before every response, determine the caller's spoken language from the complete latest caller turn. "
-                "Respond in that language. A clear current-turn language overrides the previous conversation language. "
-                "CRITICAL: If the caller changes language (e.g. Gujarati to Hindi/English, Hindi to Gujarati/English, or English to Hindi/Gujarati), YOU MUST SWITCH IMMEDIATELY. Never remain stuck in the previous conversational language. "
-                "Do not switch languages based only on script or isolated acknowledgement words.\n\n"
-                "### STRICT NO MEDICAL DISCLAIMERS REMINDER\n"
-                "CRITICAL: NEVER append automatic medical, legal, or informational disclaimers (e.g., 'not a medical diagnosis', 'advice is for informational purposes only', 'અમારી સલાહ મેડિકલ સલાહ કે નિદાન નથી', 'हमारी सलाह मेडिकल सलाह नहीं है') at the end of answers. Keep all responses natural, clean, and conversational."
+                "Speak warmly, naturally, and concisely in 2-3 spoken sentences. "
+                "Follow the style, persona, tool, and safety rules from the loaded prompt files."
             )
 
         # Input queues and state flags
@@ -343,23 +335,6 @@ class GeminiLiveStreamClient:
 
     def _build_tool_declarations(self) -> genai_types.Tool:
         """Assembles native tool schemas matching project enterprise tools."""
-        capture_lead_tool = genai_types.FunctionDeclaration(
-            name="capture_lead",
-            description="DO NOT USE THIS FOR BOOKING APPOINTMENTS. ONLY use this if a caller spontaneously insists on a callback. NEVER ask the caller for their name or phone number proactively.",
-            parameters=genai_types.Schema(
-                type=genai_types.Type.OBJECT,
-                properties={
-                    "name": genai_types.Schema(type=genai_types.Type.STRING, description="Caller's full name"),
-                    "phone": genai_types.Schema(type=genai_types.Type.STRING, description="Caller's phone number"),
-                    "city": genai_types.Schema(type=genai_types.Type.STRING, description="City where caller wants dental services"),
-                    "intent": genai_types.Schema(type=genai_types.Type.STRING, description="Intent: consultation, find_dentist, warranty_verification, faq, other"),
-                    "notes": genai_types.Schema(type=genai_types.Type.STRING, description="Any extra conversation notes"),
-                    "preferred_language": genai_types.Schema(type=genai_types.Type.STRING, description="Caller language: en, hi, gu"),
-                },
-                required=["name", "phone", "city", "intent"],
-            ),
-        )
-
         check_city_tool = genai_types.FunctionDeclaration(
             name="check_city_coverage",
             description=(
@@ -375,6 +350,10 @@ class GeminiLiveStreamClient:
                     "city": genai_types.Schema(
                         type=genai_types.Type.STRING,
                         description="City, town, or state name to check coverage for (e.g. 'Gujarat', 'Surat', 'Amreli', 'Maharashtra')"
+                    ),
+                    "pincode": genai_types.Schema(
+                        type=genai_types.Type.STRING,
+                        description="Optional. 6-digit area PIN code if provided by caller (e.g. '395006', '380015', '313003')"
                     ),
                     "exclude_cities": genai_types.Schema(
                         type=genai_types.Type.ARRAY,
@@ -421,19 +400,6 @@ class GeminiLiveStreamClient:
                     ),
                 },
                 required=["topic", "language"],
-            ),
-        )
-
-        handoff_tool = genai_types.FunctionDeclaration(
-            name="human_handoff",
-            description="DO NOT USE THIS FOR BOOKING APPOINTMENTS. Do not proactively offer to share details with the team.",
-            parameters=genai_types.Schema(
-                type=genai_types.Type.OBJECT,
-                properties={
-                    "reason": genai_types.Schema(type=genai_types.Type.STRING, description="Reason for escalation"),
-                    "phone_number": genai_types.Schema(type=genai_types.Type.STRING, description="Caller phone number"),
-                },
-                required=["reason"],
             ),
         )
 
@@ -515,7 +481,7 @@ class GeminiLiveStreamClient:
                 "Fetch nearest authorized smile designers for the caller. "
                 "Call when caller wants to book or asks about available dentists. "
                 "Use page=2 if caller asks for more options. "
-                "The tool result contains strict presentation instructions — follow them exactly."
+                "The tool result provides verified doctor names and contextual presentation rules."
             ),
             parameters=genai_types.Schema(
                 type=genai_types.Type.OBJECT,
@@ -673,7 +639,8 @@ class GeminiLiveStreamClient:
                             parts=[genai_types.Part.from_text(
                                 text=(
                                     "[SESSION ANCHOR] This is a live voice call. "
-                                    "You are Kiara, an elite female consultant for Ultimate Smile Design. "
+                                    "You are Kiara, an elite Indian female consultant for Ultimate Smile Design. "
+                                    "When speaking English, you MUST speak in an authentic, natural, warm Indian-English female accent with refined Indian concierge cadence (never American or British accent). "
                                     "Strictly maintain your female identity and feminine grammatical endings (-ती हूँ in Hindi, -ઈ in Gujarati) on every turn. "
                                     "Do not infer the caller's language from name, city, form data or metadata. "
                                     "Listen to the caller's spoken audio. "
@@ -686,16 +653,13 @@ class GeminiLiveStreamClient:
                         ),
                         genai_types.Content(
                             parts=[genai_types.Part.from_text(
-                                text="Understood. I am Kiara, an elite female consultant, and I will strictly use feminine grammatical forms. I will listen to the caller's spoken audio and match the language of their current sentence. If the caller switches between English, Hindi, or Gujarati, I will switch my response language immediately."
+                                text="Understood. I am Kiara, an elite Indian female consultant. I will strictly speak with an authentic, refined Indian-English female accent (never American or Western) and use feminine grammatical forms in Hindi and Gujarati. I will listen to the caller's spoken audio and match the language of their current sentence. If the caller switches between English, Hindi, or Gujarati, I will switch my response language immediately."
                             )],
                             role="model",
                         ),
                     ]
 
-                    # Solution B: City is intentionally OMITTED from this context message.
-                    # The city is still available server-side in self.caller_context for tool
-                    # calls (book_consultation, check_city_coverage, check_dentist), but it
-                    # is NOT sent to Gemini here so it cannot bias Gemini's language choice.
+                    user_parts: list[genai_types.Part] = []
                     if self.caller_context:
                         name = self.caller_context.get("name", "")
                         phone = self.caller_context.get("phone", "")
@@ -726,18 +690,16 @@ class GeminiLiveStreamClient:
                             f"{smile_analysis_block}"
                             "</caller_context>"
                         )
-                        turns.append(
-                            genai_types.Content(
-                                parts=[genai_types.Part.from_text(text=context_msg)],
-                                role="user",
-                            )
-                        )
+                        user_parts.append(genai_types.Part.from_text(text=context_msg))
 
                     initial_prompt = getattr(self, "initial_prompt", None)
                     if initial_prompt:
+                        user_parts.append(genai_types.Part.from_text(text=initial_prompt))
+
+                    if user_parts:
                         turns.append(
                             genai_types.Content(
-                                parts=[genai_types.Part.from_text(text=initial_prompt)],
+                                parts=user_parts,
                                 role="user",
                             )
                         )

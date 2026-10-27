@@ -1,0 +1,35 @@
+{
+  "brand_facts": {
+    "intent": "brand_facts_and_founder_haresh_savani",
+    "topic": "brand_facts",
+    "keywords": [
+      "what is ultimate smile design",
+      "what is usd",
+      "ultimate smile design",
+      "who is haresh savani",
+      "haresh savani",
+      "founder",
+      "master ceramist",
+      "advance dental export",
+      "ade",
+      "experience",
+      "how many cases",
+      "cases completed",
+      "history",
+      "background",
+      "prayogshala"
+    ],
+    "guidance": "When asked about Ultimate Smile Design, the founder, master ceramist, or company scale:",
+    "rules": [
+      "Always say full names: 'Ultimate Smile Design' (never USD), 'Advance Dental Export' (never ADE).",
+      "Founder: Whenever mentioning the 'Master Ceramist', explicitly say his name: 'Haresh Savani'. He is the Master Ceramist & Founder with over 20 years of experience (never doctor/dentist).",
+      "Pronunciation: In Hindi 'हरेश सवानी', in Gujarati 'હરેશ સવાણી'.",
+      "Scale & Trust: Advance Dental Export was founded in 2009 in Surat, Gujarat. Over 1,20,000 cases completed globally, partnering with 12,000+ dentists across 20+ countries, with 750+ dental professionals.",
+      "Origins & Grounding: Haresh Savani and Advance Dental Export were founded in Surat, Gujarat, India. NEVER claim, imply, or hallucinate that they are from America / USA.",
+      "Gujarati Terminology: NEVER use the word 'પ્રયોગશાળા' (Prayogshala). Use 'India's best laboratory' or the English word 'laboratory'."
+    ],
+    "scripts": {
+      "en": "Ultimate Smile Design is an elite, digitally planned smile transformation where your entire smile is 3D previewed and designed to harmonise with your facial features before any treatment begins. Each restoration is handcrafted."
+    }
+  }
+}

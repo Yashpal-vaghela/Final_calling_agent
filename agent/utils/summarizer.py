@@ -6,7 +6,6 @@ sentiment, booking outcome, and actionable follow-ups from live conversation tur
 
 import json
 import logging
-import os
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from google import genai
@@ -16,7 +15,6 @@ from backend.app.settings import settings
 
 logger = logging.getLogger(__name__)
 
-CALLS_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "data", "calls.json")
 
 
 class CallSummarySchema(BaseModel):
@@ -157,55 +155,32 @@ Instructions:
 
 def save_call_record(
     call_id: str,
-    summary: Optional[Dict[str, Any]],
+    summary: Optional[Dict[str, Any]] = None,
     transcript: Optional[List[Dict[str, Any]]] = None,
     include_transcript: bool = False,
     lead_id: Optional[str] = None,
-    booking_lead_id: Optional[str] = None
+    booking_lead_id: Optional[str] = None,
+    timestamps: Optional[Dict[str, Any]] = None,
+    attempt_id: Optional[str] = None,
+    user_info: Optional[Dict[str, Any]] = None,
 ) -> None:
-    """
-    Helper to persist call summary and metadata to data/calls.json.
-    Safely ignores IO errors so background logging never impacts runtime.
-    """
-    if not call_id:
-        return
+    """Save conversation fields only. Provider lifecycle fields cannot be passed here."""
+    from copy import deepcopy
+    from backend.app.services.call_record_service import get_call_store
+    summary = deepcopy(summary)
+    if summary:
+        if lead_id:
+            summary.setdefault("lead_id", lead_id)
+        if booking_lead_id:
+            summary.setdefault("booking_lead_id", booking_lead_id)
+    get_call_store().save_summary(
+        call_id, attempt_id=attempt_id, summary=summary, transcript=transcript,
+        include_transcript=include_transcript, lead_id=lead_id,
+        booking_lead_id=booking_lead_id, timestamps=timestamps, user_info=user_info,
+    )
 
-    try:
-        data = {}
-        if os.path.exists(CALLS_FILE):
-            try:
-                with open(CALLS_FILE, "r", encoding="utf-8") as f:
-                    content = f.read().strip()
-                    if content:
-                        data = json.loads(content)
-            except Exception:
-                data = {}
 
-        resolved_lead_id = lead_id or (summary.get("lead_id") if summary else None)
-        resolved_booking_id = booking_lead_id or (summary.get("booking_lead_id") if summary else None)
-
-        if summary and isinstance(summary, dict):
-            if resolved_lead_id and "lead_id" not in summary:
-                summary["lead_id"] = resolved_lead_id
-            if resolved_booking_id and "booking_lead_id" not in summary:
-                summary["booking_lead_id"] = resolved_booking_id
-
-        record: Dict[str, Any] = {
-            "call_id": call_id,
-            "lead_id": resolved_lead_id,
-            "booking_lead_id": resolved_booking_id,
-            "summary": summary,
-            "transcript_turn_count": len(transcript) if transcript else 0
-        }
-        if include_transcript and transcript:
-            record["transcript"] = transcript
-
-        data[call_id] = record
-
-        os.makedirs(os.path.dirname(CALLS_FILE), exist_ok=True)
-        with open(CALLS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-            
-        logger.info(f"[Summarizer] Saved call record for {call_id} to data/calls.json")
-    except Exception as e:
-        logger.warning(f"[Summarizer] Could not write call record to disk: {e}")
+def find_call_record(identifier: str) -> Optional[Dict[str, Any]]:
+    """Look up new or legacy records without manufacturing absent call statuses."""
+    from backend.app.services.call_record_service import get_call_store
+    return get_call_store().find_record(identifier)

@@ -167,26 +167,35 @@ def check_dentist(doctor_name: str, city: str = "") -> Dict[str, Any]:
                 "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
             }
 
-    # 3. Not authorized in any city
+    # 3. Not in Dentist API directory (Not associated with USD)
     avail_dentists = city_dentists or auth_dentists.get(city_clean, [])
     top_doc = avail_dentists[0] if avail_dentists else None
     target_city = matched_city or city_clean
+    clean_display_name = doc_clean if doc_clean.lower().startswith("dr.") else f"Dr. {doc_clean}"
+
     if top_doc:
         msg = (
-            f"{doc_clean} is not an authorized smile designer. "
-            f"Tell the caller: '{doc_clean} is not one of our authorized smile designers. "
-            f"We have {top_doc} in {target_city}. "
-            f"Shall I book your appointment with {top_doc}?'"
+            f"{clean_display_name} is not associated with Ultimate Smile Design. "
+            f"Our bespoke smile transformations are exclusively provided through our certified authorized smile designers. "
+            f"Tell the caller: '{clean_display_name} is not associated with Ultimate Smile Design. "
+            f"In {target_city}, our authorized smile designer is {top_doc}. "
+            f"Shall I arrange your consultation with {top_doc}?'"
         )
     else:
+        from backend.app.services.city_service import get_nearest_covered_city
+        nearest_center = get_nearest_covered_city(target_city)
+        nearest_docs = auth_dentists.get(nearest_center, [])
+        doc_phrase = f"{nearest_docs[0]}" if nearest_docs else "our authorized smile designer"
         msg = (
-            f"{doc_clean} is not an authorized smile designer. "
-            f"Tell the caller: '{doc_clean} is not one of our authorized smile designers. "
-            f"Would you like me to check our nearest authorized smile designer for you?'"
+            f"{clean_display_name} is not associated with Ultimate Smile Design. "
+            f"Tell the caller: '{clean_display_name} is not associated with Ultimate Smile Design. "
+            f"Currently, our nearest authorized smile designer is in {nearest_center} with {doc_phrase}. "
+            f"Shall I arrange your consultation there?'"
         )
 
     return {
         "is_authorized": False,
+        "is_associated": False,
         "doctor_name": doc_clean,
         "city": target_city,
         "suggested_doctor": top_doc,

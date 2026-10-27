@@ -40,6 +40,10 @@ ENABLE_LOCAL_VAD = False
 # while preserving real caller barge-in during AI speech turns.
 ENABLE_NOISE_GATE = os.getenv("ENABLE_NOISE_GATE", "true").lower() in ("1", "true", "yes")
 
+def _get_inbound_greeting_cache() -> Optional[bytes]:
+    """Compatibility wrapper - dynamic greeting mode active (no pre-recorded audio)."""
+    return None
+
 
 def _safe_print(msg: str) -> None:
     """Print message safely on platforms with restricted terminal encodings (e.g. Windows CP1252)."""
@@ -203,9 +207,10 @@ class VoicePipelineOrchestrator:
         self.gemini_live_client = None
         self.tts_provider_name = "Gemini Live"
         self.mulaw_frame_size = 160
-        self.prebuffer_threshold = int(os.getenv("PREBUFFER_THRESHOLD_BYTES", "2400"))  # 300ms jitter buffer (absorbs WAN jitter without perceptible delay)
+        self.prebuffer_threshold = int(os.getenv("PREBUFFER_THRESHOLD_BYTES", "640"))  # 80ms jitter buffer (absorbs WAN jitter with minimal delay)
         self.output_buffer = bytearray()
         self._initial_greeting_complete = False
+        self._has_instant_greeting = False
         self._timings = {}
         self._send_audio_task: Optional[asyncio.Task] = None
         self._outbound_chunk_counter: int = 1
@@ -360,12 +365,13 @@ class VoicePipelineOrchestrator:
         CHUNK_MULTIPLIER = 2 # 800 bytes (100ms) - matches Smartflo native 100ms packet cadence
         target_chunk_size = getattr(self, "mulaw_frame_size", 160) * CHUNK_MULTIPLIER
         FRAME_DURATION = 0.02 * CHUNK_MULTIPLIER  # 100ms = 0.10s
-        recovery_threshold = target_chunk_size  # 200ms hysteresis recovery (1600 bytes)
+        recovery_threshold = int(os.getenv("RECOVERY_THRESHOLD_BYTES", "1600"))  # 200ms hysteresis recovery (1600 bytes)
         
         try:
             next_send_at = time.monotonic()
             starved_time = None
             is_starved = False
+            is_timeout = False
 
             while self._is_running and not self._stopped:
                 now = time.monotonic()
@@ -431,6 +437,8 @@ class VoicePipelineOrchestrator:
                     # Extended playout starvation timeout from 2.0s to 4.0s
                     is_timeout = starved_time is not None and (now - starved_time) > 4.0
 
+                    # In dynamic greeting mode, turn completion is driven by Gemini's explicit signal or starvation timeout
+
                     if is_turn_complete or is_timeout:
                         if len(self.output_buffer) > 0:
                             trailing = bytes(self.output_buffer)
@@ -469,8 +477,9 @@ class VoicePipelineOrchestrator:
             
             # When buffer is fully drained and assistant is done speaking
             if len(self.output_buffer) == 0 and self._is_running and not self._stopped:
-                if not getattr(self, "_initial_greeting_complete", True) and getattr(self, "_assistant_turn_complete", False):
+                if not getattr(self, "_initial_greeting_complete", True) and (getattr(self, "_assistant_turn_complete", False) or is_timeout):
                     self._initial_greeting_complete = True
+                    self._assistant_turn_complete = True
                     self._timings['greeting_complete'] = time.monotonic()
                     
                     t = self._timings
@@ -534,7 +543,7 @@ class VoicePipelineOrchestrator:
             
             # Kick off playback task once jitter buffer threshold is satisfied or if turn is completed with audio pending
             if self._send_audio_task is None or self._send_audio_task.done():
-                if len(self.output_buffer) >= getattr(self, "prebuffer_threshold", 2400) or getattr(self, "_assistant_turn_complete", False):
+                if len(self.output_buffer) >= getattr(self, "prebuffer_threshold", 640) or getattr(self, "_assistant_turn_complete", False):
                     self._send_audio_task = asyncio.create_task(self._send_buffered_live_audio())
         except Exception as e:
             print(f"[Orchestrator Error] Error sending live audio to WebSocket: {e}")
@@ -548,7 +557,7 @@ class VoicePipelineOrchestrator:
             return
 
         print("[Gemini Interruption] Server interruption confirmed; clearing queued Smartflo audio")
-        if getattr(self, "_send_audio_task", None) and not self._send_audio_task.done():
+        if self._send_audio_task is not None and not self._send_audio_task.done():
             self._send_audio_task.cancel()
         self.output_buffer.clear()
         self._outbound_resample_state = None
@@ -708,9 +717,18 @@ class VoicePipelineOrchestrator:
             cache_key = build_state_key(city_raw) if is_state else build_city_key(city_raw)
             ttl = TTL_STATE if is_state else TTL_CITY
 
-            # Skip cache if exclude_cities is specified (personalized result)
+            # Resolve caller pincode if city matches caller city or pincode was supplied
+            pin_cand = (kwargs.get("pincode") or "").strip()
+            if not pin_cand:
+                caller_city = (self.caller_context.get("city") or getattr(self, "lead_city", "") or "").strip()
+                if not city_raw or (caller_city and city_raw.lower() == caller_city.lower()):
+                    pin_cand = (self.caller_context.get("pincode") or getattr(self, "lead_pincode", "") or "").strip()
+            if pin_cand:
+                kwargs["pincode"] = pin_cand
+
+            # Skip cache if exclude_cities is specified or specific pincode proximity is requested
             exclude_cities = kwargs.get("exclude_cities") or []
-            if not exclude_cities:
+            if not exclude_cities and not pin_cand:
                 cached = await cache_get(cache_key)
                 if cached:
                     _safe_print(f"[DATA SOURCE: REDIS_L2] check_city_coverage {repeat_tag} city='{city_raw}'")
@@ -721,7 +739,7 @@ class VoicePipelineOrchestrator:
                             self.session.record_suggested_city(nearest)
                     return cached
 
-            # Cache miss or personalized exclusion query
+            # Cache miss or personalized exclusion/pincode query
             if hasattr(self, "session") and self.session:
                 for ec in exclude_cities:
                     self.session.record_rejected_city(ec)
@@ -729,16 +747,16 @@ class VoicePipelineOrchestrator:
                 kwargs["exclude_cities"] = merged_excludes
 
             res = check_city_coverage(**kwargs)
-            _safe_print(f"[DATA SOURCE: LOCAL_RAM] check_city_coverage {repeat_tag} city='{city_raw}' covered={res.get('covered')}")
-            logger.info(f"[DATA SOURCE: LOCAL_RAM] check_city_coverage {repeat_tag} city='{city_raw}' covered={res.get('covered')}")
+            _safe_print(f"[DATA SOURCE: LOCAL_RAM] check_city_coverage {repeat_tag} city='{city_raw}' pin='{pin_cand}' covered={res.get('covered')}")
+            logger.info(f"[DATA SOURCE: LOCAL_RAM] check_city_coverage {repeat_tag} city='{city_raw}' pin='{pin_cand}' covered={res.get('covered')}")
             if hasattr(self, "session") and self.session:
                 if not res.get("is_state"):
                     nearest = res.get("nearest_city") or res.get("city")
                     if nearest:
                         self.session.record_suggested_city(nearest)
 
-            # Fire-and-forget write-behind to Redis for generic lookups
-            if not exclude_cities:
+            # Fire-and-forget write-behind to Redis for generic lookups (without pincode/exclusions)
+            if not exclude_cities and not pin_cand:
                 asyncio.create_task(cache_set(cache_key, res, ttl_seconds=ttl))
 
             return res
@@ -959,7 +977,7 @@ class VoicePipelineOrchestrator:
                     if hasattr(self, "session") and self.session and cached.get("status") == "success":
                         self.session.recommended_dentists = cached.get("dentists", [])
                         self.session.dentist_page = cached.get("page", 1)
-                        self.session.top_recommended_doctor = cached.get("top_recommended_doctor", "")
+                        self.session.top_recommended_doctor = cached.get("nearest_doctor") or cached.get("top_recommended_doctor", "")
                         covered_res_city = cached.get("nearest_covered_city") or cached.get("city")
                         if covered_res_city:
                             self.session.record_suggested_city(covered_res_city)
@@ -986,7 +1004,7 @@ class VoicePipelineOrchestrator:
             if hasattr(self, "session") and self.session and res.get("status") == "success":
                 self.session.recommended_dentists = res.get("dentists", [])
                 self.session.dentist_page = res.get("page", 1)
-                self.session.top_recommended_doctor = res.get("top_recommended_doctor", "")
+                self.session.top_recommended_doctor = res.get("nearest_doctor") or res.get("top_recommended_doctor", "")
                 covered_res_city = res.get("nearest_covered_city") or res.get("city")
                 if covered_res_city:
                     self.session.record_suggested_city(covered_res_city)
@@ -1016,12 +1034,28 @@ class VoicePipelineOrchestrator:
         subj = (self.lead_subject or "").strip()
         known_name = self.lead_name if (self.lead_name and self.lead_name.lower() != "there") else ""
 
+        from backend.app.services.city_service import is_city_covered, get_nearest_covered_city
         city_display = self.lead_city or "their city"
-        location_rule = (
-            f"CRITICAL LOCATION & PARTNER RULE: The caller's consultation will be arranged with our Authorized USD Smile Designer in {city_display}. "
-            f"If they ask where the meeting or consultation will take place, confidently confirm it will be with our Authorized Smile Designer in {city_display}. "
-            f"NEVER invent, guess, or suggest other cities (like Hyderabad, Delhi, or Mumbai) if the user explicitly selected {city_display}."
+        is_covered = is_city_covered(self.lead_city) if self.lead_city else True
+        nearest_center = self.caller_context.get("nearest_covered_city") or (
+            get_nearest_covered_city(self.lead_city) if (not is_covered and self.lead_city is not None) else city_display
         )
+
+        if is_covered:
+            location_rule = (
+                f"LOCATION & PARTNER RULE: The caller is located in {city_display}, which is an authorized covered center. "
+                f"Consultations take place with our Authorized Smile Designer in {city_display}."
+            )
+        else:
+            location_rule = (
+                f"CRITICAL UNCOVERED LOCATION RULE: The caller is located in {city_display}, where we do NOT currently have an authorized smile designer. "
+                f"Our nearest authorized center is in {nearest_center}. "
+                f"If the caller asks about availability in {city_display}, state: "
+                f"'Currently, we do not have an authorized smile designer in {city_display}, but our nearest one is in {nearest_center}. "
+                f"We have [Doctor 1] and [Doctor 2] there. Shall I arrange your consultation there?' "
+                f"NEVER claim we have an authorized dentist directly in {city_display}."
+            )
+
         crucial_instruction = (
             f"CRITICAL: You already know the caller's Name and City ({city_display}) from the form they just submitted. "
             "DO NOT ask them for their name or city. Acknowledge the details they provided naturally, "
@@ -1033,24 +1067,22 @@ class VoicePipelineOrchestrator:
             crucial_instruction = (
                 f"CRITICAL: You already know the caller's First Name, Last Name, City ({city_display}){doc_info} from the booking form they just submitted. "
                 f"DO NOT ask them for their name, city, or doctor. "
-                "STRICT RULE: The appointment is ALREADY booked. NEVER tell them to book an appointment, schedule a consultation, or fill out any booking form again! "
-                f"You MUST open by confirming the appointment{doc_info} in {city_display} and asking how you can help them today. {location_rule}"
+                "STRICT RULE: The appointment request is ALREADY registered. NEVER tell them to fill out any form again! "
+                f"Confirm the appointment{doc_info} and ask how you can help them today. {location_rule}"
             )
         elif self.opening_intent == "outbound_smile_preview":
             crucial_instruction = (
                 f"CRITICAL: You already know the caller's Name and City ({city_display}) because they just completed the AI Smile Preview online. "
                 f"DO NOT ask for their name or city again. "
-                "STRICT RULE: The user ALREADY completed the AI Smile Preview. NEVER tell them to try the AI Smile Preview, upload a photo, or fill out the preview form again! "
-                f"Answer their questions first using local knowledge and the <smile_preview_analysis> context before introducing a consultation. "
-                f"Offer a consultation naturally only when the caller shows genuine interest or readiness — do NOT push booking on the opening turn. {location_rule}"
+                "STRICT RULE: The user ALREADY completed the AI Smile Preview. NEVER tell them to try the AI Smile Preview or upload photos again! "
+                f"Answer their questions first using local knowledge and the <smile_preview_analysis> context. {location_rule}"
             )
         elif self.opening_intent == "outbound_contact_form":
             crucial_instruction = (
                 f"CRITICAL: You already know the caller's Name and City ({city_display}) from the contact form they just submitted. "
                 f"You also have their initial enquiry message: '{msg}' regarding '{subj}'. "
                 f"DO NOT ask them for their name or city again. "
-                "STRICT RULE: The user ALREADY submitted their enquiry via the contact form. NEVER tell them to fill out the contact form or submit an enquiry again! "
-                f"Directly address their message and provide expert consultation. If they want to book an appointment, use their initial enquiry message as the reason/message for the booking and verify it with them. {location_rule}"
+                f"Directly address their enquiry and provide expert guidance. {location_rule}"
             )
 
         if msg:
@@ -1061,23 +1093,23 @@ class VoicePipelineOrchestrator:
                 if not clean_first_name:
                     clean_first_name = "the customer"
                 doctor = self.caller_context.get("doctor", "your selected doctor")
-                greet_phrase = f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. I'm calling to confirm that we've received your appointment booking request with {doctor} in {city_display}. Your consultation has been scheduled, and our team will contact you shortly to confirm the details."
+                greet_phrase = f"Hi {clean_first_name}, this is Kiara from Ultimate Smile Design. I'm calling to confirm that we've received your appointment booking request with {doctor}. How can I assist you today?"
                 
                 initial_prompt = (
                     f"The outbound call has connected to {clean_first_name}. "
-                    f"Say exactly: '{greet_phrase}' Then answer the question from their message directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options) using our knowledge base, and let them respond naturally. "
+                    f"Say warmly: '{greet_phrase}' Then wait for their response. "
                     f"{crucial_instruction}"
                 )
             else:
                 enquiry_type = "consultation enquiry"
                 if known_name:
-                    greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}."
+                    greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}. How can I assist you with your smile today?"
                 else:
-                    greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}."
+                    greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your {enquiry_type}{subj_str}. How can I assist you with your smile today?"
                 
                 initial_prompt = (
                     f"The outbound call has connected to {known_name or 'the customer'}. "
-                    f"Say exactly: '{greet_phrase}' Then answer the question from their message directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options with an intuitive analogy) using our knowledge base, and let them respond naturally. "
+                    f"Say warmly: '{greet_phrase}' Then wait for their response. "
                     f"If the caller decides to book an appointment later in the call, use their initial message '{msg}' as the booking reason and verify it with them. "
                     f"{crucial_instruction}"
                 )
@@ -1088,13 +1120,13 @@ class VoicePipelineOrchestrator:
             else:
                 enquiry_type = "consultation enquiry"
             if known_name:
-                greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}."
+                greet_phrase = f"Hi {known_name}, this is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}. How can I assist you today?"
             else:
-                greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}."
+                greet_phrase = f"Hello! This is Kiara from Ultimate Smile Design following up on your enquiry regarding {subj}. How can I assist you today?"
             
             initial_prompt = (
                 f"The outbound call has connected to {known_name or 'the customer'}. "
-                f"Say exactly: '{greet_phrase}' Then address their topic directly in 2 to 3 elegant sentences without filler (or 3-4 sentences if comparing options with an intuitive analogy) based on our knowledge base, and let them respond naturally. "
+                f"Say warmly: '{greet_phrase}' Then wait for their response. "
                 f"{crucial_instruction}"
             )
             return initial_prompt
@@ -1108,8 +1140,7 @@ class VoicePipelineOrchestrator:
             else:
                 initial_prompt = (
                     f"The call has just connected. "
-                    f"Say exactly: '{self.greeting}' Then wait for their reply. "
-                    "You are fluent in Gujarati, Hindi, and English; after greeting, seamlessly converse in whichever language the caller uses."
+                    f"Say exactly: '{self.greeting}' Then wait for their reply."
                 )
             return initial_prompt
 
@@ -1195,14 +1226,12 @@ class VoicePipelineOrchestrator:
                             f"Recent conversation context:\n{history_text}\n\n"
                             f"[INSTRUCTION] Retain this background context silently. Do NOT speak. Do NOT generate any output. Wait silently for the caller's next spoken audio turn."
                         )
-                        fallback_turn_complete = False
-
                 self.gemini_live_client = GeminiLiveStreamClient(
                     call_id=self.call_id,
                     preferred_language="multi",
                     initial_greeting=None if is_reconnect else self.greeting,
                     initial_prompt=fallback_prompt if (is_reconnect and not resumption_handle) else (None if is_reconnect else self._build_initial_prompt()),
-                    turn_complete_on_start=fallback_turn_complete,
+                    turn_complete_on_start=fallback_turn_complete if is_reconnect else True,
                     tool_mapping=self._build_live_tool_mapping(),
                     caller_context=self.caller_context,
                     opening_intent=self.opening_intent,
@@ -1276,6 +1305,7 @@ class VoicePipelineOrchestrator:
                         pass
                 break
 
+
     async def start(self) -> None:
         """Starts the voice pipeline connections and initiates the opening greeting."""
         if 'call_start' not in getattr(self, '_timings', {}):
@@ -1290,6 +1320,9 @@ class VoicePipelineOrchestrator:
         print(f"[Orchestrator] Starting voice pipeline for CallSid: {self.call_id}, StreamSid: {self.stream_sid}")
         
         self.session.add_transcript(self.greeting, role="assistant")
+
+        # Standard dynamic greeting mode: Gemini Live synthesizes greeting on call start
+        self._has_instant_greeting = False
         self.session.transition_state("listening")
         
         self._manage_gemini_connection_task = asyncio.create_task(self._manage_gemini_connection())
@@ -1344,7 +1377,7 @@ class VoicePipelineOrchestrator:
                         
                         audio_float32 = np.frombuffer(chunk, dtype=np.int16).astype(np.float32) / 32768.0
                         try:
-                            speech_dict = self.vad_iterator(audio_float32, return_seconds=False)
+                            speech_dict = self.vad_iterator(audio_float32, return_seconds=False) if self.vad_iterator is not None else None
                             if speech_dict:
                                 if 'start' in speech_dict:
                                     print("🗣️ [VAD] Local speech start detected.")
@@ -1379,15 +1412,16 @@ class VoicePipelineOrchestrator:
         self._inbound_resample_state = None
         self._outbound_resample_state = None
         self._outbound_chunk_counter = 1
-        if getattr(self, "_silence_monitor_task", None) and not self._silence_monitor_task.done():
+        if self._silence_monitor_task is not None and not self._silence_monitor_task.done():
             self._silence_monitor_task.cancel()
-        if getattr(self, "_send_audio_task", None) and not self._send_audio_task.done():
+        if self._send_audio_task is not None and not self._send_audio_task.done():
             self._send_audio_task.cancel()
         print(f"[Orchestrator] Stopping voice pipeline for CallSid: {self.call_id}")
         
-        if getattr(self, "gemini_live_client", None):
+        gemini_client = getattr(self, "gemini_live_client", None)
+        if gemini_client is not None:
             try:
-                await self.gemini_live_client.finish()
+                await gemini_client.finish()
             except Exception as e:
                 print(f"[Orchestrator Error] Failed to cleanly finish Gemini Live Client: {e}")
                 

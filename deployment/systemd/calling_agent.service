@@ -1,0 +1,51 @@
+# ==============================================================================
+# Ultimate Smile Design - AI Calling Agent
+# Systemd Service Unit for aaPanel (Linux)
+#
+# Installation on aaPanel Server:
+#   1. Copy this file to: /etc/systemd/system/calling_agent.service
+#   2. Adjust User, WorkingDirectory, and PATH to match your aaPanel site root
+#   3. Enable & start service:
+#        sudo systemctl daemon-reload
+#        sudo systemctl enable calling_agent
+#        sudo systemctl start calling_agent
+#        sudo systemctl status calling_agent
+# ==============================================================================
+
+[Unit]
+Description=Ultimate Smile Design - AI Voice Calling Agent (FastAPI/Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+# In aaPanel, web apps typically run as 'www' or root
+User=www
+Group=www
+
+# Update this path to your aaPanel site root directory
+WorkingDirectory=/www/wwwroot/your-domain.com
+
+# Use virtual environment python and binaries
+Environment="PATH=/www/wwwroot/your-domain.com/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=-/www/wwwroot/your-domain.com/.env
+
+# Start command using Gunicorn with UvicornWorker
+ExecStart=/www/wwwroot/your-domain.com/venv/bin/gunicorn -c deployment/gunicorn.conf.py backend.app.main:app
+
+# Auto-restart policies for zero downtime
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# File descriptor limits for high concurrency WebSockets
+LimitNOFILE=65535
+
+# Logging to systemd journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=calling_agent
+
+[Install]
+WantedBy=multi-user.target

@@ -421,13 +421,13 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    statusMsg.textContent = "Success! Please expect an incoming call from our AI consultant shortly.";
+                if (response.ok && data.success) {
+                    statusMsg.textContent = "Smartflo accepted your call request. Please expect an incoming call.";
                     statusMsg.className = "success";
                     document.getElementById('smileForm').reset();
                     updateImagePreviews();
                 } else {
-                    statusMsg.textContent = data.detail || "An error occurred. Please try again.";
+                    statusMsg.textContent = data.detail || data.error || "An error occurred. Please try again.";
                     statusMsg.className = "error";
                 }
             } catch (err) {

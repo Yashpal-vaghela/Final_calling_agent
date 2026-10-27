@@ -37,6 +37,20 @@ dump.rdb
 Thumbs.db
 
 # Tests and test artifacts (kept locally, never staged or pushed)
-tests/
+tests/*
+!tests/test_smartflo_webhooks.py
+!tests/test_smartflo_delivery.py
+!tests/test_smartflo_integration.py
+!tests/test_summarizer.py
+!tests/test_zoho_service.py
+!tests/test_smile_preview_diff.py
+!tests/test_consecutive_booking_fix.py
 test_results_*.txt
 *.bak
+
+# Runtime provider evidence, personal data, and local lock/temp files
+data/smartflo_call_state.json
+data/smartflo_call_state.json.lock
+data/smartflo_call_state.json.*.tmp
+
+.test-tmp/

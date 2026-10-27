@@ -33,7 +33,8 @@ def _format_doctor_names(doctors: List[str]) -> str:
 
 def check_city_coverage(
     city: str,
-    exclude_cities: Optional[List[str]] = None
+    exclude_cities: Optional[List[str]] = None,
+    pincode: Optional[str] = None
 ) -> dict:
     """
     Check if Ultimate Smile Design covers a specific city or state, or find the nearest authorized city and dentists.
@@ -41,6 +42,7 @@ def check_city_coverage(
     Args:
         city (str): The name of the city or state to check.
         exclude_cities (list, optional): Cities rejected by the caller or to be excluded.
+        pincode (str, optional): The caller's 6-digit area PIN code if available.
         
     Returns:
         dict: A dictionary containing the coverage status, nearest covered city, and authorized doctor names.
@@ -138,25 +140,31 @@ def check_city_coverage(
 
     # If the city is covered and NOT in the exclusion list
     if matched_city and matched_city.lower() not in exclude_clean:
-        doc_res = get_nearest_dentists(city=matched_city, limit=3)
+        doc_res = get_nearest_dentists(city=matched_city, pincode=pincode or "", limit=3)
         doctors = doc_res.get("dentists", [])
         doctors_phrase = _format_doctor_names(doctors)
         top_doc = doc_res.get("top_recommended_doctor") or (doctors[0] if doctors else "")
 
         if len(doctors) == 1:
-            spoken_offer = f"We have {top_doc} in {matched_city}. Should I confirm your appointment with them as your nearest dentist?"
+            spoken_offer = f"We have {top_doc} in {matched_city}."
         elif len(doctors) > 1:
             doctor_clause = f", including {doctors_phrase}"
-            spoken_offer = f"We have authorized smile designers in {matched_city}{doctor_clause}. Should I confirm your appointment with your nearest dentist, {top_doc}?"
+            spoken_offer = f"We have authorized smile designers in {matched_city}{doctor_clause}."
         else:
-            spoken_offer = f"We have authorized smile designers in {matched_city}. Would you like me to arrange your consultation there?"
+            spoken_offer = f"We have authorized smile designers in {matched_city}."
+
+        result_msg = (
+            f"Coverage Confirmed. {spoken_offer} Tell the caller: '{spoken_offer}' "
+            f"STRICT RULE: Do NOT automatically push or ask to confirm an appointment unless the caller explicitly requested to book."
+        )
 
         return {
             "covered": True,
             "city": matched_city,
             "dentists": doctors,
+            "nearest_doctor": top_doc,
             "top_recommended_doctor": top_doc,
-            "result": f"Coverage Confirmed. {spoken_offer} Tell the caller: '{spoken_offer}'",
+            "result": result_msg,
             "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."
         }
     else:
@@ -169,38 +177,38 @@ def check_city_coverage(
         doctors_phrase = _format_doctor_names(doctors)
         top_doc = doc_res.get("top_recommended_doctor") or (doctors[0] if doctors else "")
 
-        if len(doctors) == 1:
-            doctor_clause = f" We have {top_doc} in {nearest_city}."
-            ask_clause = f" Should I confirm your appointment with them as your nearest dentist?"
-        elif len(doctors) > 1:
-            doctor_clause = f" We have {doctors_phrase} in {nearest_city}."
-            ask_clause = f" Should I confirm your appointment with your nearest dentist, {top_doc}?"
+        if len(doctors) >= 2:
+            two_docs = [d if d.startswith("Dr.") else f"Dr. {d}" for d in doctors[:2]]
+            doc_phrase_uncovered = f"{two_docs[0]} and {two_docs[1]}"
+        elif len(doctors) == 1:
+            single_doc = doctors[0] if doctors[0].startswith("Dr.") else f"Dr. {doctors[0]}"
+            doc_phrase_uncovered = single_doc
         else:
-            doctor_clause = ""
-            ask_clause = " Shall I book your appointment there?"
+            doc_phrase_uncovered = "our authorized smile designers"
 
         if exclude_clean:
             rejected_name = exclude_cities[0] if exclude_cities else "that city"
             speech_msg = (
                 f"Understood. If you prefer not to visit {rejected_name}, "
-                f"our next nearest authorized smile designer is in {nearest_city}.{doctor_clause}{ask_clause}"
+                f"our next nearest authorized smile designer is in {nearest_city}. We have {doc_phrase_uncovered} there. Shall I arrange your consultation there?"
             )
             result_msg = (
                 f"Understood that {rejected_name} is not preferred. "
-                f"The next nearest authorized smile designer is in {nearest_city}.{doctor_clause} "
+                f"The next nearest authorized smile designer is in {nearest_city}. We have {doc_phrase_uncovered} there. "
                 f"Tell the caller: '{speech_msg}' "
-                f"STRICT RULES: DO NOT mention any intermediate un-covered town (such as Bhavnagar). "
+                f"STRICT RULES: DO NOT mention any intermediate un-covered town. "
                 f"DO NOT say we do not have dentists there. Mention ONLY {nearest_city} and the doctor names. "
                 "DO NOT use the word 'clinic'. DO NOT say 'USD smile designer'. DO NOT mention km or distance numbers."
             )
         else:
             speech_msg = (
                 f"Currently, we do not have an authorized smile designer in {city_clean}, "
-                f"but our nearest one is in {nearest_city}.{doctor_clause}{ask_clause}"
+                f"but our nearest one is in {nearest_city}. We have {doc_phrase_uncovered} there. "
+                f"Shall I arrange your consultation there?"
             )
             result_msg = (
                 f"Currently, we do not have an authorized smile designer in {city_clean}. "
-                f"The nearest authorized smile designer is in {nearest_city}.{doctor_clause} "
+                f"The nearest authorized smile designer is in {nearest_city}. We have {doc_phrase_uncovered} there. "
                 f"Tell the caller: '{speech_msg}' "
                 f"STRICT RULES: DO NOT mention any other un-covered town. Mention ONLY {nearest_city} and the doctor names. "
                 "DO NOT use the word 'clinic'. DO NOT say 'USD smile designer'. DO NOT mention km or distance numbers."
@@ -212,6 +220,7 @@ def check_city_coverage(
             "nearest_city": nearest_city,
             "nearest_covered_city": nearest_city,
             "dentists": doctors,
+            "nearest_doctor": top_doc,
             "top_recommended_doctor": top_doc,
             "result": result_msg,
             "instruction": "Respond entirely in the language of the caller's CURRENT spoken turn. If the caller switched languages, respond in that new language immediately. Do not let the language of this tool result determine the response language."

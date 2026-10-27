@@ -71,17 +71,73 @@
   },
   "choosing_right_dentist": {
     "intent": "choosing_right_dentist",
-    "topic": "How to Choose the Right Smile Design Dentist",
+    "topic": "How to Choose the Right Smile Design Dentist & Doctor Selection Policy",
     "keywords": [
       "Accha dentist kaise chunein",
       "How to find best smile design dentist",
       "Kaunsa dentist smile design karta hai",
-      "Smile design ke liye kahan jaayein",
       "Best dentist for smile makeover",
-      "Dentist choose kaise karein"
+      "Dentist choose kaise karein",
+      "Which dentist is good",
+      "Which dentists are good",
+      "Doctor ranking",
+      "Why this doctor",
+      "Doctor experience",
+      "કયા ડેન્ટિસ્ટ સારા છે",
+      "તમે આ ડૉક્ટરનું નામ કેમ લીધું",
+      "રેન્કિંગ શું છે"
     ],
-    "facts": "The dentist plays the biggest role in smile makeover results. Look for a dentist with advanced cosmetic training and proven expertise, a before-and-after gallery showing real patient results, modern technology including digital smile design and 3D scanning, transparent pricing with a detailed written treatment plan, and honest patient reviews on trusted platforms.",
-    "details": "Questions to ask before beginning: what treatments are needed for the desired smile, how long will the full process take, what materials are used for veneers or crowns, are there any risks or side effects, how does the dentist handle after-care and adjustments. Choose a dentist who listens, explains every step clearly, and supports through the entire journey. Ultimate Smile Design has a network of authorised smile designers across India — visit ultimatesmiledesign.com to find the nearest authorised smile design clinic."
+    "facts": "All Ultimate Smile Design dentists are certified Authorized Smile Designers who follow the exact same digital planning and aesthetic protocols. We do not rank or grade our doctors against one another. When suggesting dentists, they are ordered purely by geographical proximity to your area for your convenience. You are completely welcome to book your consultation with any authorized doctor of your choice.",
+    "details": "Every authorized smile designer in our network is trained in our minimally invasive porcelain veneers and clear aligner workflows, backed by Advance Dental Export laboratory craftsmanship. Doctors are recommended based on proximity to the patient's PIN code. No doctor has a higher rank or rating; all adhere to identical clinical standards."
+  },
+  "dentist_experience_and_case_history": {
+    "intent": "dentist_experience_and_case_history",
+    "topic": "Dentist Experience and Completed Case Track Record",
+    "keywords": [
+      "doctor experience",
+      "dentist kitna experienced hai",
+      "kitne case kiye hain",
+      "number of cases handled",
+      "doctor track record",
+      "cases treated",
+      "how many cases",
+      "ડૉક્ટરનો અનુભવ કેટલો છે",
+      "કેટલા કેસ કર્યા છે",
+      "ડોક્ટર અનુભવી છે કે નહિ",
+      "ડૉક્ટર કેટલા અનુભવી છે"
+    ],
+    "facts": "Every authorized smile designer in our network is a certified smile designer trained in our digital aesthetic protocols. Furthermore, your case is crafted in direct partnership with our central laboratory, Advance Dental Export, which has completed over 1,20,000 smile design cases globally across 20 countries. During your consultation, the doctor performs a comprehensive clinical evaluation and 3D digital scan to plan your smile.",
+    "details": "Kiara must never invent arbitrary years of experience or case counts for an individual doctor. Reframe around certified clinical vetting, Advance Dental Export's 1,20,000+ global case pedigree, and the in-clinic 3D digital scan evaluation."
+  },
+  "usd_protocols": {
+    "intent": "usd_protocols",
+    "topic": "Ultimate Smile Design Clinical and Digital Protocols",
+    "keywords": [
+      "what is a protocol",
+      "what is protocol",
+      "which protocol",
+      "what protocol does your dentist follow",
+      "what are usd protocols",
+      "clinical protocol",
+      "digital protocol",
+      "protocols",
+      "what is the protocol",
+      "protocol kya hai",
+      "kon sa protocol",
+      "dentist kaun sa protocol follow karte hain",
+      "પ્રોટોકોલ એટલે શું",
+      "કયા પ્રોટોકોલ",
+      "તમારા ડેન્ટિસ્ટ કયો પ્રોટોકોલ ફોલો કરે છે",
+      "પ્રટોકોલ શું છે",
+      "પ્રોટોકોલ",
+      "પ્રક્રિયા શું છે",
+      "प्रोटोकॉल क्या है",
+      "प्रोटोकॉल",
+      "कौन सा प्रोटोकॉल",
+      "क्लिनिकल प्रोटोकॉल"
+    ],
+    "facts": "Ultimate Smile Design protocols follow three core standards: 1) Facial-driven 3D digital planning and preview before touching a tooth, 2) Minimally invasive techniques to preserve maximum natural tooth enamel, and 3) Restorations handcrafted by master ceramists at Advance Dental Export using biocompatible materials with documented authenticity.",
+    "details": "Kiara explains these three pillars conversationally and reassuringly. Never use complicated medical jargon. Reframe around digital precision, natural tooth preservation, and Advance Dental Export master lab craftsmanship."
   },
   "smile_design_cost_india": {
     "intent": "smile_design_cost_india",

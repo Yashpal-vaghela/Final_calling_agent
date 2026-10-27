@@ -177,7 +177,7 @@
       border: 1px solid rgba(212, 175, 55, 0.2);
     }
 
-    input, textarea {
+    input, textarea, select {
       background: var(--input-bg);
       border: 1px solid var(--input-border);
       border-radius: var(--radius-sm);
@@ -190,10 +190,26 @@
       width: 100%;
     }
 
-    input:focus, textarea:focus {
+    input:focus, textarea:focus, select:focus {
       border-color: var(--gold-primary);
       box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
       background: rgba(15, 20, 32, 0.95);
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23D4AF37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+    }
+
+    select option {
+      background: #0F1420;
+      color: #F8FAFC;
+      padding: 10px;
     }
 
     input::placeholder, textarea::placeholder {
@@ -376,6 +392,17 @@
             <div id="cityHint" style="font-size: 11.5px; margin-top: 4px; display: none;"></div>
           </div>
 
+          <div class="form-group full-width" id="dentistGroup">
+            <label for="doctor_name">
+              Preferred Smile Designer (Dentist)
+              <span class="optional-badge" style="color: var(--text-muted); font-size: 11px; font-weight: 400;">(Optional)</span>
+            </label>
+            <select id="doctor_name" name="doctor_name">
+              <option value="">Any available smile designer</option>
+            </select>
+            <div id="dentistHint" style="font-size: 11.5px; margin-top: 4px; display: none;"></div>
+          </div>
+
           <div class="form-group full-width">
             <label for="message">Enter your message</label>
             <textarea id="message" name="message" placeholder="e.g. Looking for a consultation..."></textarea>
@@ -422,6 +449,71 @@
     const pincodeInput = document.getElementById('pincode');
     const cityInput = document.getElementById('city');
     const cityHint = document.getElementById('cityHint');
+    const dentistSelect = document.getElementById('doctor_name');
+    const dentistHint = document.getElementById('dentistHint');
+
+    // Dynamic dentist suggestions based on city
+    let dentistLookupTimeout = null;
+    async function fetchDentistsForCity(cityName) {
+      if (!dentistSelect) return;
+      const cleanCity = (cityName || '').trim();
+      if (!cleanCity) {
+        dentistSelect.innerHTML = '<option value="">Any available smile designer</option>';
+        if (dentistHint) dentistHint.style.display = 'none';
+        return;
+      }
+
+      if (dentistHint) {
+        dentistHint.style.display = 'block';
+        dentistHint.style.color = '#ECC85B';
+        dentistHint.innerHTML = `⏳ Checking authorized smile designers in ${cleanCity}...`;
+      }
+
+      try {
+        const resp = await fetch(`/api/dentists-by-city/${encodeURIComponent(cleanCity)}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          dentistSelect.innerHTML = '';
+
+          if (data.dentists && data.dentists.length > 0) {
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = `Any available smile designer in ${data.city}`;
+            dentistSelect.appendChild(defaultOpt);
+
+            data.dentists.forEach(docName => {
+              const opt = document.createElement('option');
+              opt.value = docName;
+              opt.textContent = docName;
+              dentistSelect.appendChild(opt);
+            });
+
+            if (dentistHint) {
+              dentistHint.style.color = '#10B981';
+              dentistHint.innerHTML = `✨ Found ${data.dentists.length} authorized smile designer(s) in ${data.city}.`;
+            }
+          } else {
+            // ZERO DENTISTS FALLBACK - Never blocks the user from submitting
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            const altCenter = data.nearest_center ? ` (Nearest Center: ${data.nearest_center})` : '';
+            defaultOpt.textContent = `Any available smile designer${altCenter}`;
+            dentistSelect.appendChild(defaultOpt);
+
+            if (dentistHint) {
+              dentistHint.style.color = '#94A3B8';
+              dentistHint.innerHTML = `ℹ️ No direct clinic in ${data.city}. Our clinical coordinator will arrange your nearest center.`;
+            }
+          }
+          return;
+        }
+      } catch (err) {
+        console.warn('Dentist lookup error:', err);
+      }
+
+      dentistSelect.innerHTML = '<option value="">Any available smile designer</option>';
+      if (dentistHint) dentistHint.style.display = 'none';
+    }
 
     // Auto-fetch city from Postal API when PIN code is entered
     let pincodeDebounce = null;
@@ -446,6 +538,8 @@
               cityHint.style.color = '#10B981';
               cityHint.innerHTML = `📍 Auto-fetched from Postal API: <strong>${data.city}</strong> (you can also edit/select)`;
             }
+            // Fetch dentists immediately for the auto-fetched city
+            fetchDentistsForCity(data.city);
             return;
           }
         }
@@ -472,8 +566,22 @@
       }
     });
 
+    // Update dentist suggestions when user manually edits or selects a city
+    cityInput.addEventListener('input', () => {
+      clearTimeout(dentistLookupTimeout);
+      dentistLookupTimeout = setTimeout(() => {
+        fetchDentistsForCity(cityInput.value);
+      }, 250);
+    });
+
+    cityInput.addEventListener('change', () => {
+      fetchDentistsForCity(cityInput.value);
+    });
+
     if (pincodeInput.value && pincodeInput.value.replace(/\D/g, '').length === 6) {
       autoFetchCityFromPostalApi(pincodeInput.value.replace(/\D/g, ''));
+    } else if (cityInput.value && cityInput.value.trim()) {
+      fetchDentistsForCity(cityInput.value.trim());
     }
 
     form.addEventListener('submit', async (e) => {
@@ -486,6 +594,7 @@
       const city = document.getElementById('city').value.trim();
       const pincode = document.getElementById('pincode').value.trim();
       const message = document.getElementById('message').value.trim();
+      const doctor_name = dentistSelect ? (dentistSelect.value.trim() || null) : null;
 
       if (!pincode || !/^\d{6}$/.test(pincode)) {
         showStatus('error', 'Invalid Pincode', 'Please enter a valid 6-digit area pincode (e.g. 395007).');
@@ -513,8 +622,6 @@
         }
       } catch (err) {}
 
-
-
       // Set loading state
       submitBtn.disabled = true;
       btnSpinner.style.display = 'inline-block';
@@ -534,7 +641,8 @@
             phone: phone,
             city: city,
             pincode: pincode,
-            message: message
+            message: message,
+            doctor_name: doctor_name
           })
         });
 
@@ -543,10 +651,17 @@
         if (response.ok && result.success) {
           showStatus(
             'success',
-            'Outbound Call Triggered Successfully!',
-            `Smartflo is calling ${phone}. Kiara has been equipped with ${first_name} ${last_name}'s details and will conduct the booking seamlessly.`
+            'Call Request Accepted',
+            `The call request for ${phone} was accepted. Please expect an incoming call.`
           );
-          btnText.textContent = 'Call in Progress...';
+          btnText.textContent = 'Request Accepted';
+
+          // Re-enable button after 15 seconds cooldown for subsequent bookings
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            btnSpinner.style.display = 'none';
+            btnText.textContent = 'Book Another Consultation';
+          }, 15000);
         } else {
           showStatus(
             'error',

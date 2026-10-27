@@ -1,4 +1,3 @@
-import httpx
 import asyncio
 import logging
 from typing import Optional, Dict, Any
@@ -76,8 +75,7 @@ class SmartfloClient:
         if custom_params:
             payload.update(custom_params)
 
-        import json
-        print(f"[SmartfloClient Debug] EXACT JSON payload being sent: {json.dumps(payload)}")
+        logger.debug("Smartflo request fields: %s", sorted(payload))
 
         logger.info(f"[SmartfloClient] Triggering Click-to-Call for customer: {customer_number} via {url}")
 
@@ -85,9 +83,14 @@ class SmartfloClient:
             import requests
             res = requests.post(url, json=payload, headers=headers, timeout=15)
             try:
-                return res.json()
+                data = res.json()
+                if not isinstance(data, dict):
+                    return {"success": False, "error": "Smartflo returned a non-object response", "http_status_code": res.status_code}
+                if not 200 <= res.status_code < 300:
+                    return {**data, "success": False, "http_status_code": res.status_code}
+                return data
             except Exception:
-                return {"status_code": res.status_code, "text": res.text}
+                return {"success": False, "http_status_code": res.status_code, "error": "Smartflo returned an invalid JSON response"}
 
         try:
             data = await asyncio.to_thread(_do_request)

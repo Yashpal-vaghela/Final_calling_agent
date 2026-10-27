@@ -322,5 +322,1368 @@
       ]
     },
     "transcript_turn_count": 7
+  },
+  "CAGE6-T1-1791634673.788042": {
+    "call_id": "CAGE6-T1-1791634673.788042",
+    "summary": {
+      "summary": "Kalariya Keval from Surat inquired about smile design and treatment options for two broken teeth. Although an appointment was initially discussed, the caller ultimately decided to cancel it due to scheduling conflicts and hesitation regarding pricing and clinic trust.",
+      "key_concerns": [
+        "Two broken teeth treatment options (veneers, crowns, or implants)",
+        "Pricing (customized based on dentist experience and clinic location)",
+        "Trust and credibility of the clinic",
+        "Availability and scheduling conflicts"
+      ],
+      "booking_status": "declined",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Update CRM status to reflect appointment cancellation",
+        "Add a note regarding caller's pricing concerns and preference for local affordable options",
+        "Schedule a nurturing follow-up call in 2-3 weeks"
+      ]
+    },
+    "transcript_turn_count": 33
+  },
+  "CAGE6-T2-1791797314.149016": {
+    "call_id": "CAGE6-T2-1791797314.149016",
+    "summary": {
+      "summary": "Keval Kalariya inquired about dental treatment pricing and mentioned having a gap in his front tooth. Kiara provided pricing details, recommended veneers or clear aligners, and offered a virtual smile preview or consultation, but the caller ended the conversation without booking.",
+      "key_concerns": [
+        "Pricing inquiry",
+        "Gap in front tooth"
+      ],
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "English",
+      "next_actions": [
+        "Send WhatsApp follow-up with pricing details and link to the Virtual AI Smile Preview",
+        "Schedule a follow-up call in a few days to check if he wants to book a consultation in Surat"
+      ]
+    },
+    "transcript_turn_count": 7
+  },
+  "CAGE3-T9-1791800980.167373": {
+    "call_id": "CAGE3-T9-1791800980.167373",
+    "summary": {
+      "summary": "Kalariya keval answered the follow-up call regarding their smile consultation inquiry from Surat. However, the caller stated they were currently driving and requested a callback tomorrow at 5:00 PM.",
+      "key_concerns": [
+        "Smile consultation enquiry follow-up"
+      ],
+      "call_outcome": "callback_requested",
+      "callback_time": "tomorrow at 5:00 p.m.",
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "English",
+      "next_actions": [
+        "Schedule an automated reminder to call Kalariya keval tomorrow at 5:00 PM",
+        "Prepare smile consultation information for the upcoming callback"
+      ]
+    },
+    "transcript_turn_count": 3
+  },
+  "CAGE3-T6-1791860052.687261": {
+    "call_id": "CAGE3-T6-1791860052.687261",
+    "summary": {
+      "summary": "Keval Kalariya inquired about pricing and treatment recommendations for a gap in his teeth and a broken tooth. Kiara explained that pricing varies and recommended scheduling an in-clinic consultation for a personalized assessment, though no final appointment was booked during the call.",
+      "key_concerns": [
+        "Tooth gap",
+        "Broken tooth",
+        "Pricing inquiry",
+        "Treatment recommendations"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Keval via WhatsApp to check if he would like to schedule an in-clinic consultation",
+        "Have a clinic coordinator contact him to discuss general pricing guidelines and address specific concerns regarding his broken tooth and gap"
+      ]
+    },
+    "transcript_turn_count": 9
+  },
+  "H2-D5-1791865304.13760": {
+    "call_id": "H2-D5-1791865304.13760",
+    "summary": {
+      "summary": "Kalariya Keval called to inquire about smile design treatments for his broken and crooked teeth in Surat. After initial technical difficulties and questions regarding pricing, an appointment was successfully booked with Dr. Viren K. Savani in Surat, but the caller later requested to transfer the appointment to Ahmedabad and ultimately chose Dr. Janu Shah.",
+      "key_concerns": [
+        "Broken teeth",
+        "Crooked teeth",
+        "Pricing and cost of treatment",
+        "Clinic location change from Surat to Ahmedabad"
+      ],
+      "call_outcome": "appointment_booked",
+      "callback_time": null,
+      "booking_status": "booked",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Verify caller details for the appointment with Dr. Janu Shah in Ahmedabad",
+        "Send appointment confirmation SMS and WhatsApp message to the caller",
+        "Notify Dr. Janu Shah's clinic team regarding the new appointment"
+      ]
+    },
+    "transcript_turn_count": 39
+  },
+  "CAGE6-T11-1791873258.370427": {
+    "call_id": "CAGE6-T11-1791873258.370427",
+    "lead_id": "990028913649161136",
+    "booking_lead_id": "784154068183923727",
+    "summary": {
+      "summary": "Keval Kalariya inquired about Ultimate Smile Design services and pricing for uneven teeth. After discussing clear aligners, bespoke treatment, and various dentists in Surat, he agreed to book an appointment with Dr. Viren K. Savani.",
+      "key_concerns": [
+        "Uneven teeth",
+        "Cost of clear aligners and veneers",
+        "Meaning of bespoke",
+        "Choosing the right dentist in Surat"
+      ],
+      "call_outcome": "appointment_booked",
+      "callback_time": null,
+      "booking_status": "booked",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Verify details for Keval Kalariya's appointment with Dr. Viren K. Savani",
+        "Send appointment confirmation and clinic location details via WhatsApp",
+        "Pass along the caller's notes and questions to the treating dentist"
+      ],
+      "lead_id": "990028913649161136",
+      "booking_lead_id": "784154068183923727"
+    },
+    "transcript_turn_count": 23
+  },
+  "CAGE3-T6-1791885495.993246": {
+    "call_id": "CAGE3-T6-1791885495.993246",
+    "lead_id": "576264257521569786",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Keval Kalariya inquired about straightening crooked teeth and asked about the pricing and differences between clear aligners and veneers. Although pricing details were discussed, no appointment was booked and the call ended with information provided.",
+      "key_concerns": [
+        "Crooked teeth",
+        "Clear aligners vs. veneers comparison",
+        "Pricing and cost of treatment"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a WhatsApp message with information about clear aligners, veneers, and starting price estimates.",
+        "Follow up in 2-3 days to check if he would like to schedule an in-clinic consultation in Surat."
+      ],
+      "lead_id": "576264257521569786",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 13
+  },
+  "CAGE3-T9-1791886513.460070": {
+    "call_id": "CAGE3-T9-1791886513.460070",
+    "lead_id": "895603760849832868",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Keval Patel inquired about treatments for a missing tooth and a broken tooth, as well as whether veneers work on uneven teeth and what the starting prices are. Kiara explained that an in-person clinical examination and 3D scan are required to determine the exact treatment plan and pricing. The caller ultimately declined to schedule an appointment after discussing pricing.",
+      "key_concerns": [
+        "Missing tooth",
+        "Broken tooth",
+        "Uneven tooth suitability for veneers",
+        "Pricing and starting cost inquiry"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "declined",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a WhatsApp message with clinic location and starting price information overview",
+        "Keep lead in nurturing stage for future follow-up"
+      ],
+      "lead_id": "895603760849832868",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 17
+  },
+  "CAGE3-T10-1791890080.496080": {
+    "call_id": "CAGE3-T10-1791890080.496080",
+    "lead_id": "501519540735436646",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Keval Patel inquired about treatments for uneven teeth, discussing clear aligners, veneers, and inquiring about pricing and whether traditional braces are offered. The AI clarified that the clinic specializes in clear aligners and veneers rather than traditional braces and explained that pricing depends on a personalized clinical evaluation. The call concluded with the caller asking about veneer pricing, but no appointment was booked.",
+      "key_concerns": [
+        "Uneven teeth",
+        "Inquiring about veneers",
+        "Inquiring about clear aligners",
+        "Inquiring about traditional braces",
+        "Pricing and cost of treatments"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a WhatsApp message with information about clear aligners and veneers",
+        "Follow up with Keval Patel to offer a consultation booking for accurate pricing"
+      ],
+      "lead_id": "501519540735436646",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 19
+  },
+  "CAGE008-T11-1791892443.360159": {
+    "call_id": "CAGE008-T11-1791892443.360159",
+    "lead_id": "641319069679469337",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Tukdiya Keval inquired about veneers and pricing for an uneven or misaligned tooth. The AI assistant explained the treatment options and pricing factors, but the caller did not book an appointment or request a callback.",
+      "key_concerns": [
+        "Uneven or misaligned tooth",
+        "Veneers pricing inquiry",
+        "Treatment options"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send WhatsApp message detailing veneer treatment options and general pricing guide",
+        "Follow up in a few days to check if the caller wants to schedule a consultation in Surat"
+      ],
+      "lead_id": "641319069679469337",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 19
+  },
+  "CAGE008-T11-1791892905.364013": {
+    "call_id": "CAGE008-T11-1791892905.364013",
+    "lead_id": "464946170388750859",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Jiya reviewed her AI Smile Preview and liked it overall, but expressed concern that her front teeth appeared too wide, resembling 'rabbit teeth'. Kiara explained that an in-person consultation with their authorized smile designer would allow for a personalized, natural-looking treatment plan, though the call was cut off before a final appointment could be scheduled.",
+      "key_concerns": [
+        "Overlapping front teeth",
+        "Concern about front teeth looking too wide or like 'rabbit teeth' in the simulation"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "positive",
+      "language_used": "English",
+      "next_actions": [
+        "Follow up with Jiya via WhatsApp to address her concern regarding 'rabbit teeth'",
+        "Offer to schedule an in-person consultation with the nearest authorized smile designer"
+      ],
+      "lead_id": "464946170388750859",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 7
+  },
+  "H2-D6-1791893236.192457": {
+    "call_id": "H2-D6-1791893236.192457",
+    "lead_id": "531896711829059036",
+    "booking_lead_id": "531896711829059036",
+    "summary": {
+      "summary": "Jiya inquired about solutions for gaps in her teeth. After discussing treatment options, dentist vs. smile designer differences, and Hresh Savani's philosophy, she initially requested an appointment in Surat with Dr. Viren Savani. She then changed her mind and asked to shift her consultation to Vadodara due to relocation, resulting in a successfully booked consultation with Dr. Khushbu Patel in Vadodara.",
+      "key_concerns": [
+        "Gaps between teeth",
+        "Clear aligners and ultra-thin veneers",
+        "Difference between a regular dentist and an authorized smile designer",
+        "Master ceramist credentials and smile design protocol",
+        "City relocation from Surat to Vadodara for consultation"
+      ],
+      "call_outcome": "appointment_booked",
+      "callback_time": null,
+      "booking_status": "booked",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Verify appointment details with Jiya for Vadodara clinic",
+        "Confirm appointment with Dr. Khushbu Patel in Vadodara",
+        "Ensure Surat consultation is fully cancelled in the system"
+      ],
+      "lead_id": "531896711829059036",
+      "booking_lead_id": "531896711829059036"
+    },
+    "transcript_turn_count": 67
+  },
+  "H2-D5-1791894322.214742": {
+    "call_id": "H2-D5-1791894322.214742",
+    "lead_id": "318096838102615640",
+    "booking_lead_id": "318096838102615640",
+    "summary": {
+      "summary": "Nikhil inquired about cosmetic dental treatments and uneven gaps. After some back and forth regarding doctors and cities, an appointment was successfully scheduled with Dr. Jay Patel.",
+      "key_concerns": [
+        "Uneven gaps in teeth",
+        "Clear aligners and veneers",
+        "Doctor and city preference updates"
+      ],
+      "call_outcome": "appointment_booked",
+      "callback_time": null,
+      "booking_status": "booked",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Verify appointment details with Dr. Jay Patel",
+        "Send appointment confirmation message to Nikhil",
+        "Follow up regarding any city or doctor preference changes if needed"
+      ],
+      "lead_id": "318096838102615640",
+      "booking_lead_id": "318096838102615640"
+    },
+    "transcript_turn_count": 59
+  },
+  "CAGE3-T8-1791894989.1068395": {
+    "call_id": "CAGE3-T8-1791894989.1068395",
+    "lead_id": "602905178394748515",
+    "booking_lead_id": "602905178394748515",
+    "summary": {
+      "summary": "Nikhil called to inquire about treatment for gaps in his teeth. After discussing various locations and doctors, he ultimately requested an appointment with Dr. D. J. Chetaria in Jamnagar, which was successfully booked by the AI assistant.",
+      "key_concerns": [
+        "Gaps in teeth",
+        "Smile makeover consultation",
+        "Doctor selection across different cities (Surat, Mumbai, and Jamnagar)"
+      ],
+      "call_outcome": "appointment_booked",
+      "callback_time": null,
+      "booking_status": "booked",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Confirm the appointment details with Nikhil via WhatsApp or phone call",
+        "Ensure clinic team in Jamnagar has notes regarding treatment for tooth gaps for Dr. D. J. Chetaria"
+      ],
+      "lead_id": "602905178394748515",
+      "booking_lead_id": "602905178394748515"
+    },
+    "transcript_turn_count": 35
+  },
+  "CAGE008-T11-1791952933.26409": {
+    "call_id": "CAGE008-T11-1791952933.26409",
+    "lead_id": "654790430409093484",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Keval Kalariya inquired about the Ultimate Smile Design treatment and asked what it means, specifically mentioning he has only one tooth. The AI explained how the treatment works, how master ceramists customize the smile to facial features, and assured him that even a single tooth can be treated to blend naturally. The call ended after providing information without an appointment booking or callback request.",
+      "key_concerns": [
+        "Understanding what Ultimate Smile Design is",
+        "Treatment approach for having only one tooth"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a WhatsApp brochure explaining Ultimate Smile Design and single-tooth solutions",
+        "Follow up in a few days to check if he would like to book a consultation in Surat"
+      ],
+      "lead_id": "654790430409093484",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 11
+  },
+  "CAGE3-T9-1791953153.577608": {
+    "call_id": "CAGE3-T9-1791953153.577608",
+    "lead_id": "541755209197327673",
+    "booking_lead_id": "419",
+    "summary": {
+      "summary": "Kalariya Keval inquired about smile design and materials such as veneers, crowns, E.max, and Zirconia. Although he initially mentioned being in Surat, he clarified that he wanted the consultation done in Rajkot. An in-clinic consultation appointment was successfully booked with Dr. Hetal Buch in Rajkot.",
+      "key_concerns": [
+        "Smile design information",
+        "Veneers and crowns materials (E.max and Zirconia)",
+        "Tooth alignment or wisdom tooth issue mentioned",
+        "Consultation location preference changed to Rajkot"
+      ],
+      "call_outcome": "appointment_booked",
+      "callback_time": null,
+      "booking_status": "booked",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Confirm the appointment details with the patient via WhatsApp or phone call",
+        "Forward the patient's notes regarding the wedding message to Dr. Hetal Buch",
+        "Remind the Rajkot clinic team about the scheduled consultation"
+      ],
+      "lead_id": "541755209197327673",
+      "booking_lead_id": "419"
+    },
+    "transcript_turn_count": 17
+  },
+  "CAGE3-T4-1791969896.712917": {
+    "call_id": "CAGE3-T4-1791969896.712917",
+    "lead_id": "180429226249496342",
+    "booking_lead_id": "421",
+    "summary": {
+      "summary": "Keval Kalariya inquired about treatments for his uneven teeth, specifically asking about clear aligners, veneers, and pricing. After discussing the options, he decided to book an in-clinic consultation with Dr. Purvi Patel in Surat.",
+      "key_concerns": [
+        "Uneven teeth (वाંકાચૂંકા દાંત)",
+        "Interest in clear aligners and thin veneers",
+        "Pricing inquiry for treatments"
+      ],
+      "call_outcome": "appointment_booked",
+      "callback_time": null,
+      "booking_status": "booked",
+      "customer_sentiment": "positive",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Verify consultation details with Keval Kalariya",
+        "Confirm the appointment schedule with Dr. Purvi Patel in Surat",
+        "Note the patient's concern regarding uneven teeth in the clinical file"
+      ],
+      "lead_id": "180429226249496342",
+      "booking_lead_id": "421"
+    },
+    "transcript_turn_count": 21
+  },
+  "H2-D6-1791978749.215028": {
+    "call_id": "H2-D6-1791978749.215028",
+    "lead_id": "295758762462796089",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Kalariya Keval called to inquire about the Ultimate Smile Design service, asking about the difference between standard cosmetic dentistry and USD, the role of Advance Dental Export, and the founder Haresh Savani. The AI explained the bespoke facial proportion approach and laboratory processes, and the caller ended the conversation after receiving detailed information without booking a consultation.",
+      "key_concerns": [
+        "Retirement smile design definition",
+        "Difference between Ultimate Face Smile and ordinary cosmetic dentistry",
+        "USD clinic, lab, or dentist network structure",
+        "Founder of the smile league / USD",
+        "Role of Advance Dental Export in smile design",
+        "Focus on entire facial structure instead of just teeth"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a WhatsApp message with educational brochures on Ultimate Smile Design and Advance Dental Export",
+        "Follow up in a few days to see if the caller is ready to schedule a consultation"
+      ],
+      "lead_id": "295758762462796089",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 13
+  },
+  "CAGE3-T7-1791982844.814702": {
+    "call_id": "CAGE3-T7-1791982844.814702",
+    "lead_id": "382613829561237206",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Keval Kalariya inquired about smile design and treatment options at Ultimate Smile Design in Surat. The AI assistant explained the treatment process in Gujarati and Hindi, and asked if he would like to book a consultation with an authorized dentist.",
+      "key_concerns": [
+        "Smile makeover treatment process",
+        "Consultation requirements"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "in_progress",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Keval Kalariya to confirm if he wants to schedule the smile consultation in Surat"
+      ],
+      "lead_id": "382613829561237206",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 5
+  },
+  "CAGE3-T8-1792037616.1467600": {
+    "call_id": "CAGE3-T8-1792037616.1467600",
+    "lead_id": "125118602504906794",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Kalariya Keval called to inquire about various cosmetic dental procedures, including natural-looking veneers, teeth whitening for yellow teeth, fixing a gap in the front teeth, crooked teeth, chipped teeth, and solutions for a gummy smile and implants. The AI assistant provided information on treatments like aligners, veneers, teeth whitening, and laser-guided gum reshaping. The call ended after answering all his questions without booking an appointment or requesting a callback.",
+      "key_concerns": [
+        "Natural-looking veneers",
+        "Yellow teeth and whitening",
+        "Front teeth gap and bonding",
+        "Crooked teeth alignment",
+        "Chipped and uneven teeth",
+        "Gummy smile correction",
+        "Dental implants"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a WhatsApp message with informational links on veneers, teeth whitening, and gum reshaping",
+        "Follow up in a few days to check if the patient would like to book a consultation in Rajkot"
+      ],
+      "lead_id": "125118602504906794",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 29
+  },
+  "CAGE3-T9-1792045900.880494": {
+    "call_id": "CAGE3-T9-1792045900.880494",
+    "lead_id": "962913129357160662",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Charmil Patel inquired about Ultimate Smile Design's concept, founder Haresh Savani, and how facial proportions and digital workflow differ from traditional dentistry. He also asked whether very white teeth would look fake, receiving detailed explanations before the call ended without booking an appointment.",
+      "key_concerns": [
+        "Understanding what Ultimate Smile Design is and how it differs from regular dentists",
+        "Founder Haresh Savani and Advance Dental Export laboratory",
+        "Why facial proportions are considered in smile design instead of just teeth",
+        "Difference between natural and Hollywood smiles",
+        "Concern about whether very white teeth will look fake"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send WhatsApp follow-up with before/after photos showcasing natural vs. very white cosmetic smile makeovers in Rajkot",
+        "Have a cosmetic dentist or patient coordinator follow up to address his specific query regarding very white teeth and whether they look fake"
+      ],
+      "lead_id": "962913129357160662",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 20
+  },
+  "CAGE3-T9-1792120016.950371": {
+    "call_id": "CAGE3-T9-1792120016.950371",
+    "lead_id": "387261738411468205",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Kalaria Keval inquired about the nature of the Ultimate Smile Design service in Gujarati. The AI assistant explained that it is a premium, customized smile makeover service tailored to facial proportions and lip structure. The call ended before a consultation or callback could be discussed.",
+      "key_concerns": [
+        "Inquired about what Ultimate Smile Design is and how it works"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Gujarati",
+      "next_actions": [
+        "Send an informational WhatsApp brochure explaining Ultimate Smile Design in Gujarati",
+        "Follow up with a call in 2 days to check if they want to book a consultation"
+      ],
+      "lead_id": "387261738411468205",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 3
+  },
+  "CAGE3-T4-1792125339.967875": {
+    "call_id": "CAGE3-T4-1792125339.967875",
+    "lead_id": "694596570593403393",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Patel Dream inquired about the concept of Ultimate Smile Design and asked about the specific treatments included in Gujarati. Kiara explained the comprehensive, facial-proportion-based approach and mentioned treatments like veneers, aligners, and crowns before the call ended without a booking or callback request.",
+      "key_concerns": [
+        "What is Ultimate Smile Design",
+        "What treatments are included in Ultimate Smile Design",
+        "Veneers, aligners, and crowns"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send an informational WhatsApp brochure regarding Ultimate Smile Design treatments including veneers and aligners in Gujarati/English",
+        "Follow up in a few days to check if the caller is ready to schedule a consultation in Rajkot"
+      ],
+      "lead_id": "694596570593403393",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 5
+  },
+  "CAGE3-T6-1792128748.1601227": {
+    "call_id": "CAGE3-T6-1792128748.1601227",
+    "lead_id": "287804242588985731",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Kalariya Keval submitted an inquiry for a smile consultation in Surat. When Kiara followed up, the caller mentioned spine lesions and the conversation remained unclear without a specific dental concern being addressed.",
+      "key_concerns": [
+        "Spine lesions"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Review lead profile and determine if a follow-up call regarding dental aligners or smile makeover is needed",
+        "Send an informational WhatsApp message about Ultimate Smile Design services"
+      ],
+      "lead_id": "287804242588985731",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 3
+  },
+  "CAGE011-T8-1792128864.1101234": {
+    "call_id": "CAGE011-T8-1792128864.1101234",
+    "lead_id": "272855705858870473",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Nikhil inquired about Ultimate Smile Design and the involvement of Advanced Dental Export, asking questions in a mix of Hindi, Gujarati, Spanish, and English. Kiara explained the cosmetic process and the laboratory credentials, and offered to schedule an appointment with Dr. Abbas Noorani in Ahmedabad. The call ended without a confirmed booking.",
+      "key_concerns": [
+        "Explanation of Ultimate Smile Design",
+        "Inquiry about Advanced Dental Export laboratory",
+        "Authorized dentists and clinic locations"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Nikhil via WhatsApp to share details about Dr. Abbas Noorani and offer appointment booking options in Ahmedabad"
+      ],
+      "lead_id": "272855705858870473",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 13
+  },
+  "CAGE3-T8-1792148264.1701386": {
+    "call_id": "CAGE3-T8-1792148264.1701386",
+    "lead_id": "647739178101430975",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Kalariya Keval inquired about Ultimate Smile Design in Rajkot. Kiara explained that it is an elite, digitally planned smile architecture designed for a bespoke, signature look.",
+      "key_concerns": [
+        "Ultimate Smile Design explanation",
+        "Smile makeover and cosmetic dentistry"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "English",
+      "next_actions": [
+        "Follow up with WhatsApp information regarding smile design packages",
+        "Attempt another call to schedule an in-clinic consultation in Rajkot"
+      ],
+      "lead_id": "647739178101430975",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 3
+  },
+  "CAGE6-T11-1792477924.267945": {
+    "call_id": "CAGE6-T11-1792477924.267945",
+    "lead_id": "135004604193259106",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Kalariya Keval inquired about smile designing services in Jamnagar. Kiara explained the digital smile design process in Gujarati, and the caller asked for a definition of smile design before the call concluded without booking or requesting a callback.",
+      "key_concerns": [
+        "Smile design definition and process",
+        "Digital smile preview inquiry"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Gujarati",
+      "next_actions": [
+        "Send a WhatsApp message with information about digital smile designing",
+        "Follow up in a few days to see if the caller has more questions"
+      ],
+      "lead_id": "135004604193259106",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 5
+  },
+  "CAGE3-T3-1792478186.279969": {
+    "call_id": "CAGE3-T3-1792478186.279969",
+    "lead_id": "749405310320914713",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "The caller, Patel Dream, inquired extensively about the clinical protocols and steps involved in the Ultimate Smile Design process. Kiara provided detailed explanations regarding 3D scans, digital previews, minimally invasive procedures, and dentist training, but no appointment or callback was booked.",
+      "key_concerns": [
+        "Digital Smile Design protocols",
+        "Dentist training and adherence to protocols",
+        "Minimally invasive procedures and handcrafted restorations"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a detailed digital brochure on Ultimate Smile Design protocols via WhatsApp",
+        "Follow up with the lead in a few days to check if they want to schedule a consultation in Rajkot"
+      ],
+      "lead_id": "749405310320914713",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 19
+  },
+  "CAGE3-T7-1792640343.656795": {
+    "call_id": "CAGE3-T7-1792640343.656795",
+    "lead_id": "250450912539777854",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Kiara reached out to Kaushik Kalariya regarding his smile consultation inquiry in Surat and started explaining the smile makeover service. The conversation was cut short after the initial greeting and brief description due to an abrupt disconnect.",
+      "key_concerns": [
+        "Smile makeover",
+        "Dental consultation"
+      ],
+      "call_outcome": "hung_up_early",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Schedule a follow-up call to complete the consultation inquiry",
+        "Send an introductory WhatsApp message with information about Ultimate Smile Design services"
+      ],
+      "lead_id": "250450912539777854",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 3
+  },
+  "CAGE6-T11-1792640474.654973": {
+    "call_id": "CAGE6-T11-1792640474.654973",
+    "lead_id": "886198799892421318",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Nikhil inquired about what smile design treatment entails. Kiara, the AI assistant, explained that it is a customized treatment plan tailored to facial proportions and natural expressions to enhance overall appearance. The call ended abruptly before a consultation or further details could be discussed.",
+      "key_concerns": [
+        "What is smile design"
+      ],
+      "call_outcome": "hung_up_early",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Gujarati",
+      "next_actions": [
+        "Follow up with Nikhil via WhatsApp or phone call to provide more information about smile design and schedule a consultation"
+      ],
+      "lead_id": "886198799892421318",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 3
+  },
+  "H2-D6-1792648085.48164": {
+    "call_id": "H2-D6-1792648085.48164",
+    "lead_id": "120513792530648556",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Keval inquired about cosmetic dental treatments for teeth gaps and uneven teeth, expressing interest in clear aligners and asking about pricing and doctor locations. He discussed options with Dr. Viren K Savani based in his area (Varachha, Surat), but ultimately ended the conversation with questions answered without booking an appointment or requesting a callback.",
+      "key_concerns": [
+        "Gaps in teeth",
+        "Uneven teeth",
+        "Treatment pricing and starting cost",
+        "Geographic proximity of dentists in Surat (Varachha/Hirabaug area)",
+        "Preference for Dr. Viren K Savani"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a WhatsApp message with information about clear aligners and veneers.",
+        "Share details and clinic location for Dr. Viren K Savani in the Varachha area.",
+        "Follow up in a few days to see if he would like to schedule a consultation."
+      ],
+      "lead_id": "120513792530648556",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 37
+  },
+  "CAGE3-T10-1792656520.776168": {
+    "call_id": "CAGE3-T10-1792656520.776168",
+    "lead_id": "254721535897798133",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Mukhesh Kalariya inquired about smile design procedures for his uneven teeth and asked for dentist recommendations in Surat. The AI assistant explained the smile design process, mentioning treatments like clear aligners and veneers, and provided the names of authorized smile designers in Surat.",
+      "key_concerns": [
+        "Uneven teeth (आडा अवळा दांत)",
+        "Smile design procedure details",
+        "Recommended dentists in Surat"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "positive",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Mukhesh via WhatsApp to share details about the recommended dentists in Surat",
+        "Offer to schedule an in-clinic consultation for his uneven teeth assessment"
+      ],
+      "lead_id": "254721535897798133",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 13
+  },
+  "CAGE6-T2-1792656679.766478": {
+    "call_id": "CAGE6-T2-1792656679.766478",
+    "lead_id": "882197359027924497",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Dilip Kalariya inquired about dental doctors and their contact numbers at Ultimate Smile Design. Kiara informed him of the available dentists in Ahmedabad and Sri Ganganagar, as there are currently no partner dentists in Udaipur.",
+      "key_concerns": [
+        "Medical doctor names and phone numbers",
+        "Availability of dentists or centers in Udaipur and Rajasthan"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with WhatsApp message regarding available locations in Rajasthan"
+      ],
+      "lead_id": "882197359027924497",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 7
+  },
+  "CAGE3-T3-1792729534.925877": {
+    "call_id": "CAGE3-T3-1792729534.925877",
+    "lead_id": "422026720219863477",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Raj Kothiya expressed interest in correcting his uneven teeth. During the discussion about treatment options like clear aligners and veneers, he asked the AI to call him back in 10 minutes.",
+      "key_concerns": [
+        "Uneven teeth",
+        "Inquiry regarding clear aligners and veneers"
+      ],
+      "call_outcome": "callback_requested",
+      "callback_time": "in 10 minutes",
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Call Raj Kothiya back after 10 minutes to continue the smile consultation discussion.",
+        "Share information regarding clear aligners and veneers for uneven teeth."
+      ],
+      "lead_id": "422026720219863477",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 7
+  },
+  "CAGE3-T10-1792732100.948276": {
+    "call_id": "CAGE3-T10-1792732100.948276",
+    "lead_id": "578593278091440678",
+    "booking_lead_id": null,
+    "summary": {
+      "summary": "Rushil Beladiya inquired about treatment options for uneven teeth and expressed a preference to consult with Dr. Viren K Savani in Surat. Although the AI attempted to book the appointment, a technical issue occurred, leading to a request for a callback to finalize the booking.",
+      "key_concerns": [
+        "Uneven teeth",
+        "Clear aligners",
+        "Consultation with Dr. Viren K Savani"
+      ],
+      "call_outcome": "callback_requested",
+      "callback_time": "unspecified",
+      "booking_status": "in_progress",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Resolve technical issue with booking system",
+        "Call back Rushil Beladiya to finalize appointment with Dr. Viren K Savani"
+      ],
+      "lead_id": "578593278091440678",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 19
+  },
+  "attempt_136198761282766266_1792738215": {
+    "call_id": "attempt_136198761282766266_1792738215",
+    "lead_id": "136198761282766266",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-23T06:50:15.394340+00:00",
+      "updated_at": "2026-10-23T06:50:15.395931+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "CAGE3-T9-1792738216.981251": {
+    "call_id": "CAGE3-T9-1792738216.981251",
+    "lead_id": "136198761282766266",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-23T06:50:27.253662+00:00",
+      "updated_at": "2026-10-23T06:50:27.255070+00:00",
+      "ended_at": "2026-10-23T06:52:45.235003+00:00"
+    },
+    "summary": {
+      "summary": "Kalariya Keval inquired about straightening uneven teeth and requested an appointment with Dr. Jay Patel in Surat. The AI assistant confirmed the doctor's location in Surat and began processing the booking details before asking for the pincode to finalize.",
+      "key_concerns": [
+        "Uneven teeth",
+        "Consultation with Dr. Jay Patel in Surat"
+      ],
+      "call_outcome": "appointment_booked",
+      "callback_time": null,
+      "booking_status": "in_progress",
+      "customer_sentiment": "positive",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Verify patient pincode and complete appointment booking with Dr. Jay Patel in Surat",
+        "Send appointment confirmation details to the patient via WhatsApp and email"
+      ],
+      "lead_id": "136198761282766266",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 13
+  },
+  "attempt_411586484917959453_1792747768": {
+    "call_id": "attempt_411586484917959453_1792747768",
+    "lead_id": "411586484917959453",
+    "booking_lead_id": null,
+    "call_status": "not picked up",
+    "timestamps": {
+      "initiated_at": "2026-10-23T09:29:28.606027+00:00",
+      "updated_at": "2026-10-23T09:29:28.607194+00:00",
+      "ended_at": "2026-10-23T09:30:28.646868+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "attempt_415979875139841516_1792748226": {
+    "call_id": "attempt_415979875139841516_1792748226",
+    "lead_id": "415979875139841516",
+    "booking_lead_id": null,
+    "call_status": "not picked up",
+    "timestamps": {
+      "initiated_at": "2026-10-23T09:37:06.951991+00:00",
+      "updated_at": "2026-10-23T09:37:06.964302+00:00",
+      "ended_at": "2026-10-23T09:38:06.982986+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "attempt_153248856435396870_1792754322": {
+    "call_id": "attempt_153248856435396870_1792754322",
+    "lead_id": "153248856435396870",
+    "booking_lead_id": null,
+    "call_status": "not picked up",
+    "timestamps": {
+      "initiated_at": "2026-10-23T11:18:42.370929+00:00",
+      "updated_at": "2026-10-23T11:18:42.371727+00:00",
+      "ended_at": "2026-10-23T11:19:42.401271+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "attempt_347483556086484121_1792815954": {
+    "call_id": "attempt_347483556086484121_1792815954",
+    "lead_id": "347483556086484121",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-24T04:25:54.869162+00:00",
+      "updated_at": "2026-10-24T04:25:54.871111+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "CAGE6-T11-1792815955.1157107": {
+    "call_id": "CAGE6-T11-1792815955.1157107",
+    "lead_id": "347483556086484121",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-24T04:26:07.371085+00:00",
+      "updated_at": "2026-10-24T04:26:07.371742+00:00",
+      "ended_at": "2026-10-24T04:29:47.375453+00:00"
+    },
+    "summary": {
+      "summary": "Denil Bhimani inquired about smile design and veneers/aligners after filling out a form in Gandhi Nagar. He requested the nearest authorized dentist to Gandhi Nagar and ultimately agreed to book an appointment with Dr. Dilip J. Parejiya in Dhrangadhra, though a technical issue interrupted the final booking confirmation.",
+      "key_concerns": [
+        "Smile makeover and design",
+        "Veneers and clear aligners",
+        "Finding the nearest authorized dentist to Gandhi Nagar"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "in_progress",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Resolve technical issue preventing booking",
+        "Contact Denil Bhimani to confirm appointment with Dr. Dilip J. Parejiya in Dhrangadhra",
+        "Send clinic location and details via WhatsApp"
+      ],
+      "lead_id": "347483556086484121",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 21
+  },
+  "attempt_460576560650970060_1792818271": {
+    "call_id": "attempt_460576560650970060_1792818271",
+    "lead_id": "460576560650970060",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-24T05:04:31.856801+00:00",
+      "updated_at": "2026-10-24T05:04:31.857897+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "H2-D5-1792818272.37049": {
+    "call_id": "H2-D5-1792818272.37049",
+    "lead_id": "460576560650970060",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-24T05:04:41.109502+00:00",
+      "updated_at": "2026-10-24T05:04:41.110744+00:00",
+      "ended_at": "2026-10-24T05:07:01.830677+00:00"
+    },
+    "summary": {
+      "summary": "Yashpal called inquiring about tooth pain and expressed a need to build trust in the clinic's quality and lab standards. Kiara provided details about the clinic's master lab, experienced specialists in Ahmedabad, and the smile design process, but the call ended without an appointment being booked.",
+      "key_concerns": [
+        "Tooth pain",
+        "Trust and credibility of the dental lab and specialists",
+        "Inquiring about lab details and material preparation"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a WhatsApp message with lab credentials, master ceramist details, and patient success stories to build trust",
+        "Follow up in a few days to check on his tooth pain and offer a consultation with an Ahmedabad specialist"
+      ],
+      "lead_id": "460576560650970060",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 13
+  },
+  "attempt_958101676395541735_1792828776": {
+    "call_id": "attempt_958101676395541735_1792828776",
+    "lead_id": "958101676395541735",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-24T07:59:36.012528+00:00",
+      "updated_at": "2026-10-24T07:59:36.039163+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "CAGE3-T8-1792828776.1423553": {
+    "call_id": "CAGE3-T8-1792828776.1423553",
+    "lead_id": "958101676395541735",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-24T07:59:51.111550+00:00",
+      "updated_at": "2026-10-24T07:59:51.132163+00:00",
+      "ended_at": "2026-10-24T08:00:26.226098+00:00"
+    },
+    "summary": {
+      "summary": "Nikhil called regarding tooth pain in Ahmedabad. Kiara explained Ultimate Smile Design's approach of treating any pain or decay before starting smile alignment, but the conversation ended before an appointment or callback was scheduled.",
+      "key_concerns": [
+        "Tooth pain"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Gujarati",
+      "next_actions": [
+        "Follow up with Nikhil via phone or WhatsApp to check on his tooth pain and schedule a clinical consultation."
+      ],
+      "lead_id": "958101676395541735",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 3
+  },
+  "attempt_203677482913410980_1792829883": {
+    "call_id": "attempt_203677482913410980_1792829883",
+    "lead_id": "203677482913410980",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-24T08:18:03.485359+00:00",
+      "updated_at": "2026-10-24T08:18:03.487287+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "H2-D6-1792829884.97999": {
+    "call_id": "H2-D6-1792829884.97999",
+    "lead_id": "203677482913410980",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-24T08:18:13.331207+00:00",
+      "updated_at": "2026-10-24T08:18:13.342437+00:00",
+      "ended_at": "2026-10-24T08:18:39.098416+00:00"
+    },
+    "summary": {
+      "summary": "Nikhil inquired about smile designing services in Gujarati. The AI assistant explained the digital smile design process and offered to share details about the first consultation, after which the call concluded without a booking or callback request.",
+      "key_concerns": [
+        "Smile makeover or smile designing information"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Gujarati",
+      "next_actions": [
+        "Send a WhatsApp message with details about the smile consultation and digital treatment planning."
+      ],
+      "lead_id": "203677482913410980",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 3
+  },
+  "attempt_962457062547925678_1792835493": {
+    "call_id": "attempt_962457062547925678_1792835493",
+    "lead_id": "962457062547925678",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-24T09:51:33.809234+00:00",
+      "updated_at": "2026-10-24T09:51:33.813947+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "CAGE6-T2-1792835494.1283407": {
+    "call_id": "CAGE6-T2-1792835494.1283407",
+    "lead_id": "962457062547925678",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-24T09:51:44.964869+00:00",
+      "updated_at": "2026-10-24T09:51:44.979242+00:00",
+      "ended_at": "2026-10-24T09:53:20.045103+00:00"
+    },
+    "summary": {
+      "summary": "Vasu inquired about missing teeth and treatment options with a warranty, expressing some initial frustration and switching between Hindi, Gujarati, and English. Kiara explained that Ultimate Smile Design offers documented warranties and suggested an in-clinic consultation to evaluate his bite and discuss options for completing his smile. The call concluded with information provided, but no appointment was booked yet.",
+      "key_concerns": [
+        "Missing teeth (only one tooth remaining)",
+        "Treatment warranty and authentication",
+        "Overall dental health and bite functionality"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Vasu via WhatsApp to address warranty details and answer any remaining questions",
+        "Attempt another call in a few days to schedule an in-clinic consultation with the Surat dentist"
+      ],
+      "lead_id": "962457062547925678",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 11
+  },
+  "attempt_632563766188792878_1792837268": {
+    "call_id": "attempt_632563766188792878_1792837268",
+    "lead_id": "632563766188792878",
+    "booking_lead_id": null,
+    "call_status": "not picked up",
+    "timestamps": {
+      "initiated_at": "2026-10-24T10:21:08.490958+00:00",
+      "updated_at": "2026-10-24T10:21:08.509627+00:00",
+      "ended_at": "2026-10-24T10:22:08.538939+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "attempt_827702471564502889_1792837331": {
+    "call_id": "attempt_827702471564502889_1792837331",
+    "lead_id": "827702471564502889",
+    "booking_lead_id": null,
+    "call_status": "not picked up",
+    "timestamps": {
+      "initiated_at": "2026-10-24T10:22:11.503794+00:00",
+      "updated_at": "2026-10-24T10:22:11.524469+00:00",
+      "ended_at": "2026-10-24T10:23:11.540096+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "CAGE3-T3-1792837332.1292708": {
+    "call_id": "CAGE3-T3-1792837332.1292708",
+    "lead_id": "632563766188792878",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-24T10:22:32.024490+00:00",
+      "updated_at": "2026-10-24T10:22:32.038331+00:00",
+      "ended_at": "2026-10-24T10:22:47.470051+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 1
+  },
+  "attempt_373799956733752826_1792838689": {
+    "call_id": "attempt_373799956733752826_1792838689",
+    "lead_id": "373799956733752826",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-24T10:44:49.959172+00:00",
+      "updated_at": "2026-10-24T10:44:49.975749+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "attempt_919282516385795959_1792838690": {
+    "call_id": "attempt_919282516385795959_1792838690",
+    "lead_id": "919282516385795959",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-24T10:44:50.383296+00:00",
+      "updated_at": "2026-10-24T10:44:50.396225+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "attempt_911439183018157084_1792840721": {
+    "call_id": "attempt_911439183018157084_1792840721",
+    "lead_id": "911439183018157084",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-24T11:18:41.350888+00:00",
+      "updated_at": "2026-10-24T11:18:41.355860+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "H2-D5-1792840722.171003": {
+    "call_id": "H2-D5-1792840722.171003",
+    "lead_id": "911439183018157084",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-24T11:18:53.729473+00:00",
+      "updated_at": "2026-10-24T11:18:53.744297+00:00",
+      "ended_at": "2026-10-24T11:19:50.908686+00:00"
+    },
+    "summary": {
+      "summary": "Fenil inquired about the Ultimate Smile Design treatment and mentioned wanting to get started. The conversation shifted between English and Gujarati, discussing smile designing processes and estimates before the line was disconnected early.",
+      "key_concerns": [
+        "Smile design consultation",
+        "Treatment pricing and estimates"
+      ],
+      "call_outcome": "hung_up_early",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Follow up with Fenil via phone call to resume the consultation inquiry",
+        "Send a WhatsApp message with information about Ultimate Smile Design pricing and consultation details"
+      ],
+      "lead_id": "911439183018157084",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 6
+  },
+  "attempt_229358906365770294_1792840840": {
+    "call_id": "attempt_229358906365770294_1792840840",
+    "lead_id": "229358906365770294",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-24T11:20:40.125439+00:00",
+      "updated_at": "2026-10-24T11:20:40.137616+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "CAGE3-T4-1792840840.1302828": {
+    "call_id": "CAGE3-T4-1792840840.1302828",
+    "lead_id": "229358906365770294",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-24T11:21:06.676905+00:00",
+      "updated_at": "2026-10-24T11:21:06.697604+00:00",
+      "ended_at": "2026-10-24T11:21:44.272940+00:00"
+    },
+    "summary": {
+      "summary": "Nikhil inquired about what Ultimate Smile Design is. Kiara explained that it is bespoke smile craftsmanship by Advance Dental Export, founded by Master Ceramist Haresh Savani. The call ended after providing this information without a booking or callback request.",
+      "key_concerns": [
+        "What is ultimate smile design"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "neutral",
+      "language_used": "English",
+      "next_actions": [
+        "Send a WhatsApp message with more details about Ultimate Smile Design services and pricing",
+        "Follow up in a few days to see if he would like to book a consultation in Surat"
+      ],
+      "lead_id": "229358906365770294",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 3
+  },
+  "attempt_843273969401586167_1792983244": {
+    "call_id": "attempt_843273969401586167_1792983244",
+    "lead_id": "843273969401586167",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-26T02:54:04.648006+00:00",
+      "updated_at": "2026-10-26T02:54:04.675724+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "CAGE008-T11-1792983246.7200": {
+    "call_id": "CAGE008-T11-1792983246.7200",
+    "lead_id": "843273969401586167",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-26T02:54:15.414016+00:00",
+      "updated_at": "2026-10-26T02:54:15.444236+00:00",
+      "ended_at": "2026-10-26T02:54:49.571273+00:00"
+    },
+    "summary": {
+      "summary": "Varaj inquired about the smile consultation process in Surat but expressed some confusion about the clinic's name and services. Kiara clarified that Ultimate Smile Design provides digital smile planning, but the call ended without an appointment being booked or a callback requested.",
+      "key_concerns": [
+        "Smile consultation process",
+        "Clinic identity and service clarification"
+      ],
+      "call_outcome": "information_provided",
+      "callback_time": null,
+      "booking_status": "not_discussed",
+      "customer_sentiment": "hesitant",
+      "language_used": "Mixed",
+      "next_actions": [
+        "Send a WhatsApp message with an overview of the Ultimate Smile Design process",
+        "Follow up in a few days to address any remaining questions regarding smile makeover options"
+      ],
+      "lead_id": "843273969401586167",
+      "booking_lead_id": null
+    },
+    "transcript_turn_count": 5
+  },
+  "attempt_701027181821072200_1792984280": {
+    "call_id": "attempt_701027181821072200_1792984280",
+    "lead_id": "701027181821072200",
+    "booking_lead_id": null,
+    "call_status": "initiated",
+    "timestamps": {
+      "initiated_at": "2026-10-26T03:11:20.667451+00:00",
+      "updated_at": "2026-10-26T03:11:20.670494+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 0
+  },
+  "CAGE3-T3-1792984282.2989": {
+    "call_id": "CAGE3-T3-1792984282.2989",
+    "lead_id": "701027181821072200",
+    "booking_lead_id": null,
+    "call_status": "disconnected",
+    "timestamps": {
+      "answered_at": "2026-10-26T03:11:33.032087+00:00",
+      "updated_at": "2026-10-26T03:11:33.057896+00:00",
+      "ended_at": "2026-10-26T03:11:38.127698+00:00"
+    },
+    "summary": null,
+    "transcript_turn_count": 1
   }
 }

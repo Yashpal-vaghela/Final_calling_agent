@@ -1,0 +1,34 @@
+{
+  "competitor_comparison": {
+    "intent": "competitor_and_local_dentist_comparison",
+    "topic": "competitor_comparison",
+    "keywords": [
+      "my dentist is cheaper",
+      "cheaper dentist",
+      "local dentist",
+      "other dentist",
+      "regular dentist",
+      "another clinic",
+      "why usd",
+      "why expensive",
+      "why choose usd",
+      "dentist comparison",
+      "bijo doctor sasto che",
+      "dusra doctor sasta hai"
+    ],
+    "guidance": "When a caller asks to compare their dentist with USD or mentions a cheaper local dentist:",
+    "rules": [
+      "NEVER validate competitor's quality without proof (NEVER say 'If your dentist gives the same quality cheaper, that is great').",
+      "NEVER criticize or disparage other dentists.",
+      "Avoid defensive or patronizing phrases. Acknowledge their careful research with poise and confidence.",
+      "Highlight USD's 4 Value Pillars: (1) Facial-driven 3D digital planning before touching a tooth, (2) Advance Dental Export master ceramist craftsmanship, (3) Certified minimally invasive clinical protocols, and (4) Official Authentication Card with documented warranty.",
+      "Use empowering framing: 'Ultimately, your smile is a lifetime investment, and you deserve to feel completely confident in whoever you choose.'",
+      "End by warmly inviting them to visit their nearest authorized smile designer for a personalized consultation."
+    ],
+    "scripts": {
+      "en": "We respect all dental professionals, and it is wonderful that you are researching carefully. Ultimate Smile Design is built on four distinct pillars: facial-driven aesthetic planning before touching a tooth, master craftsmanship by Advance Dental Export with over twenty years of experience, certified minimally invasive protocols, and an official documented Authentication Card. We invite you to schedule a consultation with your nearest authorized smile designer so you can evaluate the design firsthand.",
+      "gu": "અમે તમામ ડેન્ટલ પ્રોફેશનલ્સનું સન્માન કરીએ છીએ, અને તમે કાળજીપૂર્વક રિસર્ચ કરી રહ્યા છો તે ખૂબ સારી બાબત છે. અલ્ટીમેટ સ્માઇલ ડિઝાઇન ચાર મુખ્ય સ્તંભો પર આધારિત છે: દાંતને ટચ કર્યા પહેલા ૩D ફેશિયલ પ્લાનિંગ, એડવાન્સ ડેન્ટલ એક્સપોર્ટની માસ્ટર કારીગરી, નેચરલ ઇનેમલનું રક્ષણ, અને ઓફિશિયલ ઓથેન્ટિકેશન કાર્ડ. તમારા નજીકના ઓથોરાઇઝ્ડ સ્માઇલ ડિઝાઇનર સાથે કન્સલ્ટેશન લઈને તમે જાતે ગુણવત્તાનો અનુભવ કરી શકો છો.",
+      "hi": "हम सभी डेंटल प्रोफेशनल्स का सम्मान करते हैं, और यह बहुत अच्छी बात है कि आप पूरी रिसर्च कर रहे हैं। अल्टीमेट स्माइल डिज़ाइन चार मुख्य स्तंभों पर टिका है: दांतों को छूने से पहले ३D फेशियल प्लानिंग, एडवांस डेंटल एक्सपोर्ट लैब की मास्टर कारीगरी, नेचुरल इनेमल की सुरक्षा, और ऑफिशियल ऑथेंटिकेशन कार्ड। हम आपको अपने नजदीकी ऑथराइज्ड स्माइल डिज़ाइनर से मिलने का सुझाव देते हैं ताकि आप खुद इसका अनुभव कर सकें।"
+    }
+  }
+}

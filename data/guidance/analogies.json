@@ -31,12 +31,34 @@
     "intent": "usd_protocols",
     "keywords": [
       "What are USD Protocols?",
+      "What is a protocol?",
+      "What is protocol",
+      "Which protocol",
+      "What protocol does your dentist follow",
       "What's your process?",
       "How does USD work?",
-      "Explain the smile journey."
+      "Explain the smile journey.",
+      "clinical protocol",
+      "digital protocol",
+      "what is the protocol",
+      "protocol",
+      "protocols",
+      "પ્રોટોકોલ એટલે શું",
+      "કયા પ્રોટોકોલ",
+      "તમારા ડેન્ટિસ્ટ કયો પ્રોટોકોલ ફોલો કરે છે",
+      "પ્રટોકોલ શું છે",
+      "પ્રક્રિયા શું છે",
+      "प्रोटोकॉल क्या है",
+      "कौन सा प्रोटोकॉल",
+      "डेंटिस्ट क्या प्रोटोकॉल फॉलो करते हैं",
+      "क्लिनिकल प्रोटोकॉल"
     ],
-    "reframe": "The process is closer to commissioning a beautiful residence from a master architect than choosing something off the shelf. The proportions and vision are understood first, then the design is refined before anything is created.",
-    "follow_up": "Would you like me to explain the first step?",
+    "reframe": "The process is closer to commissioning a beautiful residence from a master architect than choosing something off the shelf. The proportions and vision are understood first, then the design is refined before anything is created. In practical terms, it means three clear standards: 1) 3D digital facial scanning and preview before touching a tooth, 2) minimally invasive care preserving natural tooth enamel, and 3) restorations handcrafted by master ceramists at Advance Dental Export.",
+    "suggested_phrasing": {
+      "en": "Our protocol is like an architect designing a residence rather than picking off a shelf. In practical terms, it means three things: first, 3D digital scanning to design your smile to your face before touching a tooth; second, preserving your natural enamel through minimally invasive care; and third, restorations handcrafted at our central laboratory, Advance Dental Export.",
+      "gu": "અમારો પ્રોટોકોલ એક આર્કિટેક્ટના પ્લાનિંગ જેવો છે. વાસ્તવમાં આમાં ત્રણ મુખ્ય બાબતો છે: પહેલું, દાંતને ટચ કર્યા વગર તમારા ચહેરા મુજબ ૩D ડિજિટલ સ્કેનિંગ અને પ્રિવ્યૂ. બીજું, નેચરલ ઈનેમલનું રક્ષણ જેથી દાંત સુરક્ષિત રહે. અને ત્રીજું, એડવાન્સ ડેન્ટલ એક્સપોર્ટ દ્વારા તૈયાર થતા વિશ્વકક્ષાના મટિરિયલ્સ.",
+      "hi": "हमारा प्रोटोकॉल एक आर्किटेक्ट की प्लानिंग की तरह है। सीधे शब्दों में इसके तीन मुख्य कदम हैं: पहला, दांतों को छुए बिना आपके चेहरे के अनुसार ३D डिजिटल स्कैन और प्रीव्यू। दूसरा, नेचुरल इनेमल की सुरक्षा ताकि आपके दांत सुरक्षित रहें। और तीसरा, एडवांस डेंटल एक्सपोर्ट लैब द्वारा तैयार की गई मास्टर कारीगरी।"
+    },
     "emotion": "curious"
   },
   "smile_confidence": {
