@@ -23,6 +23,8 @@ from agent.utils.summarizer import (
 from backend.app.services.zoho_service import send_call_summary_to_zoho
 from backend.app.services.call_record_service import get_call_store, provider_ids, now_iso, CorrelationError
 from backend.app.services.outbound_call_service import initiate_tracked_call
+from backend.app.services.ai_agent_webhook import send_status_to_ai_agent
+
 
 router = APIRouter()
 
@@ -304,6 +306,10 @@ async def smartflo_media_stream(
 
                 print(f"[Smartflo WS] Stream started. StreamSid: {stream_sid}, CallSid: {call_sid}")
 
+                # Notify AI-agent webhook that customer answered and active conversation has started
+                if lead_id:
+                    asyncio.create_task(send_status_to_ai_agent(lead_id, "answered"))
+
                 orchestrator = VoicePipelineOrchestrator(
                     websocket=websocket,
                     call_id=call_sid,
@@ -402,6 +408,11 @@ async def smartflo_media_stream(
                     )
 
             asyncio.create_task(_run_post_call_summary())
+
+        # Notify AI-agent webhook that call has hung up / completed
+        target_lead_status = intake_lead_id_val or lead_id
+        if target_lead_status:
+            asyncio.create_task(send_status_to_ai_agent(target_lead_status, "completed"))
         
         # Purge caller context and dynamic prewarmed greeting from memory across all indexed keys on call termination
         phone_to_clean = lead_phone or (caller_ctx.get("phone") if caller_ctx else None)

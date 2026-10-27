@@ -308,8 +308,10 @@ class CallRecordStore:
             if aid:
                 self._attach(doc, aid, ids)
                 doc["calls"][aid]["timestamps"]["media_started_at"] = now_iso()
+                self._queue_agent_delivery(doc, doc["calls"][aid], f"media_started:{aid}", "answered")
                 self._reconcile(doc)
             return aid
+
 
     @staticmethod
     def _merge_summary(rec: dict, update: dict):

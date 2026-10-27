@@ -20,8 +20,12 @@ async def send_status_to_ai_agent(lead_id: str, status: str) -> bool:
             if response.status_code not in (200, 201, 202, 204):
                 logger.warning("AI-agent status webhook returned HTTP %s: %s",
                                response.status_code, response.text[:200])
+                print(f"[AI-Agent Webhook] ⚠️ Received HTTP {response.status_code} for lead {lead_id} ({status}): {response.text[:200]}")
                 return False
+            print(f"[AI-Agent Webhook] ✅ Dispatched status '{status}' for lead '{lead_id}' (HTTP {response.status_code})")
             return True
-    except Exception:
+    except Exception as e:
         logger.exception("AI-agent status delivery failed for lead %s status %s", lead_id, status)
+        print(f"[AI-Agent Webhook] ❌ Delivery failed for lead {lead_id} ({status}): {e}")
         return False
+
