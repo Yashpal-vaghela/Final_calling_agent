@@ -14,9 +14,9 @@ bind = os.getenv("BIND_ADDRESS", "127.0.0.1:8050")
 backlog = 2048
 
 # Worker Processes
-# For voice pipelines using in-memory L1 cache + Redis L2 fallback:
-# 2 workers deliver optimal CPU usage while preventing excessive RAM duplication.
-workers = int(os.getenv("WEB_CONCURRENCY", "2"))
+# Single worker: pre-warmed Gemini sessions and caller contexts live in process memory,
+# so the dial request and Smartflo's media stream must reach the same process.
+workers = int(os.getenv("WEB_CONCURRENCY", "1"))
 worker_class = "uvicorn.workers.UvicornWorker"
 worker_connections = 1000
 timeout = 120
@@ -32,8 +32,8 @@ errorlog = "-"   # stderr
 
 # Graceful Reload & Worker Lifecycle
 graceful_timeout = 30
-max_requests = 5000
-max_requests_jitter = 500
+# Disabled: an automatic worker restart would cut every live call on the single worker
+max_requests = 0
 
 # Forwarded headers configuration (for reverse proxy behind aaPanel Nginx)
 forwarded_allow_ips = "*"

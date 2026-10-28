@@ -326,6 +326,9 @@ class GeminiLiveStreamClient:
         self._closed: bool = False
         self._is_connected: bool = False
         self._ready_event: asyncio.Event = asyncio.Event()
+        # Set once the opening turns are sent; release_greeting() waits on it.
+        self._opening_sent_event: asyncio.Event = asyncio.Event()
+        self._live_session = None
         self._diagnostic_model_started: bool = False
 
     @property
@@ -625,6 +628,7 @@ class GeminiLiveStreamClient:
         try:
             async with self.client.aio.live.connect(model=self.model_name, config=config) as session:
                 self._is_connected = True
+                self._live_session = session
                 self._ready_event.set()
                 print("[Gemini Live Stream] Session established successfully.")
 
@@ -715,6 +719,7 @@ class GeminiLiveStreamClient:
                         )
                 else:
                     print("[Gemini Resumption] Session resumed with existing handle; skipping anchor, context, and greeting injection.")
+                self._opening_sent_event.set()
 
                 async def send_audio_loop():
                     try:
@@ -916,7 +921,9 @@ class GeminiLiveStreamClient:
             raise
         finally:
             self._is_connected = False
+            self._live_session = None
             self._ready_event.clear()
+            self._opening_sent_event.clear()
             print("[Gemini Live Stream] Session closed.")
 
     async def connect(
@@ -953,6 +960,16 @@ class GeminiLiveStreamClient:
     async def wait_until_ready(self, timeout: float = 10.0) -> None:
         """Waits until the Gemini Live session WebSocket connection is established and ready."""
         await asyncio.wait_for(self._ready_event.wait(), timeout=timeout)
+
+    async def release_greeting(self, timeout: float = 10.0) -> None:
+        """
+        Completes the opening turn sent with turn_complete=False, so Gemini speaks
+        the greeting live now. Waits for the opening turns if they are still in flight.
+        """
+        await asyncio.wait_for(self._opening_sent_event.wait(), timeout=timeout)
+        if self._live_session is None:
+            raise RuntimeError("Gemini Live session is not connected")
+        await self._live_session.send_client_content(turn_complete=True)
 
     async def finish(self) -> None:
         """Gracefully shuts down background tasks and closes GenAI SDK client resources."""

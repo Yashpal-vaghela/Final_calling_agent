@@ -119,9 +119,28 @@ async def receive_smartflo_webhook(request: Request):
     logger.info("Smartflo webhook event=%s trigger=%s matched=%s applied=%s",
                 result.get("event_id"), trigger, result.get("matched"), result.get("applied"))
 
+    # A hung-up attempt no longer needs its pre-warmed Gemini session (no-op once answered)
+    if trigger.startswith("hangup") and result.get("attempt_id"):
+        from backend.app.services.prewarm_service import discard_prewarmed
+        asyncio.create_task(discard_prewarmed(result["attempt_id"]))
+
+    # Background: fetch real recording URL from Smartflo CDR API after a completed call
+    if trigger == "hangup_answered" and result.get("attempt_id"):
+        rec_url = payload.get("recording_url")
+        if rec_url and not str(rec_url).startswith("$"):
+            print(f"[Recording] 🎙️ Recording URL: {rec_url}")
+        from backend.app.services.smartflo_recording_service import enrich_recording
+        cid = payload.get("call_id") or payload.get("callId") or payload.get("uuid")
+        asyncio.create_task(enrich_recording(
+            attempt_id=result["attempt_id"],
+            call_id=str(cid) if cid and not str(cid).startswith("$") else None,
+            uuid=str(payload.get("uuid")) if payload.get("uuid") and not str(payload.get("uuid")).startswith("$") else None,
+        ))
+
     # Also directly notify AI-agent status webhook if lead_id or ref_id is present
-    lead_id = payload.get("lead_id") or payload.get("ref_id")
-    if lead_id:
+    raw_lead = payload.get("lead_id") or payload.get("ref_id")
+    lead_id = str(raw_lead).strip() if isinstance(raw_lead, (str, int)) and not isinstance(raw_lead, bool) else ""
+    if lead_id and not lead_id.startswith("$") and lead_id.lower() != "none":
         from backend.app.services.ai_agent_webhook import send_status_to_ai_agent
         from backend.app.services.call_record_service import agent_status_for
         agent_status = agent_status_for(trigger, payload)

@@ -11,7 +11,7 @@ from backend.app.services.dentist_service import get_dentist_service
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 CITIES_FILE = os.path.join(DATA_DIR, "covered_cities.json")
-API_URL = "http://192.168.0.161:1020/api/consult-with-dentist/"
+API_URL = "http://192.168.0.203:1020/api/consult-with-dentist/"
 
 def book_consultation(
     first_name: str = "",

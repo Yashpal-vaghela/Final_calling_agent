@@ -3,7 +3,7 @@ import httpx
 from typing import Optional
 from backend.app.services.city_service import get_default_pincode_for_city
 
-API_URL = "http://192.168.0.161:1020/api/consult-with-dentist/"
+API_URL = "http://192.168.0.203:1020/api/consult-with-dentist/"
 def cancel_consultation(
     lead_id: str, 
     reason: str = "",

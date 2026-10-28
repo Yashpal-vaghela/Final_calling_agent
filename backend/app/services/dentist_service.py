@@ -17,7 +17,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 REMOTE_API_URL = "https://ultimatesmiledesign.com/api/dentists-list/pincode/"
-LOCAL_API_URL = "http://192.168.0.161:1020/api/dentists-list/pincode/"
+LOCAL_API_URL = "http://192.168.0.203:1020/api/dentists-list/pincode/"
 DEFAULT_QUERY_PINCODE = "395006"
 TTL_DIRECTORY_SECONDS = 3600  # 1 hour cache TTL
 

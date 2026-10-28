@@ -256,7 +256,14 @@ async def send_call_status_to_zoho(provider_event: Dict[str, Any]) -> bool:
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(webhook_url, json=payload, headers={"Content-Type": "application/json"})
-            return response.status_code in (200, 201, 202, 204)
+            if response.status_code in (200, 201, 202, 204):
+                status_disp = payload.get("status") or payload.get("call_status")
+                rec_disp = payload.get("recording_url") or "None"
+                print(f"[Zoho Flow Status] ✅ Delivered status='{status_disp}' recording_url='{rec_disp}' for lead '{payload.get('lead_id')}' (HTTP {response.status_code})")
+                return True
+            else:
+                print(f"[Zoho Flow Status] ⚠️ Returned HTTP {response.status_code}: {response.text[:150]}")
+                return False
     except Exception:
         logger.exception("[Zoho Flow] Status delivery failed for event %s", payload["event_id"])
         return False

@@ -24,6 +24,9 @@ async def initiate_tracked_call(client, customer_number: str, *, lead_id: str | 
         ACTIVE_CALLER_CONTEXTS[aid] = caller_context
         from agent.cache import cache_set, build_call_context_key, TTL_CALL_CONTEXT
         await cache_set(build_call_context_key(aid), caller_context, ttl_seconds=TTL_CALL_CONTEXT)
+        # Connect Gemini Live before dialing so it is ready when the customer answers
+        from backend.app.services.prewarm_service import start_prewarm
+        await start_prewarm(aid, caller_context, lead_id=lead_id, opening_intent=params.get("opening_intent"))
     try:
         result = await client.initiate_click_to_call(customer_number=customer_number, custom_params=params)
         if not isinstance(result, dict):

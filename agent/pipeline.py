@@ -211,6 +211,8 @@ class VoicePipelineOrchestrator:
         self.output_buffer = bytearray()
         self._initial_greeting_complete = False
         self._has_instant_greeting = False
+        # True while pre-warmed during ringing: Gemini gets the opening turn but must not speak yet
+        self._defer_greeting = False
         self._timings = {}
         self._send_audio_task: Optional[asyncio.Task] = None
         self._outbound_chunk_counter: int = 1
@@ -1231,7 +1233,7 @@ class VoicePipelineOrchestrator:
                     preferred_language="multi",
                     initial_greeting=None if is_reconnect else self.greeting,
                     initial_prompt=fallback_prompt if (is_reconnect and not resumption_handle) else (None if is_reconnect else self._build_initial_prompt()),
-                    turn_complete_on_start=fallback_turn_complete if is_reconnect else True,
+                    turn_complete_on_start=fallback_turn_complete if is_reconnect else not self._defer_greeting,
                     tool_mapping=self._build_live_tool_mapping(),
                     caller_context=self.caller_context,
                     opening_intent=self.opening_intent,
@@ -1326,6 +1328,67 @@ class VoicePipelineOrchestrator:
         self.session.transition_state("listening")
         
         self._manage_gemini_connection_task = asyncio.create_task(self._manage_gemini_connection())
+
+    async def prewarm(self) -> None:
+        """
+        Connects Gemini Live while the outbound call is still ringing. The same system prompt,
+        context and greeting instruction are sent, but the turn is left open so no audio is
+        generated until attach() is called on answer.
+        """
+        self._is_running = True
+        self._defer_greeting = True
+        self._gemini_reconnect_event.clear()
+        print(f"[Orchestrator] Pre-warming Gemini Live during ringing for {self.call_id} (intent: {self.opening_intent})")
+        self._manage_gemini_connection_task = asyncio.create_task(self._manage_gemini_connection())
+
+    async def attach(self, websocket, call_id: str, stream_sid: str) -> None:
+        """Binds a pre-warmed pipeline to the answered call and lets Gemini speak the greeting live."""
+        self.websocket = websocket
+        self.stream_sid = stream_sid
+        if call_id:
+            self.call_id = call_id
+            self.session.call_id = call_id
+        self._timings['call_start'] = time.monotonic()
+        self._waiting_for_user_since = None
+        self._silence_state = "active"
+        self._silence_monitor_task = asyncio.create_task(self._silence_monitor())
+
+        print(f"[Orchestrator] Attaching pre-warmed pipeline to CallSid: {self.call_id}, StreamSid: {self.stream_sid}")
+        self.session.add_transcript(self.greeting, role="assistant")
+        self.session.transition_state("listening")
+        self._defer_greeting = False
+        self._release_greeting_task = asyncio.create_task(self._release_prewarmed_greeting())
+
+    async def _release_prewarmed_greeting(self) -> None:
+        """Tells the pre-warmed Gemini session to speak now; falls back to a fresh connection on failure."""
+        deadline = time.monotonic() + 10.0
+        while self.gemini_live_client is None and not self._stopped and time.monotonic() < deadline:
+            await asyncio.sleep(0.02)
+        if self._stopped:
+            return
+        client = self.gemini_live_client
+        try:
+            if client is None:
+                raise RuntimeError("Gemini Live client was not created in time")
+            # A client created after attach() already completes the turn by itself
+            if client.turn_complete_on_start is False:
+                await client.release_greeting(timeout=max(0.1, deadline - time.monotonic()))
+            self._timings['greeting_triggered'] = time.monotonic()
+            print(f"[Orchestrator] Greeting released to pre-warmed Gemini Live for CallSid: {self.call_id}")
+        except Exception as e:
+            print(f"[Orchestrator Warning] Pre-warmed Gemini Live unusable ({e}); reconnecting with standard greeting.")
+            task = getattr(self, "_manage_gemini_connection_task", None)
+            if task and not task.done():
+                task.cancel()
+            self.gemini_live_client = None
+            if client:
+                try:
+                    await client.finish()
+                except Exception:
+                    pass
+            if not self._stopped:
+                self._timings.pop('gemini_connecting', None)
+                self._manage_gemini_connection_task = asyncio.create_task(self._manage_gemini_connection())
 
     async def handle_media_payload(self, ulaw_base64: str) -> None:
         """

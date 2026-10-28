@@ -11,7 +11,7 @@ from typing import Optional, Dict, Any
 from backend.app.services.caller_context import validate_phone_number
 from backend.app.services.city_service import get_default_pincode_for_city
 
-API_URL = "http://192.168.0.161:1020/api/consult-with-dentist/"
+API_URL = "http://192.168.0.203:1020/api/consult-with-dentist/"
 
 
 def update_caller_profile(

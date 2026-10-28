@@ -1,5 +1,6 @@
 import json
 import asyncio
+import time
 import urllib.parse
 from typing import Optional, Any
 from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect, HTTPException
@@ -24,9 +25,47 @@ from backend.app.services.zoho_service import send_call_summary_to_zoho
 from backend.app.services.call_record_service import get_call_store, provider_ids, now_iso, CorrelationError
 from backend.app.services.outbound_call_service import initiate_tracked_call
 from backend.app.services.ai_agent_webhook import send_status_to_ai_agent
+from backend.app.services.prewarm_service import claim_prewarmed
 
 
 router = APIRouter()
+
+# Diagnostics only: when Smartflo asked for the wss_url, so the handover gap that the
+# greeting timing report cannot see (answer -> voice webhook -> media stream) is visible.
+_VOICE_WEBHOOK_AT: dict[str, float] = {}
+_VOICE_WEBHOOK_MAX_KEYS = 200
+
+
+def _mark_voice_webhook(at: float, *keys: Optional[str]) -> None:
+    for key in keys:
+        if key and key.strip():
+            _VOICE_WEBHOOK_AT[key] = at
+    while len(_VOICE_WEBHOOK_AT) > _VOICE_WEBHOOK_MAX_KEYS:
+        _VOICE_WEBHOOK_AT.pop(next(iter(_VOICE_WEBHOOK_AT)), None)
+
+
+def _pop_voice_webhook_at(*keys: Optional[str]) -> Optional[float]:
+    found = None
+    for key in keys:
+        value = _VOICE_WEBHOOK_AT.pop(key, None) if key else None
+        if value is not None:
+            found = value if found is None else min(found, value)
+    return found
+
+
+def _print_handover_report(webhook_at: Optional[float], ws_accept_at: float, start_at: float) -> None:
+    print("\n" + "=" * 50)
+    print("TELEPHONY HANDOVER TIMING REPORT")
+    print("=" * 50)
+    if webhook_at is not None:
+        print("Smartflo asked for wss_url:  0.000s")
+        print(f"WebSocket accepted:         {ws_accept_at - webhook_at:+.3f}s")
+        print(f"'start' event received:     {start_at - webhook_at:+.3f}s  <-- greeting report's 0.000s")
+        print("(The caller answered shortly BEFORE 0.000s; Smartflo does not report that moment.)")
+    else:
+        print("Smartflo asked for wss_url: not recorded for this call")
+        print(f"WebSocket accept -> 'start': {start_at - ws_accept_at:.3f}s")
+    print("=" * 50 + "\n")
 
 
 async def _attempt_context(attempt_id: str):
@@ -50,6 +89,7 @@ async def smartflo_dynamic_endpoint(request: Request):
     }
     (Note: 'sucess' with single 'c' as per Tata Smartflo specification)
     """
+    webhook_arrived_at = time.monotonic()
     print("[SMARTFLO WEBHOOK] >>> LOCAL SMARTFLO HTTP WEBHOOK HIT <<<")
     print(f"[LOCAL RECEIVER PROOF] method={request.method}")
     print(f"[LOCAL RECEIVER PROOF] url={request.url}")
@@ -156,6 +196,9 @@ async def smartflo_dynamic_endpoint(request: Request):
         ws_url += f"&lead_id={urllib.parse.quote(lead_id)}"
 
     print(f"[Smartflo Dynamic Endpoint] Resolved wss_url: {ws_url} for callId: {call_id}")
+    _mark_voice_webhook(webhook_arrived_at, attempt_id, call_id)
+    print(f"[Handover Timing] wss_url answered in {time.monotonic() - webhook_arrived_at:.3f}s "
+          f"(attempt={attempt_id}, callId={call_id})")
 
     # Return strict Tata Smartflo JSON response schema (supporting both 'sucess' and 'success')
     return JSONResponse(
@@ -184,6 +227,7 @@ async def smartflo_media_stream(
     print(f"[LOCAL RECEIVER PROOF] ws_url={websocket.url}")
 
     await websocket.accept()
+    ws_accept_at = time.monotonic()
     raw_query_sid = websocket.query_params.get("call_sid", "")
     call_sid = call_sid or raw_query_sid
     query_lead_id = websocket.query_params.get("lead_id")
@@ -231,6 +275,7 @@ async def smartflo_media_stream(
         print(f"[Smartflo WS] Initial check: No pre-existing caller context found for call_sid: '{call_sid}' (Will check start payload)")
 
     orchestrator = None
+    intake_lead_id_val = lead_id
     media_log_count = 0
 
     try:
@@ -244,6 +289,7 @@ async def smartflo_media_stream(
                 await websocket.send_text(json.dumps({"event": "connected"}))
 
             elif event_type == "start":
+                start_event_at = time.monotonic()
                 start_obj = data.get("start", {})
                 print(f"[Smartflo WS] Raw start event payload: {json.dumps(start_obj)}")
                 
@@ -310,22 +356,33 @@ async def smartflo_media_stream(
                 if lead_id:
                     asyncio.create_task(send_status_to_ai_agent(lead_id, "answered"))
 
-                orchestrator = VoicePipelineOrchestrator(
-                    websocket=websocket,
-                    call_id=call_sid,
-                    stream_sid=stream_sid,
-                    opening_intent=opening_intent,
-                    lead_id=lead_id,
-                    lead_name=lead_name,
-                    lead_city=lead_city,
-                    lead_phone=lead_phone,
-                    lead_email=lead_email,
-                    lead_subject=lead_subject,
-                    lead_message=lead_message,
-                    lead_pincode=lead_pincode,
-                    caller_context=caller_ctx
+                orchestrator = claim_prewarmed(attempt_id, opening_intent) if caller_ctx else None
+                if orchestrator is not None:
+                    await orchestrator.attach(websocket, call_sid, stream_sid)
+                else:
+                    orchestrator = VoicePipelineOrchestrator(
+                        websocket=websocket,
+                        call_id=call_sid,
+                        stream_sid=stream_sid,
+                        opening_intent=opening_intent,
+                        lead_id=lead_id,
+                        lead_name=lead_name,
+                        lead_city=lead_city,
+                        lead_phone=lead_phone,
+                        lead_email=lead_email,
+                        lead_subject=lead_subject,
+                        lead_message=lead_message,
+                        lead_pincode=lead_pincode,
+                        caller_context=caller_ctx
+                    )
+                    await orchestrator.start()
+
+                # Printed after the pipeline is live so diagnostics never delay the greeting
+                _print_handover_report(
+                    _pop_voice_webhook_at(attempt_id, call_sid),
+                    ws_accept_at,
+                    start_event_at,
                 )
-                await orchestrator.start()
 
             elif event_type == "media":
                 if orchestrator is not None:
@@ -352,12 +409,12 @@ async def smartflo_media_stream(
     except Exception as e:
         print(f"[Smartflo WS] Error handling stream for CallSid {call_sid}: {e}")
     finally:
+        intake_lead_id_val = (orchestrator.lead_id or lead_id) if orchestrator is not None else lead_id
         if orchestrator is not None:
             # Snapshot conversation history, collected user entities, and call identifiers
             history_snapshot = list(orchestrator.session.conversation_history)
             user_info_snapshot = dict(orchestrator.session.collected_user_info)
             call_id_val = orchestrator.call_id
-            intake_lead_id_val = orchestrator.lead_id or lead_id
             booking_lead_id_val = getattr(orchestrator, "booking_lead_id", None)
 
             await orchestrator.stop()
@@ -473,3 +530,4 @@ async def get_call_summary(identifier: str):
     if rec is None:
         raise HTTPException(404, "Call record not found")
     return rec
+ 

@@ -15,7 +15,7 @@ from backend.app.services.city_service import (
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 
 REMOTE_API_URL = "https://ultimatesmiledesign.com/api/dentists-list/pincode/"
-LOCAL_API_URL = "http://192.168.0.161:1020/api/dentists-list/pincode/"
+LOCAL_API_URL = "http://192.168.0.203:1020/api/dentists-list/pincode/"
 POSTAL_PINCODE_API_URL = "https://api.postalpincode.in/pincode/"
 
 def _clean_pincode(pincode: Any) -> str:
@@ -412,11 +412,11 @@ async def async_get_nearest_dentists(
     100% non-blocking HTTP execution on the asyncio event loop via httpx.AsyncClient.
     """
     # Defensive swap: if caller passed city as first positional arg or pincode as city
-    if pincode and not city and re.search(r"[a-zA-Z]", str(pincode)) and not re.search(r"^\d{6}$", str(pincode).strip()):
-        city = str(pincode)
+    if pincode and not city and re.search(r"[a-zA-Z]", pincode) and not re.search(r"^\d{6}$", pincode.strip()):
+        city = pincode
         pincode = ""
-    elif city and not pincode and re.match(r"^\s*\d{6}\s*$", str(city)):
-        pincode = str(city)
+    elif city and not pincode and re.match(r"^\s*\d{6}\s*$", city):
+        pincode = city
         city = ""
 
     clean_pin = _clean_pincode(pincode)
@@ -517,11 +517,11 @@ def get_nearest_dentists(
     Supports exclude_cities to bypass rejected cities.
     """
     # Defensive swap: if caller passed city as first positional arg or pincode as city
-    if pincode and not city and re.search(r"[a-zA-Z]", str(pincode)) and not re.search(r"^\d{6}$", str(pincode).strip()):
-        city = str(pincode)
+    if pincode and not city and re.search(r"[a-zA-Z]", pincode) and not re.search(r"^\d{6}$", pincode.strip()):
+        city = pincode
         pincode = ""
-    elif city and not pincode and re.match(r"^\s*\d{6}\s*$", str(city)):
-        pincode = str(city)
+    elif city and not pincode and re.match(r"^\s*\d{6}\s*$", city):
+        pincode = city
         city = ""
 
     clean_pin = _clean_pincode(pincode)

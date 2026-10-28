@@ -354,6 +354,44 @@ class CallRecordStore:
                     "call_status_source": None, "created_at": now_iso()})
                 self._merge_summary(orphan, update)
 
+    def save_recording_url(self, attempt_id: str, recording_url: str) -> bool:
+        if not identifier(attempt_id) or not identifier(recording_url):
+            return False
+        with self._document() as doc:
+            rec = doc.get("calls", {}).get(attempt_id)
+            if rec is None:
+                return False
+            existing = rec.get("recording_url") or ""
+            if existing and not str(existing).startswith("$"):
+                return False
+            rec["recording_url"] = recording_url
+            rec.setdefault("timestamps", {})["recording_enriched_at"] = now_iso()
+
+            # If lead_id exists, queue a distinct Zoho delivery event for the recording URL
+            if rec.get("lead_id"):
+                key = f"rec:{attempt_id}"
+                if key not in doc["deliveries"]:
+                    doc["sequence"] += 1
+                    selected_eid = rec.get("selected_event_id")
+                    selected_event = doc.get("events", {}).get(selected_eid) if selected_eid else None
+                    current_status = agent_status_for(selected_event["trigger"], selected_event["payload"]) if selected_event else None
+                    doc["deliveries"][key] = {
+                        "event_id": key, "attempt_id": rec["attempt_id"],
+                        "sequence": doc["sequence"], "state": "pending", "attempts": 0, "next_attempt_at": 0,
+                        "payload": {"event": "call_status_update", "event_id": key,
+                                    "event_sequence": doc["sequence"], "attempt_id": rec["attempt_id"],
+                                    "attempt_created_at": rec["created_at"], "timestamp": now_iso(),
+                                    "lead_id": rec["lead_id"], "call_id": rec.get("call_id"),
+                                    "ref_id": rec.get("ref_id"), "phone": rec["customer_number"],
+                                    "smartflo_trigger": rec.get("smartflo_trigger"),
+                                    "status": current_status,
+                                    "call_status": rec.get("call_status"),
+                                    "status_event_id": rec.get("status_event_id"),
+                                    "recording_url": recording_url,
+                                    **{k: rec.get(k) for k in CAUSE_FIELDS}},
+                    }
+            return True
+
     def receive_event(self, trigger: str, payload: dict) -> dict:
         if trigger not in TRIGGERS or not isinstance(payload, dict):
             raise ValueError("A supported trigger and JSON object are required")
@@ -371,6 +409,7 @@ class CallRecordStore:
             self._reconcile(doc)
             event = doc["events"][digest]
             return {"success": True, "event_id": digest, "duplicate": duplicate,
+                    "attempt_id": event["attempt_id"],
                     "matched": event["attempt_id"] is not None, "applied": event["applied"],
                     "diagnostics": list(event["diagnostics"])}
 
@@ -498,7 +537,9 @@ class CallRecordStore:
                         "lead_id": rec["lead_id"], "call_id": rec.get("call_id"),
                         "ref_id": rec.get("ref_id"), "phone": rec["customer_number"],
                         "smartflo_trigger": rec["smartflo_trigger"],
+                        "status": agent_status_for(event["trigger"], event["payload"]),
                         "call_status": rec["call_status"], "status_event_id": rec.get("status_event_id"),
+                        "recording_url": rec.get("recording_url"),
                         **{key: rec.get(key) for key in CAUSE_FIELDS}},
         }
 
